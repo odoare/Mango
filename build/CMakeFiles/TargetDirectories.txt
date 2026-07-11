@@ -5,6 +5,7 @@
 /home/doare/src/Mango/build/CMakeFiles/Mango_vst3_helper.dir
 /home/doare/src/Mango/build/CMakeFiles/MangoBinaryData.dir
 /home/doare/src/Mango/build/CMakeFiles/MangoTests.dir
+/home/doare/src/Mango/build/CMakeFiles/MangoRenderTest.dir
 /home/doare/src/Mango/build/CMakeFiles/test.dir
 /home/doare/src/Mango/build/CMakeFiles/edit_cache.dir
 /home/doare/src/Mango/build/CMakeFiles/rebuild_cache.dir

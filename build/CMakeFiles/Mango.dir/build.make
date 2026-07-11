@@ -73,10 +73,24 @@ Mango_artefacts/JuceLibraryCode/JuceHeader.h: Mango_artefacts/JuceLibraryCode/Re
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/doare/src/Mango/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Generating Mango_artefacts/JuceLibraryCode/JuceHeader.h"
 	JUCE/tools/extras/Build/juceaide/juceaide_artefacts/Custom/juceaide header /home/doare/src/Mango/build/Mango_artefacts/JuceLibraryCode/Release/Defs.txt /home/doare/src/Mango/build/Mango_artefacts/JuceLibraryCode/JuceHeader.h
 
+CMakeFiles/Mango.dir/Source/Dsp/MangoEngine.cpp.o: CMakeFiles/Mango.dir/flags.make
+CMakeFiles/Mango.dir/Source/Dsp/MangoEngine.cpp.o: /home/doare/src/Mango/Source/Dsp/MangoEngine.cpp
+CMakeFiles/Mango.dir/Source/Dsp/MangoEngine.cpp.o: CMakeFiles/Mango.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/doare/src/Mango/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/Mango.dir/Source/Dsp/MangoEngine.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/Mango.dir/Source/Dsp/MangoEngine.cpp.o -MF CMakeFiles/Mango.dir/Source/Dsp/MangoEngine.cpp.o.d -o CMakeFiles/Mango.dir/Source/Dsp/MangoEngine.cpp.o -c /home/doare/src/Mango/Source/Dsp/MangoEngine.cpp
+
+CMakeFiles/Mango.dir/Source/Dsp/MangoEngine.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/Mango.dir/Source/Dsp/MangoEngine.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/doare/src/Mango/Source/Dsp/MangoEngine.cpp > CMakeFiles/Mango.dir/Source/Dsp/MangoEngine.cpp.i
+
+CMakeFiles/Mango.dir/Source/Dsp/MangoEngine.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/Mango.dir/Source/Dsp/MangoEngine.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/doare/src/Mango/Source/Dsp/MangoEngine.cpp -o CMakeFiles/Mango.dir/Source/Dsp/MangoEngine.cpp.s
+
 CMakeFiles/Mango.dir/Source/PluginEditor.cpp.o: CMakeFiles/Mango.dir/flags.make
 CMakeFiles/Mango.dir/Source/PluginEditor.cpp.o: /home/doare/src/Mango/Source/PluginEditor.cpp
 CMakeFiles/Mango.dir/Source/PluginEditor.cpp.o: CMakeFiles/Mango.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/doare/src/Mango/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/Mango.dir/Source/PluginEditor.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/doare/src/Mango/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/Mango.dir/Source/PluginEditor.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/Mango.dir/Source/PluginEditor.cpp.o -MF CMakeFiles/Mango.dir/Source/PluginEditor.cpp.o.d -o CMakeFiles/Mango.dir/Source/PluginEditor.cpp.o -c /home/doare/src/Mango/Source/PluginEditor.cpp
 
 CMakeFiles/Mango.dir/Source/PluginEditor.cpp.i: cmake_force
@@ -90,7 +104,7 @@ CMakeFiles/Mango.dir/Source/PluginEditor.cpp.s: cmake_force
 CMakeFiles/Mango.dir/Source/PluginProcessor.cpp.o: CMakeFiles/Mango.dir/flags.make
 CMakeFiles/Mango.dir/Source/PluginProcessor.cpp.o: /home/doare/src/Mango/Source/PluginProcessor.cpp
 CMakeFiles/Mango.dir/Source/PluginProcessor.cpp.o: CMakeFiles/Mango.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/doare/src/Mango/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/Mango.dir/Source/PluginProcessor.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/doare/src/Mango/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/Mango.dir/Source/PluginProcessor.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/Mango.dir/Source/PluginProcessor.cpp.o -MF CMakeFiles/Mango.dir/Source/PluginProcessor.cpp.o.d -o CMakeFiles/Mango.dir/Source/PluginProcessor.cpp.o -c /home/doare/src/Mango/Source/PluginProcessor.cpp
 
 CMakeFiles/Mango.dir/Source/PluginProcessor.cpp.i: cmake_force
@@ -104,7 +118,7 @@ CMakeFiles/Mango.dir/Source/PluginProcessor.cpp.s: cmake_force
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors/juce_audio_processors.cpp.o: CMakeFiles/Mango.dir/flags.make
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors/juce_audio_processors.cpp.o: /home/doare/src/JUCE/modules/juce_audio_processors/juce_audio_processors.cpp
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors/juce_audio_processors.cpp.o: CMakeFiles/Mango.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/doare/src/Mango/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors/juce_audio_processors.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/doare/src/Mango/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors/juce_audio_processors.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors/juce_audio_processors.cpp.o -MF CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors/juce_audio_processors.cpp.o.d -o CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors/juce_audio_processors.cpp.o -c /home/doare/src/JUCE/modules/juce_audio_processors/juce_audio_processors.cpp
 
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors/juce_audio_processors.cpp.i: cmake_force
@@ -118,7 +132,7 @@ CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors/juce_audi
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_gui_extra/juce_gui_extra.cpp.o: CMakeFiles/Mango.dir/flags.make
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_gui_extra/juce_gui_extra.cpp.o: /home/doare/src/JUCE/modules/juce_gui_extra/juce_gui_extra.cpp
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_gui_extra/juce_gui_extra.cpp.o: CMakeFiles/Mango.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/doare/src/Mango/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_gui_extra/juce_gui_extra.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/doare/src/Mango/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_gui_extra/juce_gui_extra.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_gui_extra/juce_gui_extra.cpp.o -MF CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_gui_extra/juce_gui_extra.cpp.o.d -o CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_gui_extra/juce_gui_extra.cpp.o -c /home/doare/src/JUCE/modules/juce_gui_extra/juce_gui_extra.cpp
 
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_gui_extra/juce_gui_extra.cpp.i: cmake_force
@@ -132,7 +146,7 @@ CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_gui_extra/juce_gui_extra.c
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_gui_basics/juce_gui_basics.cpp.o: CMakeFiles/Mango.dir/flags.make
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_gui_basics/juce_gui_basics.cpp.o: /home/doare/src/JUCE/modules/juce_gui_basics/juce_gui_basics.cpp
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_gui_basics/juce_gui_basics.cpp.o: CMakeFiles/Mango.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/doare/src/Mango/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_gui_basics/juce_gui_basics.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/doare/src/Mango/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_gui_basics/juce_gui_basics.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_gui_basics/juce_gui_basics.cpp.o -MF CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_gui_basics/juce_gui_basics.cpp.o.d -o CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_gui_basics/juce_gui_basics.cpp.o -c /home/doare/src/JUCE/modules/juce_gui_basics/juce_gui_basics.cpp
 
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_gui_basics/juce_gui_basics.cpp.i: cmake_force
@@ -146,7 +160,7 @@ CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_gui_basics/juce_gui_basics
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_graphics/juce_graphics.cpp.o: CMakeFiles/Mango.dir/flags.make
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_graphics/juce_graphics.cpp.o: /home/doare/src/JUCE/modules/juce_graphics/juce_graphics.cpp
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_graphics/juce_graphics.cpp.o: CMakeFiles/Mango.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/doare/src/Mango/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_graphics/juce_graphics.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/doare/src/Mango/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_graphics/juce_graphics.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_graphics/juce_graphics.cpp.o -MF CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_graphics/juce_graphics.cpp.o.d -o CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_graphics/juce_graphics.cpp.o -c /home/doare/src/JUCE/modules/juce_graphics/juce_graphics.cpp
 
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_graphics/juce_graphics.cpp.i: cmake_force
@@ -160,7 +174,7 @@ CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_graphics/juce_graphics.cpp
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.o: CMakeFiles/Mango.dir/flags.make
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.o: /home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.o: CMakeFiles/Mango.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/doare/src/Mango/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/doare/src/Mango/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.o -MF CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.o.d -o CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.o -c /home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp
 
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.i: cmake_force
@@ -174,7 +188,7 @@ CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Har
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.o: CMakeFiles/Mango.dir/flags.make
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.o: /home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.o: CMakeFiles/Mango.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/doare/src/Mango/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building C object CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/doare/src/Mango/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building C object CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.o -MF CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.o.d -o CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.o -c /home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c
 
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.i: cmake_force
@@ -188,7 +202,7 @@ CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_graphics/juce_graphics_She
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_events/juce_events.cpp.o: CMakeFiles/Mango.dir/flags.make
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_events/juce_events.cpp.o: /home/doare/src/JUCE/modules/juce_events/juce_events.cpp
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_events/juce_events.cpp.o: CMakeFiles/Mango.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/doare/src/Mango/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_events/juce_events.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/doare/src/Mango/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_events/juce_events.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_events/juce_events.cpp.o -MF CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_events/juce_events.cpp.o.d -o CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_events/juce_events.cpp.o -c /home/doare/src/JUCE/modules/juce_events/juce_events.cpp
 
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_events/juce_events.cpp.i: cmake_force
@@ -202,7 +216,7 @@ CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_events/juce_events.cpp.s: 
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_core/juce_core.cpp.o: CMakeFiles/Mango.dir/flags.make
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_core/juce_core.cpp.o: /home/doare/src/JUCE/modules/juce_core/juce_core.cpp
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_core/juce_core.cpp.o: CMakeFiles/Mango.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/doare/src/Mango/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_core/juce_core.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/doare/src/Mango/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_core/juce_core.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_core/juce_core.cpp.o -MF CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_core/juce_core.cpp.o.d -o CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_core/juce_core.cpp.o -c /home/doare/src/JUCE/modules/juce_core/juce_core.cpp
 
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_core/juce_core.cpp.i: cmake_force
@@ -216,7 +230,7 @@ CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_core/juce_core.cpp.s: cmak
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_core/juce_core_CompilationTime.cpp.o: CMakeFiles/Mango.dir/flags.make
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_core/juce_core_CompilationTime.cpp.o: /home/doare/src/JUCE/modules/juce_core/juce_core_CompilationTime.cpp
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_core/juce_core_CompilationTime.cpp.o: CMakeFiles/Mango.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/doare/src/Mango/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_core/juce_core_CompilationTime.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/doare/src/Mango/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CXX object CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_core/juce_core_CompilationTime.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_core/juce_core_CompilationTime.cpp.o -MF CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_core/juce_core_CompilationTime.cpp.o.d -o CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_core/juce_core_CompilationTime.cpp.o -c /home/doare/src/JUCE/modules/juce_core/juce_core_CompilationTime.cpp
 
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_core/juce_core_CompilationTime.cpp.i: cmake_force
@@ -230,7 +244,7 @@ CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_core/juce_core_Compilation
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_data_structures/juce_data_structures.cpp.o: CMakeFiles/Mango.dir/flags.make
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_data_structures/juce_data_structures.cpp.o: /home/doare/src/JUCE/modules/juce_data_structures/juce_data_structures.cpp
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_data_structures/juce_data_structures.cpp.o: CMakeFiles/Mango.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/doare/src/Mango/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CXX object CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_data_structures/juce_data_structures.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/doare/src/Mango/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Building CXX object CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_data_structures/juce_data_structures.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_data_structures/juce_data_structures.cpp.o -MF CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_data_structures/juce_data_structures.cpp.o.d -o CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_data_structures/juce_data_structures.cpp.o -c /home/doare/src/JUCE/modules/juce_data_structures/juce_data_structures.cpp
 
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_data_structures/juce_data_structures.cpp.i: cmake_force
@@ -244,7 +258,7 @@ CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_data_structures/juce_data_
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.cpp.o: CMakeFiles/Mango.dir/flags.make
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.cpp.o: /home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.cpp
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.cpp.o: CMakeFiles/Mango.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/doare/src/Mango/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Building CXX object CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/doare/src/Mango/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Building CXX object CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.cpp.o -MF CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.cpp.o.d -o CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.cpp.o -c /home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.cpp
 
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.cpp.i: cmake_force
@@ -258,7 +272,7 @@ CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors_headless/
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.o: CMakeFiles/Mango.dir/flags.make
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.o: /home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.o: CMakeFiles/Mango.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/doare/src/Mango/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Building CXX object CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/doare/src/Mango/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_16) "Building CXX object CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.o -MF CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.o.d -o CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.o -c /home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp
 
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.i: cmake_force
@@ -272,7 +286,7 @@ CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors_headless/
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.o: CMakeFiles/Mango.dir/flags.make
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.o: /home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.o: CMakeFiles/Mango.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/doare/src/Mango/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_16) "Building CXX object CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/doare/src/Mango/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_17) "Building CXX object CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.o -MF CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.o.d -o CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.o -c /home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp
 
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.i: cmake_force
@@ -286,7 +300,7 @@ CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors_headless/
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_basics/juce_audio_basics.cpp.o: CMakeFiles/Mango.dir/flags.make
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_basics/juce_audio_basics.cpp.o: /home/doare/src/JUCE/modules/juce_audio_basics/juce_audio_basics.cpp
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_basics/juce_audio_basics.cpp.o: CMakeFiles/Mango.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/doare/src/Mango/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_17) "Building CXX object CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_basics/juce_audio_basics.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/doare/src/Mango/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_18) "Building CXX object CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_basics/juce_audio_basics.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_basics/juce_audio_basics.cpp.o -MF CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_basics/juce_audio_basics.cpp.o.d -o CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_basics/juce_audio_basics.cpp.o -c /home/doare/src/JUCE/modules/juce_audio_basics/juce_audio_basics.cpp
 
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_basics/juce_audio_basics.cpp.i: cmake_force
@@ -300,7 +314,7 @@ CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_basics/juce_audio_ba
 CMakeFiles/Mango.dir/lib/FxmeTools/FxmeTools/FxmeTools.cpp.o: CMakeFiles/Mango.dir/flags.make
 CMakeFiles/Mango.dir/lib/FxmeTools/FxmeTools/FxmeTools.cpp.o: /home/doare/src/Mango/lib/FxmeTools/FxmeTools/FxmeTools.cpp
 CMakeFiles/Mango.dir/lib/FxmeTools/FxmeTools/FxmeTools.cpp.o: CMakeFiles/Mango.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/doare/src/Mango/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_18) "Building CXX object CMakeFiles/Mango.dir/lib/FxmeTools/FxmeTools/FxmeTools.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/doare/src/Mango/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_19) "Building CXX object CMakeFiles/Mango.dir/lib/FxmeTools/FxmeTools/FxmeTools.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/Mango.dir/lib/FxmeTools/FxmeTools/FxmeTools.cpp.o -MF CMakeFiles/Mango.dir/lib/FxmeTools/FxmeTools/FxmeTools.cpp.o.d -o CMakeFiles/Mango.dir/lib/FxmeTools/FxmeTools/FxmeTools.cpp.o -c /home/doare/src/Mango/lib/FxmeTools/FxmeTools/FxmeTools.cpp
 
 CMakeFiles/Mango.dir/lib/FxmeTools/FxmeTools/FxmeTools.cpp.i: cmake_force
@@ -314,7 +328,7 @@ CMakeFiles/Mango.dir/lib/FxmeTools/FxmeTools/FxmeTools.cpp.s: cmake_force
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_utils/juce_audio_utils.cpp.o: CMakeFiles/Mango.dir/flags.make
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_utils/juce_audio_utils.cpp.o: /home/doare/src/JUCE/modules/juce_audio_utils/juce_audio_utils.cpp
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_utils/juce_audio_utils.cpp.o: CMakeFiles/Mango.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/doare/src/Mango/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_19) "Building CXX object CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_utils/juce_audio_utils.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/doare/src/Mango/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_20) "Building CXX object CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_utils/juce_audio_utils.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_utils/juce_audio_utils.cpp.o -MF CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_utils/juce_audio_utils.cpp.o.d -o CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_utils/juce_audio_utils.cpp.o -c /home/doare/src/JUCE/modules/juce_audio_utils/juce_audio_utils.cpp
 
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_utils/juce_audio_utils.cpp.i: cmake_force
@@ -328,7 +342,7 @@ CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_utils/juce_audio_uti
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_formats/juce_audio_formats.cpp.o: CMakeFiles/Mango.dir/flags.make
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_formats/juce_audio_formats.cpp.o: /home/doare/src/JUCE/modules/juce_audio_formats/juce_audio_formats.cpp
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_formats/juce_audio_formats.cpp.o: CMakeFiles/Mango.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/doare/src/Mango/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_20) "Building CXX object CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_formats/juce_audio_formats.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/doare/src/Mango/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_21) "Building CXX object CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_formats/juce_audio_formats.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_formats/juce_audio_formats.cpp.o -MF CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_formats/juce_audio_formats.cpp.o.d -o CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_formats/juce_audio_formats.cpp.o -c /home/doare/src/JUCE/modules/juce_audio_formats/juce_audio_formats.cpp
 
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_formats/juce_audio_formats.cpp.i: cmake_force
@@ -342,7 +356,7 @@ CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_formats/juce_audio_f
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_devices/juce_audio_devices.cpp.o: CMakeFiles/Mango.dir/flags.make
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_devices/juce_audio_devices.cpp.o: /home/doare/src/JUCE/modules/juce_audio_devices/juce_audio_devices.cpp
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_devices/juce_audio_devices.cpp.o: CMakeFiles/Mango.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/doare/src/Mango/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_21) "Building CXX object CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_devices/juce_audio_devices.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/doare/src/Mango/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_22) "Building CXX object CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_devices/juce_audio_devices.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_devices/juce_audio_devices.cpp.o -MF CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_devices/juce_audio_devices.cpp.o.d -o CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_devices/juce_audio_devices.cpp.o -c /home/doare/src/JUCE/modules/juce_audio_devices/juce_audio_devices.cpp
 
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_devices/juce_audio_devices.cpp.i: cmake_force
@@ -356,7 +370,7 @@ CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_devices/juce_audio_d
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_dsp/juce_dsp.cpp.o: CMakeFiles/Mango.dir/flags.make
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_dsp/juce_dsp.cpp.o: /home/doare/src/JUCE/modules/juce_dsp/juce_dsp.cpp
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_dsp/juce_dsp.cpp.o: CMakeFiles/Mango.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/doare/src/Mango/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_22) "Building CXX object CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_dsp/juce_dsp.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/doare/src/Mango/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_23) "Building CXX object CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_dsp/juce_dsp.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_dsp/juce_dsp.cpp.o -MF CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_dsp/juce_dsp.cpp.o.d -o CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_dsp/juce_dsp.cpp.o -c /home/doare/src/JUCE/modules/juce_dsp/juce_dsp.cpp
 
 CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_dsp/juce_dsp.cpp.i: cmake_force
@@ -369,6 +383,7 @@ CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_dsp/juce_dsp.cpp.s: cmake_
 
 # Object files for target Mango
 Mango_OBJECTS = \
+"CMakeFiles/Mango.dir/Source/Dsp/MangoEngine.cpp.o" \
 "CMakeFiles/Mango.dir/Source/PluginEditor.cpp.o" \
 "CMakeFiles/Mango.dir/Source/PluginProcessor.cpp.o" \
 "CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors/juce_audio_processors.cpp.o" \
@@ -394,6 +409,7 @@ Mango_OBJECTS = \
 # External object files for target Mango
 Mango_EXTERNAL_OBJECTS =
 
+Mango_artefacts/Release/libMango_SharedCode.a: CMakeFiles/Mango.dir/Source/Dsp/MangoEngine.cpp.o
 Mango_artefacts/Release/libMango_SharedCode.a: CMakeFiles/Mango.dir/Source/PluginEditor.cpp.o
 Mango_artefacts/Release/libMango_SharedCode.a: CMakeFiles/Mango.dir/Source/PluginProcessor.cpp.o
 Mango_artefacts/Release/libMango_SharedCode.a: CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors/juce_audio_processors.cpp.o
@@ -417,7 +433,7 @@ Mango_artefacts/Release/libMango_SharedCode.a: CMakeFiles/Mango.dir/home/doare/s
 Mango_artefacts/Release/libMango_SharedCode.a: CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_dsp/juce_dsp.cpp.o
 Mango_artefacts/Release/libMango_SharedCode.a: CMakeFiles/Mango.dir/build.make
 Mango_artefacts/Release/libMango_SharedCode.a: CMakeFiles/Mango.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/doare/src/Mango/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_23) "Linking CXX static library Mango_artefacts/Release/libMango_SharedCode.a"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/doare/src/Mango/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_24) "Linking CXX static library Mango_artefacts/Release/libMango_SharedCode.a"
 	$(CMAKE_COMMAND) -P CMakeFiles/Mango.dir/cmake_clean_target.cmake
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/Mango.dir/link.txt --verbose=$(VERBOSE)
 

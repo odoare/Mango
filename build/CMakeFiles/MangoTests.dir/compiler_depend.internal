@@ -3,6 +3,7 @@
 
 CMakeFiles/MangoTests.dir/Tests/UnitTests.cpp.o
  /home/doare/src/Mango/Tests/UnitTests.cpp
+ /home/doare/src/Mango/Source/Dsp/OverrideParser.h
  /home/doare/src/Mango/lib/FxmeTools/FxmeTools/dsp/ArEnvelope.h
  /home/doare/src/Mango/lib/FxmeTools/FxmeTools/dsp/BitCrusher.h
  /home/doare/src/Mango/lib/FxmeTools/FxmeTools/dsp/DelayLine.h
@@ -30,10 +31,12 @@ CMakeFiles/MangoTests.dir/Tests/UnitTests.cpp.o
  /usr/include/c++/13/bits/concept_check.h
  /usr/include/c++/13/bits/cpp_type_traits.h
  /usr/include/c++/13/bits/cxxabi_forced.h
+ /usr/include/c++/13/bits/cxxabi_init_exception.h
  /usr/include/c++/13/bits/enable_special_members.h
  /usr/include/c++/13/bits/erase_if.h
  /usr/include/c++/13/bits/exception.h
  /usr/include/c++/13/bits/exception_defines.h
+ /usr/include/c++/13/bits/exception_ptr.h
  /usr/include/c++/13/bits/functexcept.h
  /usr/include/c++/13/bits/functional_hash.h
  /usr/include/c++/13/bits/hash_bytes.h
@@ -44,6 +47,7 @@ CMakeFiles/MangoTests.dir/Tests/UnitTests.cpp.o
  /usr/include/c++/13/bits/memory_resource.h
  /usr/include/c++/13/bits/memoryfwd.h
  /usr/include/c++/13/bits/move.h
+ /usr/include/c++/13/bits/nested_exception.h
  /usr/include/c++/13/bits/new_allocator.h
  /usr/include/c++/13/bits/node_handle.h
  /usr/include/c++/13/bits/ostream_insert.h
@@ -87,9 +91,11 @@ CMakeFiles/MangoTests.dir/Tests/UnitTests.cpp.o
  /usr/include/c++/13/cstdint
  /usr/include/c++/13/cstdio
  /usr/include/c++/13/cstdlib
+ /usr/include/c++/13/cstring
  /usr/include/c++/13/cwchar
  /usr/include/c++/13/debug/assertions.h
  /usr/include/c++/13/debug/debug.h
+ /usr/include/c++/13/exception
  /usr/include/c++/13/ext/aligned_buffer.h
  /usr/include/c++/13/ext/alloc_traits.h
  /usr/include/c++/13/ext/numeric_traits.h
@@ -100,6 +106,7 @@ CMakeFiles/MangoTests.dir/Tests/UnitTests.cpp.o
  /usr/include/c++/13/iosfwd
  /usr/include/c++/13/limits
  /usr/include/c++/13/new
+ /usr/include/c++/13/optional
  /usr/include/c++/13/pstl/execution_defs.h
  /usr/include/c++/13/pstl/glue_algorithm_defs.h
  /usr/include/c++/13/pstl/pstl_config.h
@@ -134,6 +141,8 @@ CMakeFiles/MangoTests.dir/Tests/UnitTests.cpp.o
  /usr/include/stdint.h
  /usr/include/stdio.h
  /usr/include/stdlib.h
+ /usr/include/string.h
+ /usr/include/strings.h
  /usr/include/wchar.h
  /usr/include/x86_64-linux-gnu/asm/errno.h
  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h
@@ -170,6 +179,8 @@ CMakeFiles/MangoTests.dir/Tests/UnitTests.cpp.o
  /usr/include/x86_64-linux-gnu/bits/stdlib-bsearch.h
  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h
  /usr/include/x86_64-linux-gnu/bits/stdlib.h
+ /usr/include/x86_64-linux-gnu/bits/string_fortified.h
+ /usr/include/x86_64-linux-gnu/bits/strings_fortified.h
  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h
  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h
  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h

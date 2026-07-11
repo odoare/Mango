@@ -28,6 +28,7 @@
 #include <FxmeTools/dsp/Saturator.h>
 #include <FxmeTools/midi/StringSequencer.h>
 #include <FxmeTools/midi/SequencerEngine.h>
+#include <Dsp/OverrideParser.h>
 
 static int numChecks = 0;
 
@@ -257,6 +258,55 @@ static int testSequencerEngineEmptyBlocks()
 }
 
 //==============================================================================
+static int testOverrideParser()
+{
+    using namespace mng;
+
+    // Empty / whitespace = valid empty set.
+    auto empty = parseOverrides ("");
+    CHECK (empty.has_value() && empty->count == 0);
+    CHECK (parseOverrides ("   \t ").has_value());
+
+    // The spec example.
+    auto delay = parseOverrides ("dur=0.125 fb=0.6");
+    CHECK (delay.has_value() && delay->count == 2);
+    CHECK (delay->find (OvKey::Dur) != nullptr);
+    CHECK (delay->find (OvKey::Dur)->kind == Expr::Const);
+    CHECK (near (delay->find (OvKey::Dur)->value, 0.125f, 1e-6));
+    CHECK (near (delay->find (OvKey::Fb)->value, 0.6f, 1e-6));
+    CHECK (delay->find (OvKey::Q) == nullptr);
+
+    // mididur forms.
+    auto md = parseOverrides ("dur=mididur");
+    CHECK (md.has_value() && md->find (OvKey::Dur)->kind == Expr::MididurScaled);
+    CHECK (near (md->find (OvKey::Dur)->eval (0.01f), 0.01f, 1e-7));
+
+    auto md2 = parseOverrides ("dur=mididur*2");
+    CHECK (md2.has_value() && near (md2->find (OvKey::Dur)->eval (0.01f), 0.02f, 1e-7));
+
+    auto md3 = parseOverrides ("dur=mididur/4");
+    CHECK (md3.has_value() && near (md3->find (OvKey::Dur)->eval (0.01f), 0.0025f, 1e-7));
+
+    auto md4 = parseOverrides ("dur=3*mididur");
+    CHECK (md4.has_value() && near (md4->find (OvKey::Dur)->eval (0.01f), 0.03f, 1e-7));
+
+    // Vowels.
+    auto vow = parseOverrides ("v0=a v1=u");
+    CHECK (vow.has_value());
+    CHECK (near (vow->find (OvKey::V0)->value, 0.0f, 1e-7));
+    CHECK (near (vow->find (OvKey::V1)->value, 4.0f, 1e-7));
+
+    // Errors: unknown key, malformed value, missing '=', division by zero.
+    CHECK (! parseOverrides ("foo=1").has_value());
+    CHECK (! parseOverrides ("dur=abc").has_value());
+    CHECK (! parseOverrides ("dur").has_value());
+    CHECK (! parseOverrides ("dur=").has_value());
+    CHECK (! parseOverrides ("dur=mididur/0").has_value());
+    CHECK (! parseOverrides ("dur=0.25 fb=oops").has_value());   // all-or-nothing
+    return 0;
+}
+
+//==============================================================================
 int main()
 {
     if (testDeterministicRandom())      return 1;
@@ -267,6 +317,7 @@ int main()
     if (testSaturator())                return 1;
     if (testStringSequencerAddWithId()) return 1;
     if (testSequencerEngineEmptyBlocks()) return 1;
+    if (testOverrideParser())           return 1;
 
     std::printf ("All %d checks passed.\n", numChecks);
     return 0;

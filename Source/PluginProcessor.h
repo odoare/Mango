@@ -18,9 +18,13 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "Dsp/MangoEngine.h"
 
 //==============================================================================
-class MangoAudioProcessor : public juce::AudioProcessor
+class MangoAudioProcessor : public juce::AudioProcessor,
+                            public juce::ChangeBroadcaster,
+                            private juce::AudioProcessorValueTreeState::Listener,
+                            private juce::AsyncUpdater
 {
 public:
     MangoAudioProcessor();
@@ -57,6 +61,24 @@ public:
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameters();
     juce::AudioProcessorValueTreeState apvts { *this, nullptr, "Parameters", createParameters() };
 
+    mng::MangoEngine engine;
+
+    // ---- message-thread helpers used by the editor ---------------------------
+
+    /** Stores a block's override string (under the engine lock) and re-parses
+        the override cache. Returns false if the new text does not parse (it
+        is stored anyway so the user can fix it). */
+    bool setBlockContent (int laneIndex, int blockId, const juce::String& text);
+
+    juce::String blockContent (int laneIndex, int blockId) const;
+
 private:
+    void parameterChanged (const juce::String& parameterID, float newValue) override;
+    void handleAsyncUpdate() override;
+    void applyGridFromParameters();
+
+    juce::ValueTree sequencersToTree() const;
+    void sequencersFromTree (const juce::ValueTree& tree);
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MangoAudioProcessor)
 };

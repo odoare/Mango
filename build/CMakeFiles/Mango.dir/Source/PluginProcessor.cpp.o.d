@@ -1046,6 +1046,14 @@ CMakeFiles/Mango.dir/Source/PluginProcessor.cpp.o: \
  /home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/PresetComponent.h \
  /home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/PresetBarComponent.h \
  /home/doare/src/Mango/build/juce_binarydata_MangoBinaryData/JuceLibraryCode/BinaryData.h \
+ /home/doare/src/Mango/Source/Dsp/MangoEngine.h \
+ /home/doare/src/Mango/Source/Dsp/EffectBase.h \
+ /home/doare/src/Mango/Source/Dsp/OverrideParser.h \
+ /home/doare/src/Mango/Source/Dsp/EffectTypes.h \
+ /home/doare/src/Mango/Source/Dsp/../ParamIDs.h \
  /home/doare/src/Mango/Source/PluginEditor.h \
  /home/doare/src/Mango/Source/Theme.h \
- /home/doare/src/Mango/Source/ParamIDs.h
+ /home/doare/src/Mango/Source/Components/LaneRackComponent.h \
+ /home/doare/src/Mango/Source/Components/EffectPanel.h \
+ /home/doare/src/Mango/Source/Components/../Dsp/DurationWeights.h \
+ /home/doare/src/Mango/Source/Components/BlockTextPanel.h

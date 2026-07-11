@@ -112,4 +112,41 @@ if(MANGO_BUILD_TESTS)
         ${CMAKE_CURRENT_SOURCE_DIR}/Source)
     target_compile_features(MangoTests PRIVATE cxx_std_17)
     add_test(NAME MangoTests COMMAND MangoTests)
+
+    # Offline render checks of the full processor (gater timing, seed
+    # determinism, quantizer). Built as an independent console app compiling
+    # the processor sources directly (reusing Mango's generated JuceHeader).
+    juce_add_console_app(MangoRenderTest PRODUCT_NAME "MangoRenderTest")
+    target_sources(MangoRenderTest PRIVATE
+        Tests/RenderTest.cpp
+        Source/PluginProcessor.cpp
+        Source/PluginEditor.cpp
+        Source/Dsp/MangoEngine.cpp)
+    target_include_directories(MangoRenderTest PRIVATE
+        ${CMAKE_BINARY_DIR}/Mango_artefacts/JuceLibraryCode
+        ${CMAKE_CURRENT_SOURCE_DIR}/Source)
+    target_compile_definitions(MangoRenderTest PRIVATE
+        JucePlugin_Name="Mango"
+        JucePlugin_VersionString="${PROJECT_VERSION}"
+        JUCE_WEB_BROWSER=0
+        JUCE_USE_CURL=0
+        JUCE_MODAL_LOOPS_PERMITTED=1)
+    target_link_libraries(MangoRenderTest PRIVATE
+        FxmeTools
+        MangoBinaryData
+        juce::juce_audio_basics
+        juce::juce_audio_devices
+        juce::juce_audio_formats
+        juce::juce_audio_processors
+        juce::juce_audio_utils
+        juce::juce_core
+        juce::juce_data_structures
+        juce::juce_dsp
+        juce::juce_events
+        juce::juce_graphics
+        juce::juce_gui_basics
+        juce::juce_gui_extra
+        juce::juce_recommended_config_flags)
+    add_dependencies(MangoRenderTest Mango)
+    add_test(NAME MangoRenderTest COMMAND MangoRenderTest)
 endif()

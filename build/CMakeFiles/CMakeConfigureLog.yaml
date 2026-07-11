@@ -627,3 +627,108 @@ events:
         
       exitCode: 0
 ...
+
+---
+events:
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/home/doare/src/JUCE/extras/Build/CMake/JUCECheckAtomic.cmake:73 (try_compile)"
+      - "/home/doare/src/JUCE/extras/Build/CMake/JUCECheckAtomic.cmake:128 (_juce_create_atomic_target)"
+      - "/home/doare/src/JUCE/extras/Build/CMake/JUCEModuleSupport.cmake:57 (include)"
+      - "/home/doare/src/JUCE/CMakeLists.txt:50 (include)"
+    directories:
+      source: "/home/doare/src/Mango/build/JUCE/check_atomic_dir_1jZ4tnqyIDcQLr26/CMakeFiles/CMakeTmp"
+      binary: "/home/doare/src/Mango/build/JUCE/check_atomic_dir_1jZ4tnqyIDcQLr26/CMakeFiles/CMakeTmp"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: ""
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "compile_result"
+      cached: true
+      stdout: |
+        Change Dir: '/home/doare/src/Mango/build/JUCE/check_atomic_dir_1jZ4tnqyIDcQLr26/CMakeFiles/CMakeTmp'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_8880d/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_8880d.dir/build.make CMakeFiles/cmTC_8880d.dir/build
+        gmake[1] : on entre dans le répertoire « /home/doare/src/Mango/build/JUCE/check_atomic_dir_1jZ4tnqyIDcQLr26/CMakeFiles/CMakeTmp »
+        Building CXX object CMakeFiles/cmTC_8880d.dir/check_atomic_gtAqDSuA1DoIt1tg.cpp.o
+        /usr/bin/c++   -std=c++17 -o CMakeFiles/cmTC_8880d.dir/check_atomic_gtAqDSuA1DoIt1tg.cpp.o -c /home/doare/src/Mango/build/JUCE/check_atomic_gtAqDSuA1DoIt1tg.cpp
+        Linking CXX executable cmTC_8880d
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_8880d.dir/link.txt --verbose=1
+        /usr/bin/c++ CMakeFiles/cmTC_8880d.dir/check_atomic_gtAqDSuA1DoIt1tg.cpp.o -o cmTC_8880d 
+        gmake[1] : on quitte le répertoire « /home/doare/src/Mango/build/JUCE/check_atomic_dir_1jZ4tnqyIDcQLr26/CMakeFiles/CMakeTmp »
+        
+      exitCode: 0
+...
+
+---
+events:
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/home/doare/src/JUCE/extras/Build/CMake/JUCECheckAtomic.cmake:73 (try_compile)"
+      - "/home/doare/src/JUCE/extras/Build/CMake/JUCECheckAtomic.cmake:128 (_juce_create_atomic_target)"
+      - "/home/doare/src/JUCE/extras/Build/CMake/JUCEModuleSupport.cmake:57 (include)"
+      - "/home/doare/src/JUCE/CMakeLists.txt:50 (include)"
+    directories:
+      source: "/home/doare/src/Mango/build/JUCE/check_atomic_dir_FE5VcgiSglZIuHKW/CMakeFiles/CMakeTmp"
+      binary: "/home/doare/src/Mango/build/JUCE/check_atomic_dir_FE5VcgiSglZIuHKW/CMakeFiles/CMakeTmp"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: ""
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "compile_result"
+      cached: true
+      stdout: |
+        Change Dir: '/home/doare/src/Mango/build/JUCE/check_atomic_dir_FE5VcgiSglZIuHKW/CMakeFiles/CMakeTmp'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_759a3/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_759a3.dir/build.make CMakeFiles/cmTC_759a3.dir/build
+        gmake[1] : on entre dans le répertoire « /home/doare/src/Mango/build/JUCE/check_atomic_dir_FE5VcgiSglZIuHKW/CMakeFiles/CMakeTmp »
+        Building CXX object CMakeFiles/cmTC_759a3.dir/check_atomic_xYk3KuOWIcJBEggh.cpp.o
+        /usr/bin/c++   -std=c++17 -o CMakeFiles/cmTC_759a3.dir/check_atomic_xYk3KuOWIcJBEggh.cpp.o -c /home/doare/src/Mango/build/JUCE/check_atomic_xYk3KuOWIcJBEggh.cpp
+        Linking CXX executable cmTC_759a3
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_759a3.dir/link.txt --verbose=1
+        /usr/bin/c++ CMakeFiles/cmTC_759a3.dir/check_atomic_xYk3KuOWIcJBEggh.cpp.o -o cmTC_759a3 
+        gmake[1] : on quitte le répertoire « /home/doare/src/Mango/build/JUCE/check_atomic_dir_FE5VcgiSglZIuHKW/CMakeFiles/CMakeTmp »
+        
+      exitCode: 0
+...
+
+---
+events:
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/home/doare/src/JUCE/extras/Build/CMake/JUCECheckAtomic.cmake:73 (try_compile)"
+      - "/home/doare/src/JUCE/extras/Build/CMake/JUCECheckAtomic.cmake:128 (_juce_create_atomic_target)"
+      - "/home/doare/src/JUCE/extras/Build/CMake/JUCEModuleSupport.cmake:57 (include)"
+      - "/home/doare/src/JUCE/CMakeLists.txt:50 (include)"
+    directories:
+      source: "/home/doare/src/Mango/build/JUCE/check_atomic_dir_BbMoPxECHhfAEiZe/CMakeFiles/CMakeTmp"
+      binary: "/home/doare/src/Mango/build/JUCE/check_atomic_dir_BbMoPxECHhfAEiZe/CMakeFiles/CMakeTmp"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: ""
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "compile_result"
+      cached: true
+      stdout: |
+        Change Dir: '/home/doare/src/Mango/build/JUCE/check_atomic_dir_BbMoPxECHhfAEiZe/CMakeFiles/CMakeTmp'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_bfe97/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_bfe97.dir/build.make CMakeFiles/cmTC_bfe97.dir/build
+        gmake[1] : on entre dans le répertoire « /home/doare/src/Mango/build/JUCE/check_atomic_dir_BbMoPxECHhfAEiZe/CMakeFiles/CMakeTmp »
+        Building CXX object CMakeFiles/cmTC_bfe97.dir/check_atomic_AwSNAI1qh2KbDdRY.cpp.o
+        /usr/bin/c++   -std=c++17 -o CMakeFiles/cmTC_bfe97.dir/check_atomic_AwSNAI1qh2KbDdRY.cpp.o -c /home/doare/src/Mango/build/JUCE/check_atomic_AwSNAI1qh2KbDdRY.cpp
+        Linking CXX executable cmTC_bfe97
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_bfe97.dir/link.txt --verbose=1
+        /usr/bin/c++ CMakeFiles/cmTC_bfe97.dir/check_atomic_AwSNAI1qh2KbDdRY.cpp.o -o cmTC_bfe97 
+        gmake[1] : on quitte le répertoire « /home/doare/src/Mango/build/JUCE/check_atomic_dir_BbMoPxECHhfAEiZe/CMakeFiles/CMakeTmp »
+        
+      exitCode: 0
+...

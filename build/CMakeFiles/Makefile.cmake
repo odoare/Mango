@@ -59,6 +59,7 @@ set(CMAKE_MAKEFILE_OUTPUTS
 # Byproducts of CMake generate step:
 set(CMAKE_MAKEFILE_PRODUCTS
   "Mango_artefacts/JuceLibraryCode/Release/Defs.txt"
+  "MangoRenderTest_artefacts/JuceLibraryCode/Release/Defs.txt"
   "CMakeFiles/CMakeDirectoryInformation.cmake"
   "JUCE/JUCEConfigVersion.cmake"
   "JUCE/JUCEConfig.cmake"
@@ -78,4 +79,5 @@ set(CMAKE_DEPEND_INFO_FILES
   "CMakeFiles/Mango_vst3_helper.dir/DependInfo.cmake"
   "CMakeFiles/MangoBinaryData.dir/DependInfo.cmake"
   "CMakeFiles/MangoTests.dir/DependInfo.cmake"
+  "CMakeFiles/MangoRenderTest.dir/DependInfo.cmake"
   )

@@ -5,6 +5,7 @@ cmake_policy(SET CMP0009 NEW)
 # MANGO_SOURCES at CMakeLists.txt:44 (file)
 file(GLOB_RECURSE NEW_GLOB LIST_DIRECTORIES false "/home/doare/src/Mango/Source/*.cpp")
 set(OLD_GLOB
+  "/home/doare/src/Mango/Source/Dsp/MangoEngine.cpp"
   "/home/doare/src/Mango/Source/PluginEditor.cpp"
   "/home/doare/src/Mango/Source/PluginProcessor.cpp"
   )
@@ -16,6 +17,20 @@ endif()
 # MANGO_SOURCES at CMakeLists.txt:44 (file)
 file(GLOB_RECURSE NEW_GLOB LIST_DIRECTORIES false "/home/doare/src/Mango/Source/*.h")
 set(OLD_GLOB
+  "/home/doare/src/Mango/Source/Components/BlockTextPanel.h"
+  "/home/doare/src/Mango/Source/Components/EffectPanel.h"
+  "/home/doare/src/Mango/Source/Components/LaneRackComponent.h"
+  "/home/doare/src/Mango/Source/Dsp/DurationWeights.h"
+  "/home/doare/src/Mango/Source/Dsp/EffectBase.h"
+  "/home/doare/src/Mango/Source/Dsp/EffectTypes.h"
+  "/home/doare/src/Mango/Source/Dsp/Effects/DelayEffect.h"
+  "/home/doare/src/Mango/Source/Dsp/Effects/DistortionEffect.h"
+  "/home/doare/src/Mango/Source/Dsp/Effects/FilterEnvEffect.h"
+  "/home/doare/src/Mango/Source/Dsp/Effects/GaterEffect.h"
+  "/home/doare/src/Mango/Source/Dsp/Effects/GrainDupEffect.h"
+  "/home/doare/src/Mango/Source/Dsp/Effects/QuantizerEffect.h"
+  "/home/doare/src/Mango/Source/Dsp/MangoEngine.h"
+  "/home/doare/src/Mango/Source/Dsp/OverrideParser.h"
   "/home/doare/src/Mango/Source/ParamIDs.h"
   "/home/doare/src/Mango/Source/PluginEditor.h"
   "/home/doare/src/Mango/Source/PluginProcessor.h"

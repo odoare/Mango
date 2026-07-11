@@ -1,4 +1,6 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/Mango.dir/Source/Dsp/MangoEngine.cpp.o"
+  "CMakeFiles/Mango.dir/Source/Dsp/MangoEngine.cpp.o.d"
   "CMakeFiles/Mango.dir/Source/PluginEditor.cpp.o"
   "CMakeFiles/Mango.dir/Source/PluginEditor.cpp.o.d"
   "CMakeFiles/Mango.dir/Source/PluginProcessor.cpp.o"

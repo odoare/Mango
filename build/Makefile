@@ -263,12 +263,53 @@ MangoTests/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoTests.dir/build.make CMakeFiles/MangoTests.dir/build
 .PHONY : MangoTests/fast
 
+#=============================================================================
+# Target rules for targets named MangoRenderTest
+
+# Build rule for target.
+MangoRenderTest: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 MangoRenderTest
+.PHONY : MangoRenderTest
+
+# fast build rule for target.
+MangoRenderTest/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/build
+.PHONY : MangoRenderTest/fast
+
+Source/Dsp/MangoEngine.o: Source/Dsp/MangoEngine.cpp.o
+.PHONY : Source/Dsp/MangoEngine.o
+
+# target to build an object file
+Source/Dsp/MangoEngine.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/Source/Dsp/MangoEngine.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/Source/Dsp/MangoEngine.cpp.o
+.PHONY : Source/Dsp/MangoEngine.cpp.o
+
+Source/Dsp/MangoEngine.i: Source/Dsp/MangoEngine.cpp.i
+.PHONY : Source/Dsp/MangoEngine.i
+
+# target to preprocess a source file
+Source/Dsp/MangoEngine.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/Source/Dsp/MangoEngine.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/Source/Dsp/MangoEngine.cpp.i
+.PHONY : Source/Dsp/MangoEngine.cpp.i
+
+Source/Dsp/MangoEngine.s: Source/Dsp/MangoEngine.cpp.s
+.PHONY : Source/Dsp/MangoEngine.s
+
+# target to generate assembly for a file
+Source/Dsp/MangoEngine.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/Source/Dsp/MangoEngine.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/Source/Dsp/MangoEngine.cpp.s
+.PHONY : Source/Dsp/MangoEngine.cpp.s
+
 Source/PluginEditor.o: Source/PluginEditor.cpp.o
 .PHONY : Source/PluginEditor.o
 
 # target to build an object file
 Source/PluginEditor.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/Source/PluginEditor.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/Source/PluginEditor.cpp.o
 .PHONY : Source/PluginEditor.cpp.o
 
 Source/PluginEditor.i: Source/PluginEditor.cpp.i
@@ -277,6 +318,7 @@ Source/PluginEditor.i: Source/PluginEditor.cpp.i
 # target to preprocess a source file
 Source/PluginEditor.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/Source/PluginEditor.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/Source/PluginEditor.cpp.i
 .PHONY : Source/PluginEditor.cpp.i
 
 Source/PluginEditor.s: Source/PluginEditor.cpp.s
@@ -285,6 +327,7 @@ Source/PluginEditor.s: Source/PluginEditor.cpp.s
 # target to generate assembly for a file
 Source/PluginEditor.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/Source/PluginEditor.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/Source/PluginEditor.cpp.s
 .PHONY : Source/PluginEditor.cpp.s
 
 Source/PluginProcessor.o: Source/PluginProcessor.cpp.o
@@ -293,6 +336,7 @@ Source/PluginProcessor.o: Source/PluginProcessor.cpp.o
 # target to build an object file
 Source/PluginProcessor.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/Source/PluginProcessor.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/Source/PluginProcessor.cpp.o
 .PHONY : Source/PluginProcessor.cpp.o
 
 Source/PluginProcessor.i: Source/PluginProcessor.cpp.i
@@ -301,6 +345,7 @@ Source/PluginProcessor.i: Source/PluginProcessor.cpp.i
 # target to preprocess a source file
 Source/PluginProcessor.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/Source/PluginProcessor.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/Source/PluginProcessor.cpp.i
 .PHONY : Source/PluginProcessor.cpp.i
 
 Source/PluginProcessor.s: Source/PluginProcessor.cpp.s
@@ -309,7 +354,32 @@ Source/PluginProcessor.s: Source/PluginProcessor.cpp.s
 # target to generate assembly for a file
 Source/PluginProcessor.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/Source/PluginProcessor.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/Source/PluginProcessor.cpp.s
 .PHONY : Source/PluginProcessor.cpp.s
+
+Tests/RenderTest.o: Tests/RenderTest.cpp.o
+.PHONY : Tests/RenderTest.o
+
+# target to build an object file
+Tests/RenderTest.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/Tests/RenderTest.cpp.o
+.PHONY : Tests/RenderTest.cpp.o
+
+Tests/RenderTest.i: Tests/RenderTest.cpp.i
+.PHONY : Tests/RenderTest.i
+
+# target to preprocess a source file
+Tests/RenderTest.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/Tests/RenderTest.cpp.i
+.PHONY : Tests/RenderTest.cpp.i
+
+Tests/RenderTest.s: Tests/RenderTest.cpp.s
+.PHONY : Tests/RenderTest.s
+
+# target to generate assembly for a file
+Tests/RenderTest.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/Tests/RenderTest.cpp.s
+.PHONY : Tests/RenderTest.cpp.s
 
 Tests/UnitTests.o: Tests/UnitTests.cpp.o
 .PHONY : Tests/UnitTests.o
@@ -341,6 +411,7 @@ home/doare/src/JUCE/modules/juce_audio_basics/juce_audio_basics.o: home/doare/sr
 # target to build an object file
 home/doare/src/JUCE/modules/juce_audio_basics/juce_audio_basics.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_basics/juce_audio_basics.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_audio_basics/juce_audio_basics.cpp.o
 .PHONY : home/doare/src/JUCE/modules/juce_audio_basics/juce_audio_basics.cpp.o
 
 home/doare/src/JUCE/modules/juce_audio_basics/juce_audio_basics.i: home/doare/src/JUCE/modules/juce_audio_basics/juce_audio_basics.cpp.i
@@ -349,6 +420,7 @@ home/doare/src/JUCE/modules/juce_audio_basics/juce_audio_basics.i: home/doare/sr
 # target to preprocess a source file
 home/doare/src/JUCE/modules/juce_audio_basics/juce_audio_basics.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_basics/juce_audio_basics.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_audio_basics/juce_audio_basics.cpp.i
 .PHONY : home/doare/src/JUCE/modules/juce_audio_basics/juce_audio_basics.cpp.i
 
 home/doare/src/JUCE/modules/juce_audio_basics/juce_audio_basics.s: home/doare/src/JUCE/modules/juce_audio_basics/juce_audio_basics.cpp.s
@@ -357,6 +429,7 @@ home/doare/src/JUCE/modules/juce_audio_basics/juce_audio_basics.s: home/doare/sr
 # target to generate assembly for a file
 home/doare/src/JUCE/modules/juce_audio_basics/juce_audio_basics.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_basics/juce_audio_basics.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_audio_basics/juce_audio_basics.cpp.s
 .PHONY : home/doare/src/JUCE/modules/juce_audio_basics/juce_audio_basics.cpp.s
 
 home/doare/src/JUCE/modules/juce_audio_devices/juce_audio_devices.o: home/doare/src/JUCE/modules/juce_audio_devices/juce_audio_devices.cpp.o
@@ -365,6 +438,7 @@ home/doare/src/JUCE/modules/juce_audio_devices/juce_audio_devices.o: home/doare/
 # target to build an object file
 home/doare/src/JUCE/modules/juce_audio_devices/juce_audio_devices.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_devices/juce_audio_devices.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_audio_devices/juce_audio_devices.cpp.o
 .PHONY : home/doare/src/JUCE/modules/juce_audio_devices/juce_audio_devices.cpp.o
 
 home/doare/src/JUCE/modules/juce_audio_devices/juce_audio_devices.i: home/doare/src/JUCE/modules/juce_audio_devices/juce_audio_devices.cpp.i
@@ -373,6 +447,7 @@ home/doare/src/JUCE/modules/juce_audio_devices/juce_audio_devices.i: home/doare/
 # target to preprocess a source file
 home/doare/src/JUCE/modules/juce_audio_devices/juce_audio_devices.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_devices/juce_audio_devices.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_audio_devices/juce_audio_devices.cpp.i
 .PHONY : home/doare/src/JUCE/modules/juce_audio_devices/juce_audio_devices.cpp.i
 
 home/doare/src/JUCE/modules/juce_audio_devices/juce_audio_devices.s: home/doare/src/JUCE/modules/juce_audio_devices/juce_audio_devices.cpp.s
@@ -381,6 +456,7 @@ home/doare/src/JUCE/modules/juce_audio_devices/juce_audio_devices.s: home/doare/
 # target to generate assembly for a file
 home/doare/src/JUCE/modules/juce_audio_devices/juce_audio_devices.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_devices/juce_audio_devices.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_audio_devices/juce_audio_devices.cpp.s
 .PHONY : home/doare/src/JUCE/modules/juce_audio_devices/juce_audio_devices.cpp.s
 
 home/doare/src/JUCE/modules/juce_audio_formats/juce_audio_formats.o: home/doare/src/JUCE/modules/juce_audio_formats/juce_audio_formats.cpp.o
@@ -389,6 +465,7 @@ home/doare/src/JUCE/modules/juce_audio_formats/juce_audio_formats.o: home/doare/
 # target to build an object file
 home/doare/src/JUCE/modules/juce_audio_formats/juce_audio_formats.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_formats/juce_audio_formats.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_audio_formats/juce_audio_formats.cpp.o
 .PHONY : home/doare/src/JUCE/modules/juce_audio_formats/juce_audio_formats.cpp.o
 
 home/doare/src/JUCE/modules/juce_audio_formats/juce_audio_formats.i: home/doare/src/JUCE/modules/juce_audio_formats/juce_audio_formats.cpp.i
@@ -397,6 +474,7 @@ home/doare/src/JUCE/modules/juce_audio_formats/juce_audio_formats.i: home/doare/
 # target to preprocess a source file
 home/doare/src/JUCE/modules/juce_audio_formats/juce_audio_formats.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_formats/juce_audio_formats.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_audio_formats/juce_audio_formats.cpp.i
 .PHONY : home/doare/src/JUCE/modules/juce_audio_formats/juce_audio_formats.cpp.i
 
 home/doare/src/JUCE/modules/juce_audio_formats/juce_audio_formats.s: home/doare/src/JUCE/modules/juce_audio_formats/juce_audio_formats.cpp.s
@@ -405,6 +483,7 @@ home/doare/src/JUCE/modules/juce_audio_formats/juce_audio_formats.s: home/doare/
 # target to generate assembly for a file
 home/doare/src/JUCE/modules/juce_audio_formats/juce_audio_formats.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_formats/juce_audio_formats.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_audio_formats/juce_audio_formats.cpp.s
 .PHONY : home/doare/src/JUCE/modules/juce_audio_formats/juce_audio_formats.cpp.s
 
 home/doare/src/JUCE/modules/juce_audio_plugin_client/VST3/juce_VST3ManifestHelper.o: home/doare/src/JUCE/modules/juce_audio_plugin_client/VST3/juce_VST3ManifestHelper.cpp.o
@@ -653,6 +732,7 @@ home/doare/src/JUCE/modules/juce_audio_processors/juce_audio_processors.o: home/
 # target to build an object file
 home/doare/src/JUCE/modules/juce_audio_processors/juce_audio_processors.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors/juce_audio_processors.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_audio_processors/juce_audio_processors.cpp.o
 .PHONY : home/doare/src/JUCE/modules/juce_audio_processors/juce_audio_processors.cpp.o
 
 home/doare/src/JUCE/modules/juce_audio_processors/juce_audio_processors.i: home/doare/src/JUCE/modules/juce_audio_processors/juce_audio_processors.cpp.i
@@ -661,6 +741,7 @@ home/doare/src/JUCE/modules/juce_audio_processors/juce_audio_processors.i: home/
 # target to preprocess a source file
 home/doare/src/JUCE/modules/juce_audio_processors/juce_audio_processors.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors/juce_audio_processors.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_audio_processors/juce_audio_processors.cpp.i
 .PHONY : home/doare/src/JUCE/modules/juce_audio_processors/juce_audio_processors.cpp.i
 
 home/doare/src/JUCE/modules/juce_audio_processors/juce_audio_processors.s: home/doare/src/JUCE/modules/juce_audio_processors/juce_audio_processors.cpp.s
@@ -669,6 +750,7 @@ home/doare/src/JUCE/modules/juce_audio_processors/juce_audio_processors.s: home/
 # target to generate assembly for a file
 home/doare/src/JUCE/modules/juce_audio_processors/juce_audio_processors.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors/juce_audio_processors.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_audio_processors/juce_audio_processors.cpp.s
 .PHONY : home/doare/src/JUCE/modules/juce_audio_processors/juce_audio_processors.cpp.s
 
 home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.o: home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.cpp.o
@@ -677,6 +759,7 @@ home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors
 # target to build an object file
 home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.cpp.o
 .PHONY : home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.cpp.o
 
 home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.i: home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.cpp.i
@@ -685,6 +768,7 @@ home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors
 # target to preprocess a source file
 home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.cpp.i
 .PHONY : home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.cpp.i
 
 home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.s: home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.cpp.s
@@ -693,6 +777,7 @@ home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors
 # target to generate assembly for a file
 home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.cpp.s
 .PHONY : home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.cpp.s
 
 home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.o: home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.o
@@ -701,6 +786,7 @@ home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors
 # target to build an object file
 home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.o
 .PHONY : home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.o
 
 home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.i: home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.i
@@ -709,6 +795,7 @@ home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors
 # target to preprocess a source file
 home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.i
 .PHONY : home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.i
 
 home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.s: home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.s
@@ -717,6 +804,7 @@ home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors
 # target to generate assembly for a file
 home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.s
 .PHONY : home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_ara.cpp.s
 
 home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.o: home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.o
@@ -725,6 +813,7 @@ home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors
 # target to build an object file
 home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.o
 .PHONY : home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.o
 
 home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.i: home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.i
@@ -733,6 +822,7 @@ home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors
 # target to preprocess a source file
 home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.i
 .PHONY : home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.i
 
 home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.s: home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.s
@@ -741,6 +831,7 @@ home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors
 # target to generate assembly for a file
 home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.s
 .PHONY : home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless_lv2_libs.cpp.s
 
 home/doare/src/JUCE/modules/juce_audio_utils/juce_audio_utils.o: home/doare/src/JUCE/modules/juce_audio_utils/juce_audio_utils.cpp.o
@@ -749,6 +840,7 @@ home/doare/src/JUCE/modules/juce_audio_utils/juce_audio_utils.o: home/doare/src/
 # target to build an object file
 home/doare/src/JUCE/modules/juce_audio_utils/juce_audio_utils.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_utils/juce_audio_utils.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_audio_utils/juce_audio_utils.cpp.o
 .PHONY : home/doare/src/JUCE/modules/juce_audio_utils/juce_audio_utils.cpp.o
 
 home/doare/src/JUCE/modules/juce_audio_utils/juce_audio_utils.i: home/doare/src/JUCE/modules/juce_audio_utils/juce_audio_utils.cpp.i
@@ -757,6 +849,7 @@ home/doare/src/JUCE/modules/juce_audio_utils/juce_audio_utils.i: home/doare/src/
 # target to preprocess a source file
 home/doare/src/JUCE/modules/juce_audio_utils/juce_audio_utils.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_utils/juce_audio_utils.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_audio_utils/juce_audio_utils.cpp.i
 .PHONY : home/doare/src/JUCE/modules/juce_audio_utils/juce_audio_utils.cpp.i
 
 home/doare/src/JUCE/modules/juce_audio_utils/juce_audio_utils.s: home/doare/src/JUCE/modules/juce_audio_utils/juce_audio_utils.cpp.s
@@ -765,6 +858,7 @@ home/doare/src/JUCE/modules/juce_audio_utils/juce_audio_utils.s: home/doare/src/
 # target to generate assembly for a file
 home/doare/src/JUCE/modules/juce_audio_utils/juce_audio_utils.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_utils/juce_audio_utils.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_audio_utils/juce_audio_utils.cpp.s
 .PHONY : home/doare/src/JUCE/modules/juce_audio_utils/juce_audio_utils.cpp.s
 
 home/doare/src/JUCE/modules/juce_core/juce_core.o: home/doare/src/JUCE/modules/juce_core/juce_core.cpp.o
@@ -773,6 +867,7 @@ home/doare/src/JUCE/modules/juce_core/juce_core.o: home/doare/src/JUCE/modules/j
 # target to build an object file
 home/doare/src/JUCE/modules/juce_core/juce_core.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_core/juce_core.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_core/juce_core.cpp.o
 .PHONY : home/doare/src/JUCE/modules/juce_core/juce_core.cpp.o
 
 home/doare/src/JUCE/modules/juce_core/juce_core.i: home/doare/src/JUCE/modules/juce_core/juce_core.cpp.i
@@ -781,6 +876,7 @@ home/doare/src/JUCE/modules/juce_core/juce_core.i: home/doare/src/JUCE/modules/j
 # target to preprocess a source file
 home/doare/src/JUCE/modules/juce_core/juce_core.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_core/juce_core.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_core/juce_core.cpp.i
 .PHONY : home/doare/src/JUCE/modules/juce_core/juce_core.cpp.i
 
 home/doare/src/JUCE/modules/juce_core/juce_core.s: home/doare/src/JUCE/modules/juce_core/juce_core.cpp.s
@@ -789,6 +885,7 @@ home/doare/src/JUCE/modules/juce_core/juce_core.s: home/doare/src/JUCE/modules/j
 # target to generate assembly for a file
 home/doare/src/JUCE/modules/juce_core/juce_core.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_core/juce_core.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_core/juce_core.cpp.s
 .PHONY : home/doare/src/JUCE/modules/juce_core/juce_core.cpp.s
 
 home/doare/src/JUCE/modules/juce_core/juce_core_CompilationTime.o: home/doare/src/JUCE/modules/juce_core/juce_core_CompilationTime.cpp.o
@@ -797,6 +894,7 @@ home/doare/src/JUCE/modules/juce_core/juce_core_CompilationTime.o: home/doare/sr
 # target to build an object file
 home/doare/src/JUCE/modules/juce_core/juce_core_CompilationTime.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_core/juce_core_CompilationTime.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_core/juce_core_CompilationTime.cpp.o
 .PHONY : home/doare/src/JUCE/modules/juce_core/juce_core_CompilationTime.cpp.o
 
 home/doare/src/JUCE/modules/juce_core/juce_core_CompilationTime.i: home/doare/src/JUCE/modules/juce_core/juce_core_CompilationTime.cpp.i
@@ -805,6 +903,7 @@ home/doare/src/JUCE/modules/juce_core/juce_core_CompilationTime.i: home/doare/sr
 # target to preprocess a source file
 home/doare/src/JUCE/modules/juce_core/juce_core_CompilationTime.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_core/juce_core_CompilationTime.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_core/juce_core_CompilationTime.cpp.i
 .PHONY : home/doare/src/JUCE/modules/juce_core/juce_core_CompilationTime.cpp.i
 
 home/doare/src/JUCE/modules/juce_core/juce_core_CompilationTime.s: home/doare/src/JUCE/modules/juce_core/juce_core_CompilationTime.cpp.s
@@ -813,6 +912,7 @@ home/doare/src/JUCE/modules/juce_core/juce_core_CompilationTime.s: home/doare/sr
 # target to generate assembly for a file
 home/doare/src/JUCE/modules/juce_core/juce_core_CompilationTime.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_core/juce_core_CompilationTime.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_core/juce_core_CompilationTime.cpp.s
 .PHONY : home/doare/src/JUCE/modules/juce_core/juce_core_CompilationTime.cpp.s
 
 home/doare/src/JUCE/modules/juce_data_structures/juce_data_structures.o: home/doare/src/JUCE/modules/juce_data_structures/juce_data_structures.cpp.o
@@ -821,6 +921,7 @@ home/doare/src/JUCE/modules/juce_data_structures/juce_data_structures.o: home/do
 # target to build an object file
 home/doare/src/JUCE/modules/juce_data_structures/juce_data_structures.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_data_structures/juce_data_structures.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_data_structures/juce_data_structures.cpp.o
 .PHONY : home/doare/src/JUCE/modules/juce_data_structures/juce_data_structures.cpp.o
 
 home/doare/src/JUCE/modules/juce_data_structures/juce_data_structures.i: home/doare/src/JUCE/modules/juce_data_structures/juce_data_structures.cpp.i
@@ -829,6 +930,7 @@ home/doare/src/JUCE/modules/juce_data_structures/juce_data_structures.i: home/do
 # target to preprocess a source file
 home/doare/src/JUCE/modules/juce_data_structures/juce_data_structures.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_data_structures/juce_data_structures.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_data_structures/juce_data_structures.cpp.i
 .PHONY : home/doare/src/JUCE/modules/juce_data_structures/juce_data_structures.cpp.i
 
 home/doare/src/JUCE/modules/juce_data_structures/juce_data_structures.s: home/doare/src/JUCE/modules/juce_data_structures/juce_data_structures.cpp.s
@@ -837,6 +939,7 @@ home/doare/src/JUCE/modules/juce_data_structures/juce_data_structures.s: home/do
 # target to generate assembly for a file
 home/doare/src/JUCE/modules/juce_data_structures/juce_data_structures.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_data_structures/juce_data_structures.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_data_structures/juce_data_structures.cpp.s
 .PHONY : home/doare/src/JUCE/modules/juce_data_structures/juce_data_structures.cpp.s
 
 home/doare/src/JUCE/modules/juce_dsp/juce_dsp.o: home/doare/src/JUCE/modules/juce_dsp/juce_dsp.cpp.o
@@ -845,6 +948,7 @@ home/doare/src/JUCE/modules/juce_dsp/juce_dsp.o: home/doare/src/JUCE/modules/juc
 # target to build an object file
 home/doare/src/JUCE/modules/juce_dsp/juce_dsp.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_dsp/juce_dsp.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_dsp/juce_dsp.cpp.o
 .PHONY : home/doare/src/JUCE/modules/juce_dsp/juce_dsp.cpp.o
 
 home/doare/src/JUCE/modules/juce_dsp/juce_dsp.i: home/doare/src/JUCE/modules/juce_dsp/juce_dsp.cpp.i
@@ -853,6 +957,7 @@ home/doare/src/JUCE/modules/juce_dsp/juce_dsp.i: home/doare/src/JUCE/modules/juc
 # target to preprocess a source file
 home/doare/src/JUCE/modules/juce_dsp/juce_dsp.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_dsp/juce_dsp.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_dsp/juce_dsp.cpp.i
 .PHONY : home/doare/src/JUCE/modules/juce_dsp/juce_dsp.cpp.i
 
 home/doare/src/JUCE/modules/juce_dsp/juce_dsp.s: home/doare/src/JUCE/modules/juce_dsp/juce_dsp.cpp.s
@@ -861,6 +966,7 @@ home/doare/src/JUCE/modules/juce_dsp/juce_dsp.s: home/doare/src/JUCE/modules/juc
 # target to generate assembly for a file
 home/doare/src/JUCE/modules/juce_dsp/juce_dsp.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_dsp/juce_dsp.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_dsp/juce_dsp.cpp.s
 .PHONY : home/doare/src/JUCE/modules/juce_dsp/juce_dsp.cpp.s
 
 home/doare/src/JUCE/modules/juce_events/juce_events.o: home/doare/src/JUCE/modules/juce_events/juce_events.cpp.o
@@ -869,6 +975,7 @@ home/doare/src/JUCE/modules/juce_events/juce_events.o: home/doare/src/JUCE/modul
 # target to build an object file
 home/doare/src/JUCE/modules/juce_events/juce_events.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_events/juce_events.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_events/juce_events.cpp.o
 .PHONY : home/doare/src/JUCE/modules/juce_events/juce_events.cpp.o
 
 home/doare/src/JUCE/modules/juce_events/juce_events.i: home/doare/src/JUCE/modules/juce_events/juce_events.cpp.i
@@ -877,6 +984,7 @@ home/doare/src/JUCE/modules/juce_events/juce_events.i: home/doare/src/JUCE/modul
 # target to preprocess a source file
 home/doare/src/JUCE/modules/juce_events/juce_events.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_events/juce_events.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_events/juce_events.cpp.i
 .PHONY : home/doare/src/JUCE/modules/juce_events/juce_events.cpp.i
 
 home/doare/src/JUCE/modules/juce_events/juce_events.s: home/doare/src/JUCE/modules/juce_events/juce_events.cpp.s
@@ -885,6 +993,7 @@ home/doare/src/JUCE/modules/juce_events/juce_events.s: home/doare/src/JUCE/modul
 # target to generate assembly for a file
 home/doare/src/JUCE/modules/juce_events/juce_events.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_events/juce_events.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_events/juce_events.cpp.s
 .PHONY : home/doare/src/JUCE/modules/juce_events/juce_events.cpp.s
 
 home/doare/src/JUCE/modules/juce_graphics/juce_graphics.o: home/doare/src/JUCE/modules/juce_graphics/juce_graphics.cpp.o
@@ -893,6 +1002,7 @@ home/doare/src/JUCE/modules/juce_graphics/juce_graphics.o: home/doare/src/JUCE/m
 # target to build an object file
 home/doare/src/JUCE/modules/juce_graphics/juce_graphics.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_graphics/juce_graphics.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_graphics/juce_graphics.cpp.o
 .PHONY : home/doare/src/JUCE/modules/juce_graphics/juce_graphics.cpp.o
 
 home/doare/src/JUCE/modules/juce_graphics/juce_graphics.i: home/doare/src/JUCE/modules/juce_graphics/juce_graphics.cpp.i
@@ -901,6 +1011,7 @@ home/doare/src/JUCE/modules/juce_graphics/juce_graphics.i: home/doare/src/JUCE/m
 # target to preprocess a source file
 home/doare/src/JUCE/modules/juce_graphics/juce_graphics.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_graphics/juce_graphics.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_graphics/juce_graphics.cpp.i
 .PHONY : home/doare/src/JUCE/modules/juce_graphics/juce_graphics.cpp.i
 
 home/doare/src/JUCE/modules/juce_graphics/juce_graphics.s: home/doare/src/JUCE/modules/juce_graphics/juce_graphics.cpp.s
@@ -909,6 +1020,7 @@ home/doare/src/JUCE/modules/juce_graphics/juce_graphics.s: home/doare/src/JUCE/m
 # target to generate assembly for a file
 home/doare/src/JUCE/modules/juce_graphics/juce_graphics.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_graphics/juce_graphics.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_graphics/juce_graphics.cpp.s
 .PHONY : home/doare/src/JUCE/modules/juce_graphics/juce_graphics.cpp.s
 
 home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.o: home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.o
@@ -917,6 +1029,7 @@ home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.o: home/doare/s
 # target to build an object file
 home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.o
 .PHONY : home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.o
 
 home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.i: home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.i
@@ -925,6 +1038,7 @@ home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.i: home/doare/s
 # target to preprocess a source file
 home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.i
 .PHONY : home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.i
 
 home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.s: home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.s
@@ -933,6 +1047,7 @@ home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.s: home/doare/s
 # target to generate assembly for a file
 home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.s
 .PHONY : home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Harfbuzz.cpp.s
 
 home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.o: home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.o
@@ -941,6 +1056,7 @@ home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.o: home/doare/
 # target to build an object file
 home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.o
 .PHONY : home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.o
 
 home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.i: home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.i
@@ -949,6 +1065,7 @@ home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.i: home/doare/
 # target to preprocess a source file
 home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.i
 .PHONY : home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.i
 
 home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.s: home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.s
@@ -957,6 +1074,7 @@ home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.s: home/doare/
 # target to generate assembly for a file
 home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.s
 .PHONY : home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.s
 
 home/doare/src/JUCE/modules/juce_gui_basics/juce_gui_basics.o: home/doare/src/JUCE/modules/juce_gui_basics/juce_gui_basics.cpp.o
@@ -965,6 +1083,7 @@ home/doare/src/JUCE/modules/juce_gui_basics/juce_gui_basics.o: home/doare/src/JU
 # target to build an object file
 home/doare/src/JUCE/modules/juce_gui_basics/juce_gui_basics.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_gui_basics/juce_gui_basics.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_gui_basics/juce_gui_basics.cpp.o
 .PHONY : home/doare/src/JUCE/modules/juce_gui_basics/juce_gui_basics.cpp.o
 
 home/doare/src/JUCE/modules/juce_gui_basics/juce_gui_basics.i: home/doare/src/JUCE/modules/juce_gui_basics/juce_gui_basics.cpp.i
@@ -973,6 +1092,7 @@ home/doare/src/JUCE/modules/juce_gui_basics/juce_gui_basics.i: home/doare/src/JU
 # target to preprocess a source file
 home/doare/src/JUCE/modules/juce_gui_basics/juce_gui_basics.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_gui_basics/juce_gui_basics.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_gui_basics/juce_gui_basics.cpp.i
 .PHONY : home/doare/src/JUCE/modules/juce_gui_basics/juce_gui_basics.cpp.i
 
 home/doare/src/JUCE/modules/juce_gui_basics/juce_gui_basics.s: home/doare/src/JUCE/modules/juce_gui_basics/juce_gui_basics.cpp.s
@@ -981,6 +1101,7 @@ home/doare/src/JUCE/modules/juce_gui_basics/juce_gui_basics.s: home/doare/src/JU
 # target to generate assembly for a file
 home/doare/src/JUCE/modules/juce_gui_basics/juce_gui_basics.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_gui_basics/juce_gui_basics.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_gui_basics/juce_gui_basics.cpp.s
 .PHONY : home/doare/src/JUCE/modules/juce_gui_basics/juce_gui_basics.cpp.s
 
 home/doare/src/JUCE/modules/juce_gui_extra/juce_gui_extra.o: home/doare/src/JUCE/modules/juce_gui_extra/juce_gui_extra.cpp.o
@@ -989,6 +1110,7 @@ home/doare/src/JUCE/modules/juce_gui_extra/juce_gui_extra.o: home/doare/src/JUCE
 # target to build an object file
 home/doare/src/JUCE/modules/juce_gui_extra/juce_gui_extra.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_gui_extra/juce_gui_extra.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_gui_extra/juce_gui_extra.cpp.o
 .PHONY : home/doare/src/JUCE/modules/juce_gui_extra/juce_gui_extra.cpp.o
 
 home/doare/src/JUCE/modules/juce_gui_extra/juce_gui_extra.i: home/doare/src/JUCE/modules/juce_gui_extra/juce_gui_extra.cpp.i
@@ -997,6 +1119,7 @@ home/doare/src/JUCE/modules/juce_gui_extra/juce_gui_extra.i: home/doare/src/JUCE
 # target to preprocess a source file
 home/doare/src/JUCE/modules/juce_gui_extra/juce_gui_extra.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_gui_extra/juce_gui_extra.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_gui_extra/juce_gui_extra.cpp.i
 .PHONY : home/doare/src/JUCE/modules/juce_gui_extra/juce_gui_extra.cpp.i
 
 home/doare/src/JUCE/modules/juce_gui_extra/juce_gui_extra.s: home/doare/src/JUCE/modules/juce_gui_extra/juce_gui_extra.cpp.s
@@ -1005,6 +1128,7 @@ home/doare/src/JUCE/modules/juce_gui_extra/juce_gui_extra.s: home/doare/src/JUCE
 # target to generate assembly for a file
 home/doare/src/JUCE/modules/juce_gui_extra/juce_gui_extra.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_gui_extra/juce_gui_extra.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/home/doare/src/JUCE/modules/juce_gui_extra/juce_gui_extra.cpp.s
 .PHONY : home/doare/src/JUCE/modules/juce_gui_extra/juce_gui_extra.cpp.s
 
 juce_binarydata_MangoBinaryData/JuceLibraryCode/BinaryData1.o: juce_binarydata_MangoBinaryData/JuceLibraryCode/BinaryData1.cpp.o
@@ -1037,6 +1161,7 @@ lib/FxmeTools/FxmeTools/FxmeTools.o: lib/FxmeTools/FxmeTools/FxmeTools.cpp.o
 # target to build an object file
 lib/FxmeTools/FxmeTools/FxmeTools.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/lib/FxmeTools/FxmeTools/FxmeTools.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/lib/FxmeTools/FxmeTools/FxmeTools.cpp.o
 .PHONY : lib/FxmeTools/FxmeTools/FxmeTools.cpp.o
 
 lib/FxmeTools/FxmeTools/FxmeTools.i: lib/FxmeTools/FxmeTools/FxmeTools.cpp.i
@@ -1045,6 +1170,7 @@ lib/FxmeTools/FxmeTools/FxmeTools.i: lib/FxmeTools/FxmeTools/FxmeTools.cpp.i
 # target to preprocess a source file
 lib/FxmeTools/FxmeTools/FxmeTools.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/lib/FxmeTools/FxmeTools/FxmeTools.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/lib/FxmeTools/FxmeTools/FxmeTools.cpp.i
 .PHONY : lib/FxmeTools/FxmeTools/FxmeTools.cpp.i
 
 lib/FxmeTools/FxmeTools/FxmeTools.s: lib/FxmeTools/FxmeTools/FxmeTools.cpp.s
@@ -1053,6 +1179,7 @@ lib/FxmeTools/FxmeTools/FxmeTools.s: lib/FxmeTools/FxmeTools/FxmeTools.cpp.s
 # target to generate assembly for a file
 lib/FxmeTools/FxmeTools/FxmeTools.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Mango.dir/build.make CMakeFiles/Mango.dir/lib/FxmeTools/FxmeTools/FxmeTools.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/MangoRenderTest.dir/build.make CMakeFiles/MangoRenderTest.dir/lib/FxmeTools/FxmeTools/FxmeTools.cpp.s
 .PHONY : lib/FxmeTools/FxmeTools/FxmeTools.cpp.s
 
 # Help Target
@@ -1071,16 +1198,23 @@ help:
 	@echo "... Mango_All"
 	@echo "... Mango"
 	@echo "... MangoBinaryData"
+	@echo "... MangoRenderTest"
 	@echo "... MangoTests"
 	@echo "... Mango_Standalone"
 	@echo "... Mango_VST3"
 	@echo "... Mango_vst3_helper"
+	@echo "... Source/Dsp/MangoEngine.o"
+	@echo "... Source/Dsp/MangoEngine.i"
+	@echo "... Source/Dsp/MangoEngine.s"
 	@echo "... Source/PluginEditor.o"
 	@echo "... Source/PluginEditor.i"
 	@echo "... Source/PluginEditor.s"
 	@echo "... Source/PluginProcessor.o"
 	@echo "... Source/PluginProcessor.i"
 	@echo "... Source/PluginProcessor.s"
+	@echo "... Tests/RenderTest.o"
+	@echo "... Tests/RenderTest.i"
+	@echo "... Tests/RenderTest.s"
 	@echo "... Tests/UnitTests.o"
 	@echo "... Tests/UnitTests.i"
 	@echo "... Tests/UnitTests.s"

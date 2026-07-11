@@ -693,3 +693,14 @@ lto-wrapper: warning: using serial compilation of 69 LTRANS jobs
 lto-wrapper: note: see the ‘-flto’ option documentation for more information
 lto-wrapper: warning: using serial compilation of 80 LTRANS jobs
 lto-wrapper: note: see the ‘-flto’ option documentation for more information
+removing moduleinfo.json
+creating /home/doare/src/Mango/build/Mango_artefacts/Release/VST3/Mango.vst3
+-- Destination /home/doare/.vst3/Mango.vst3 exists, overwriting
+-- Installing: /home/doare/.vst3/Mango.vst3
+-- Installing: /home/doare/.vst3/Mango.vst3/Contents
+-- Installing: /home/doare/.vst3/Mango.vst3/Contents/x86_64-linux
+-- Installing: /home/doare/.vst3/Mango.vst3/Contents/x86_64-linux/Mango.so
+-- Installing: /home/doare/.vst3/Mango.vst3/Contents/Resources
+-- Installing: /home/doare/.vst3/Mango.vst3/Contents/Resources/moduleinfo.json
+[ 83%] Built target Mango_VST3
+[100%] Built target Mango_Standalone

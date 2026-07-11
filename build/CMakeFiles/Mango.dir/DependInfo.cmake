@@ -9,6 +9,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c" "CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.o" "gcc" "CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_graphics/juce_graphics_Sheenbidi.c.o.d"
+  "/home/doare/src/Mango/Source/Dsp/MangoEngine.cpp" "CMakeFiles/Mango.dir/Source/Dsp/MangoEngine.cpp.o" "gcc" "CMakeFiles/Mango.dir/Source/Dsp/MangoEngine.cpp.o.d"
   "/home/doare/src/Mango/Source/PluginEditor.cpp" "CMakeFiles/Mango.dir/Source/PluginEditor.cpp.o" "gcc" "CMakeFiles/Mango.dir/Source/PluginEditor.cpp.o.d"
   "/home/doare/src/Mango/Source/PluginProcessor.cpp" "CMakeFiles/Mango.dir/Source/PluginProcessor.cpp.o" "gcc" "CMakeFiles/Mango.dir/Source/PluginProcessor.cpp.o.d"
   "/home/doare/src/JUCE/modules/juce_audio_basics/juce_audio_basics.cpp" "CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_basics/juce_audio_basics.cpp.o" "gcc" "CMakeFiles/Mango.dir/home/doare/src/JUCE/modules/juce_audio_basics/juce_audio_basics.cpp.o.d"
