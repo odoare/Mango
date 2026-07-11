@@ -1,0 +1,3 @@
+# Hashes of file build rules.
+861317cb80b62f23e49bfebd3f03779e Mango_artefacts/JuceLibraryCode/JuceHeader.h
+41dd687d91639534be7d4b5661c3c9c9 juce_binarydata_MangoBinaryData/JuceLibraryCode/BinaryData1.cpp

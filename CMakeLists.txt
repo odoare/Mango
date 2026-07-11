@@ -1,0 +1,115 @@
+cmake_minimum_required(VERSION 3.22)
+
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release CACHE STRING "" FORCE)
+endif()
+
+project(Mango VERSION 0.1.0 LANGUAGES C CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+if(APPLE)
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "Minimum macOS deployment version")
+    set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "Target architectures")
+endif()
+
+# JUCE is expected as a sibling of this repo; FxmeTools lives in-tree as a git
+# submodule under lib/. Mango does not use the WDL-backed FirFilter, so the
+# module is registered directly (no fxmetools_attach / WDL sources needed).
+add_subdirectory(../JUCE JUCE)
+juce_add_module(${CMAKE_CURRENT_SOURCE_DIR}/lib/FxmeTools/FxmeTools)
+
+juce_add_plugin(Mango
+    COMPANY_NAME                "FX-Mechanics"
+    COMPANY_WEBSITE             "www.fx-mechanics.com"
+    PLUGIN_MANUFACTURER_CODE    FXME
+    PLUGIN_CODE                 MNGO
+    FORMATS                     AU VST3 Standalone
+    COPY_PLUGIN_AFTER_BUILD     TRUE
+    PRODUCT_NAME                "Mango"
+    DESCRIPTION                 "FX-Mechanics modular sound glitcher / mangler"
+    IS_SYNTH                    FALSE
+    NEEDS_MIDI_INPUT            TRUE
+    NEEDS_MIDI_OUTPUT           FALSE
+    IS_MIDI_EFFECT              FALSE
+    EDITOR_WANTS_KEYBOARD_FOCUS TRUE
+    VST3_CATEGORIES             Fx Distortion
+    AU_MAIN_TYPE                kAudioUnitType_Effect
+    BUNDLE_ID                   "com.FXMechanics.Mango"
+)
+
+# Source files are discovered recursively so adding a new module/component
+# does not require editing this file. Re-run CMake configure after adding files.
+file(GLOB_RECURSE MANGO_SOURCES CONFIGURE_DEPENDS
+    ${CMAKE_CURRENT_SOURCE_DIR}/Source/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Source/*.h
+)
+
+target_sources(Mango PRIVATE ${MANGO_SOURCES})
+
+# Make every subdirectory under Source/ an include root so headers can be
+# included by name regardless of where a module lives.
+file(GLOB MANGO_INCLUDE_DIRS LIST_DIRECTORIES true
+    ${CMAKE_CURRENT_SOURCE_DIR}/Source
+    ${CMAKE_CURRENT_SOURCE_DIR}/Source/*
+)
+list(FILTER MANGO_INCLUDE_DIRS EXCLUDE REGEX "\\.(c|cc|cpp|cxx|h|hpp|hxx|mm)$")
+target_include_directories(Mango PRIVATE ${MANGO_INCLUDE_DIRS})
+
+# Image assets (logo, etc.)
+file(GLOB MANGO_ASSETS ${CMAKE_CURRENT_SOURCE_DIR}/Source/Assets/*.png
+                       ${CMAKE_CURRENT_SOURCE_DIR}/Source/Assets/*.jpg)
+if(MANGO_ASSETS)
+    juce_add_binary_data(MangoBinaryData SOURCES ${MANGO_ASSETS})
+    set_target_properties(MangoBinaryData PROPERTIES
+        INTERPROCEDURAL_OPTIMIZATION OFF)
+    target_link_libraries(Mango PRIVATE MangoBinaryData)
+endif()
+
+juce_generate_juce_header(Mango)
+
+target_compile_definitions(Mango
+    PUBLIC
+        JUCE_STRICT_REFCOUNTEDPOINTER=1
+        JUCE_VST3_CAN_REPLACE_VST2=0
+        JUCE_WEB_BROWSER=0
+        JUCE_USE_CURL=0
+        JUCE_DISPLAY_SPLASH_SCREEN=0
+        JUCE_MODAL_LOOPS_PERMITTED=1
+)
+
+target_link_libraries(Mango
+    PRIVATE
+        FxmeTools
+        juce::juce_audio_basics
+        juce::juce_audio_devices
+        juce::juce_audio_formats
+        juce::juce_audio_plugin_client
+        juce::juce_audio_processors
+        juce::juce_audio_utils
+        juce::juce_core
+        juce::juce_data_structures
+        juce::juce_dsp
+        juce::juce_events
+        juce::juce_graphics
+        juce::juce_gui_basics
+        juce::juce_gui_extra
+    PUBLIC
+        juce::juce_recommended_config_flags
+        juce::juce_recommended_lto_flags
+        juce::juce_recommended_warning_flags
+)
+
+# Console unit tests for the JUCE-free pieces (FxmeTools DSP additions and the
+# Mango override parser). Build with -DMANGO_BUILD_TESTS=ON, run with ctest.
+option(MANGO_BUILD_TESTS "Build Mango unit tests" OFF)
+if(MANGO_BUILD_TESTS)
+    enable_testing()
+    add_executable(MangoTests Tests/UnitTests.cpp)
+    target_include_directories(MangoTests PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/lib/FxmeTools
+        ${CMAKE_CURRENT_SOURCE_DIR}/Source)
+    target_compile_features(MangoTests PRIVATE cxx_std_17)
+    add_test(NAME MangoTests COMMAND MangoTests)
+endif()

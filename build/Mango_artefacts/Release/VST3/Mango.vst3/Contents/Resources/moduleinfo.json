@@ -1,0 +1,48 @@
+{
+  "Name": "Mango",
+  "Version": "0.1.0",
+  "Factory Info": {
+    "Vendor": "FX-Mechanics",
+    "URL": "www.fx-mechanics.com",
+    "E-Mail": "",
+    "Flags": {
+      "Unicode": true,
+      "Classes Discardable": false,
+      "Component Non Discardable": false,
+    },
+  },
+  "Classes": [
+    {
+      "CID": "ABCDEF019182FAEB46584D454D4E474F",
+      "Category": "Audio Module Class",
+      "Name": "Mango",
+      "Vendor": "FX-Mechanics",
+      "Version": "0.1.0",
+      "SDKVersion": "VST 3.8.0",
+      "Sub Categories": [
+        "Fx",
+        "Distortion",
+      ],
+      "Class Flags": 0,
+      "Cardinality": 2147483647,
+      "Snapshots": [
+      ],
+    },
+    {
+      "CID": "ABCDEF011234ABCD46584D454D4E474F",
+      "Category": "Component Controller Class",
+      "Name": "Mango",
+      "Vendor": "FX-Mechanics",
+      "Version": "0.1.0",
+      "SDKVersion": "VST 3.8.0",
+      "Sub Categories": [
+        "Fx",
+        "Distortion",
+      ],
+      "Class Flags": 0,
+      "Cardinality": 2147483647,
+      "Snapshots": [
+      ],
+    },
+  ],
+}

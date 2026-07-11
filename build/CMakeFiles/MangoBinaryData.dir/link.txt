@@ -1,0 +1,2 @@
+/usr/bin/ar qc libMangoBinaryData.a CMakeFiles/MangoBinaryData.dir/juce_binarydata_MangoBinaryData/JuceLibraryCode/BinaryData1.cpp.o
+/usr/bin/ranlib libMangoBinaryData.a

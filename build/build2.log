@@ -1,0 +1,695 @@
+[  6%] Built target MangoBinaryData
+[ 10%] Built target MangoTests
+[ 14%] Built target Mango_vst3_helper
+[ 16%] Building CXX object CMakeFiles/Mango.dir/Source/PluginEditor.cpp.o
+[ 18%] Building CXX object CMakeFiles/Mango.dir/Source/PluginProcessor.cpp.o
+[ 20%] Building CXX object CMakeFiles/Mango.dir/lib/FxmeTools/FxmeTools/FxmeTools.cpp.o
+In file included from /home/doare/src/Mango/lib/FxmeTools/FxmeTools/FxmeTools.h:32,
+                 from /home/doare/src/Mango/lib/FxmeTools/FxmeTools/FxmeTools.cpp:1:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/lookandfeels/FxmeLookAndFeel.h: In member function ‘virtual void fxme::FxmeLookAndFeel::drawToggleButton(juce::Graphics&, juce::ToggleButton&, bool, bool)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/lookandfeels/FxmeLookAndFeel.h:144:41: warning: unused parameter ‘shouldDrawButtonAsHighlighted’ [-Wunused-parameter]
+  144 |                             bool        shouldDrawButtonAsHighlighted,
+      |                             ~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/lookandfeels/FxmeLookAndFeel.h:145:41: warning: unused parameter ‘shouldDrawButtonAsDown’ [-Wunused-parameter]
+  145 |                             bool        shouldDrawButtonAsDown ) override
+      |                             ~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/lookandfeels/FxmeLookAndFeel.h: In member function ‘virtual void fxme::FxmeLookAndFeel::drawButtonBackground(juce::Graphics&, juce::Button&, const juce::Colour&, bool, bool)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/lookandfeels/FxmeLookAndFeel.h:192:49: warning: unused parameter ‘backgroundColour’ [-Wunused-parameter]
+  192 |                             const juce::Colour& backgroundColour,
+      |                             ~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/lookandfeels/FxmeLookAndFeel.h:193:34: warning: unused parameter ‘shouldDrawButtonAsHighlighted’ [-Wunused-parameter]
+  193 |                             bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown) override
+      |                             ~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from /home/doare/src/Mango/lib/FxmeTools/FxmeTools/FxmeTools.h:33:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/FxmeSlider.h: In constructor ‘fxme::FxmeSlider::FxmeSlider(juce::AudioProcessorValueTreeState&, const juce::String&, const juce::String&, const juce::Colour&)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/FxmeSlider.h:29:36: warning: unused parameter ‘colour’ [-Wunused-parameter]
+   29 |                const juce::Colour& colour)
+      |                ~~~~~~~~~~~~~~~~~~~~^~~~~~
+In file included from /home/doare/src/Mango/lib/FxmeTools/FxmeTools/FxmeTools.h:35:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/FxmeMeters.h: In constructor ‘fxme::FxmeHorizontalMeter::FxmeHorizontalMeter(std::function<float()>&&, juce::Colour, juce::Colour, float, float)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/FxmeMeters.h:233:17: warning: ‘fxme::FxmeHorizontalMeter::valueColour’ will be initialized after [-Wreorder]
+  233 |                 valueColour{juce::Colours::yellow};
+      |                 ^~~~~~~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/FxmeMeters.h:232:16: warning:   ‘juce::Colour fxme::FxmeHorizontalMeter::backgroundColour’ [-Wreorder]
+  232 |   juce::Colour backgroundColour{juce::Colours::black},
+      |                ^~~~~~~~~~~~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/FxmeMeters.h:162:3: warning:   when initialized here [-Wreorder]
+  162 |   FxmeHorizontalMeter
+      |   ^~~~~~~~~~~~~~~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/FxmeMeters.h: In constructor ‘fxme::FxmeVerticalMeter::FxmeVerticalMeter(std::function<float()>&&, juce::Colour, juce::Colour, float, float)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/FxmeMeters.h:299:17: warning: ‘fxme::FxmeVerticalMeter::valueColour’ will be initialized after [-Wreorder]
+  299 |                 valueColour{juce::Colours::yellow};
+      |                 ^~~~~~~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/FxmeMeters.h:298:16: warning:   ‘juce::Colour fxme::FxmeVerticalMeter::backgroundColour’ [-Wreorder]
+  298 |   juce::Colour backgroundColour{juce::Colours::black},
+      |                ^~~~~~~~~~~~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/FxmeMeters.h:240:3: warning:   when initialized here [-Wreorder]
+  240 |   FxmeVerticalMeter
+      |   ^~~~~~~~~~~~~~~~~
+In file included from /home/doare/src/Mango/lib/FxmeTools/FxmeTools/FxmeTools.h:43:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/Scale.h: In function ‘const std::vector<int>& fxme::scaleIntervals(ScaleType)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/Scale.h:49:12: warning: enumeration value ‘Count’ not handled in switch [-Wswitch-enum]
+   49 |     switch (type)
+      |            ^
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/Scale.h: In function ‘const char* fxme::scaleTypeName(ScaleType)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/Scale.h:61:12: warning: enumeration value ‘Count’ not handled in switch [-Wswitch-enum]
+   61 |     switch (type)
+      |            ^
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/Scale.h: In function ‘const char* fxme::pitchClassName(int)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/Scale.h:75:43: warning: conversion to ‘std::array<const char*, 12>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+   75 |     return names[((pitchClass % 12) + 12) % 12];
+      |                  ~~~~~~~~~~~~~~~~~~~~~~~~~^~~~
+In file included from /home/doare/src/Mango/lib/FxmeTools/FxmeTools/FxmeTools.h:45:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h: In function ‘std::array<fxme::Hex, 3> fxme::grid::triadAtVertex(fxme::Hex, int)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h:171:40: warning: conversion to ‘std::array<fxme::Hex, 6>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  171 |         return { x, x + d[(corner + 5) % 6], x + d[corner] };
+      |                           ~~~~~~~~~~~~~^~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h:171:52: warning: conversion to ‘std::array<fxme::Hex, 6>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  171 |         return { x, x + d[(corner + 5) % 6], x + d[corner] };
+      |                                                    ^~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h: In function ‘std::array<fxme::Hex, 6> fxme::grid::tabsAtVertex(fxme::Hex, int)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h:204:54: warning: conversion to ‘std::array<fxme::Hex, 6>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  204 |                 for (int k = 0; k < n; ++k) if (tabs[k] == cell) { dup = true; break; }
+      |                                                      ^
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h:205:43: warning: conversion to ‘std::array<fxme::Hex, 6>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  205 |                 if (! dup && n < 6) tabs[n++] = cell;
+      |                                          ~^~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h: In function ‘std::vector<fxme::Hex> fxme::grid::selectionHexes(const fxme::Selection&)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h:238:43: warning: conversion to ‘std::array<fxme::Hex, 6>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  238 |                 return { x, x + d[(i + 5) % 6], x + d[i] };
+      |                                   ~~~~~~~~^~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h:238:55: warning: conversion to ‘std::array<fxme::Hex, 6>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  238 |                 return { x, x + d[(i + 5) % 6], x + d[i] };
+      |                                                       ^
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h:252:35: warning: conversion to ‘std::array<fxme::Hex, 6>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  252 |                 return { x, x + d[i], x + d[(i + 5) % 6], x + d[(i + 1) % 6] };
+      |                                   ^
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h:252:53: warning: conversion to ‘std::array<fxme::Hex, 6>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  252 |                 return { x, x + d[i], x + d[(i + 5) % 6], x + d[(i + 1) % 6] };
+      |                                             ~~~~~~~~^~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h:252:73: warning: conversion to ‘std::array<fxme::Hex, 6>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  252 |                 return { x, x + d[i], x + d[(i + 5) % 6], x + d[(i + 1) % 6] };
+      |                                                                 ~~~~~~~~^~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h:256:42: warning: conversion to ‘std::array<fxme::Hex, 6>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  256 |                 const Hex d1 = d[(i + 5) % 6];
+      |                                  ~~~~~~~~^~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h:257:34: warning: conversion to ‘std::array<fxme::Hex, 6>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  257 |                 const Hex d2 = d[i];
+      |                                  ^
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h:268:61: warning: conversion to ‘std::array<fxme::Hex, 6>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  268 |                 const int axis = std::abs (pitchOffset (d[i % 6])) % 12;
+      |                                                           ~~^~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h: In function ‘fxme::HexChord fxme::grid::resolve(const fxme::Selection&)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h:288:21: warning: conversion to ‘std::array<fxme::Hex, 4>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  288 |             c.hexes[i] = hs[std::min<size_t> ((size_t) i, hs.size() - 1)];
+      |                     ^
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h: In function ‘std::vector<int> fxme::grid::voiceChord(const std::array<int, 4>&, int, int)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h:303:33: warning: conversion to ‘std::array<int, 4>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  303 |         const int bassPC  = pcs[bassIndex];
+      |                                 ^~~~~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h:312:40: warning: conversion to ‘std::array<int, 4>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  312 |             const int interval = ((pcs[i] - bassPC) % 12 + 12) % 12;
+      |                                        ^
+In file included from /home/doare/src/Mango/lib/FxmeTools/FxmeTools/FxmeTools.h:46:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/GridTransform.h: In function ‘std::optional<fxme::RingPos> fxme::toRing(const Selection&)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/GridTransform.h:58:12: warning: enumeration value ‘Center’ not handled in switch [-Wswitch-enum]
+   58 |     switch (s.mode)
+      |            ^
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/GridTransform.h:58:12: warning: enumeration value ‘Tab’ not handled in switch [-Wswitch-enum]
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/GridTransform.h: In member function ‘fxme::Hex fxme::HexMove::apply(fxme::Hex, int) const’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/GridTransform.h:128:94: warning: conversion to ‘std::array<fxme::Hex, 6>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  128 |             case Kind::SectorDir: return current + grid::edgeDirs()[(((sector + q) % 6) + 6) % 6];
+      |                                                                     ~~~~~~~~~~~~~~~~~~~~~~~~~^~~
+In file included from /home/doare/src/Mango/lib/FxmeTools/FxmeTools/FxmeTools.h:52:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/dsp/Ambisonics.h: In static member function ‘static fxme::ambi::ShRotation fxme::ambi::ShRotation::fromMatrix(const fxme::ambi::Mat3&)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/dsp/Ambisonics.h:365:27: warning: comparing floating-point with ‘==’ or ‘!=’ is unsafe [-Wfloat-equal]
+  365 |                     if (u != 0.0f)
+      |                         ~~^~~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/dsp/Ambisonics.h:368:27: warning: comparing floating-point with ‘==’ or ‘!=’ is unsafe [-Wfloat-equal]
+  368 |                     if (v != 0.0f)
+      |                         ~~^~~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/dsp/Ambisonics.h:380:27: warning: comparing floating-point with ‘==’ or ‘!=’ is unsafe [-Wfloat-equal]
+  380 |                     if (w != 0.0f)
+      |                         ~~^~~~~~~
+In file included from /home/doare/src/Mango/lib/FxmeTools/FxmeTools/FxmeTools.h:32,
+                 from /home/doare/src/Mango/build/Mango_artefacts/JuceLibraryCode/JuceHeader.h:24,
+                 from /home/doare/src/Mango/Source/PluginProcessor.h:20,
+                 from /home/doare/src/Mango/Source/PluginProcessor.cpp:9:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/lookandfeels/FxmeLookAndFeel.h: In member function ‘virtual void fxme::FxmeLookAndFeel::drawToggleButton(juce::Graphics&, juce::ToggleButton&, bool, bool)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/lookandfeels/FxmeLookAndFeel.h:144:41: warning: unused parameter ‘shouldDrawButtonAsHighlighted’ [-Wunused-parameter]
+  144 |                             bool        shouldDrawButtonAsHighlighted,
+      |                             ~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/lookandfeels/FxmeLookAndFeel.h:145:41: warning: unused parameter ‘shouldDrawButtonAsDown’ [-Wunused-parameter]
+  145 |                             bool        shouldDrawButtonAsDown ) override
+      |                             ~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/lookandfeels/FxmeLookAndFeel.h: In member function ‘virtual void fxme::FxmeLookAndFeel::drawButtonBackground(juce::Graphics&, juce::Button&, const juce::Colour&, bool, bool)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/lookandfeels/FxmeLookAndFeel.h:192:49: warning: unused parameter ‘backgroundColour’ [-Wunused-parameter]
+  192 |                             const juce::Colour& backgroundColour,
+      |                             ~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/lookandfeels/FxmeLookAndFeel.h:193:34: warning: unused parameter ‘shouldDrawButtonAsHighlighted’ [-Wunused-parameter]
+  193 |                             bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown) override
+      |                             ~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from /home/doare/src/Mango/lib/FxmeTools/FxmeTools/FxmeTools.h:33:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/FxmeSlider.h: In constructor ‘fxme::FxmeSlider::FxmeSlider(juce::AudioProcessorValueTreeState&, const juce::String&, const juce::String&, const juce::Colour&)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/FxmeSlider.h:29:36: warning: unused parameter ‘colour’ [-Wunused-parameter]
+   29 |                const juce::Colour& colour)
+      |                ~~~~~~~~~~~~~~~~~~~~^~~~~~
+In file included from /home/doare/src/Mango/lib/FxmeTools/FxmeTools/FxmeTools.h:58:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/dsp/VuMeter.h: In member function ‘void fxme::VuMeter::process(const float*, int)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/dsp/VuMeter.h:53:38: warning: conversion to ‘std::vector<float, std::allocator<float> >::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+   53 |             float oldSample = window[currentSample];
+      |                                      ^~~~~~~~~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/dsp/VuMeter.h:57:20: warning: conversion to ‘std::vector<float, std::allocator<float> >::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+   57 |             window[currentSample] = sample;
+      |                    ^~~~~~~~~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/dsp/VuMeter.h: In member function ‘void fxme::VuMeter::setWindowDuration(double)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/dsp/VuMeter.h:95:24: warning: conversion to ‘std::vector<float, std::allocator<float> >::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+   95 |         window.assign (windowSize, 0.0f);
+      |                        ^~~~~~~~~~
+In file included from /home/doare/src/Mango/lib/FxmeTools/FxmeTools/FxmeTools.h:35:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/FxmeMeters.h: In constructor ‘fxme::FxmeHorizontalMeter::FxmeHorizontalMeter(std::function<float()>&&, juce::Colour, juce::Colour, float, float)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/FxmeMeters.h:233:17: warning: ‘fxme::FxmeHorizontalMeter::valueColour’ will be initialized after [-Wreorder]
+  233 |                 valueColour{juce::Colours::yellow};
+      |                 ^~~~~~~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/FxmeMeters.h:232:16: warning:   ‘juce::Colour fxme::FxmeHorizontalMeter::backgroundColour’ [-Wreorder]
+  232 |   juce::Colour backgroundColour{juce::Colours::black},
+      |                ^~~~~~~~~~~~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/FxmeMeters.h:162:3: warning:   when initialized here [-Wreorder]
+  162 |   FxmeHorizontalMeter
+      |   ^~~~~~~~~~~~~~~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/FxmeMeters.h: In constructor ‘fxme::FxmeVerticalMeter::FxmeVerticalMeter(std::function<float()>&&, juce::Colour, juce::Colour, float, float)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/FxmeMeters.h:299:17: warning: ‘fxme::FxmeVerticalMeter::valueColour’ will be initialized after [-Wreorder]
+  299 |                 valueColour{juce::Colours::yellow};
+      |                 ^~~~~~~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/FxmeMeters.h:298:16: warning:   ‘juce::Colour fxme::FxmeVerticalMeter::backgroundColour’ [-Wreorder]
+  298 |   juce::Colour backgroundColour{juce::Colours::black},
+      |                ^~~~~~~~~~~~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/FxmeMeters.h:240:3: warning:   when initialized here [-Wreorder]
+  240 |   FxmeVerticalMeter
+      |   ^~~~~~~~~~~~~~~~~
+In file included from /home/doare/src/Mango/lib/FxmeTools/FxmeTools/FxmeTools.h:43:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/Scale.h: In function ‘const std::vector<int>& fxme::scaleIntervals(ScaleType)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/Scale.h:49:12: warning: enumeration value ‘Count’ not handled in switch [-Wswitch-enum]
+   49 |     switch (type)
+      |            ^
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/Scale.h: In function ‘const char* fxme::scaleTypeName(ScaleType)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/Scale.h:61:12: warning: enumeration value ‘Count’ not handled in switch [-Wswitch-enum]
+   61 |     switch (type)
+      |            ^
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/Scale.h: In function ‘const char* fxme::pitchClassName(int)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/Scale.h:75:43: warning: conversion to ‘std::array<const char*, 12>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+   75 |     return names[((pitchClass % 12) + 12) % 12];
+      |                  ~~~~~~~~~~~~~~~~~~~~~~~~~^~~~
+In file included from /home/doare/src/Mango/lib/FxmeTools/FxmeTools/FxmeTools.h:74:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/SplMeterComponent.h: In member function ‘virtual void fxme::SplMeterComponent::paint(juce::Graphics&)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/SplMeterComponent.h:124:55: warning: ‘juce::Font::Font(float, int)’ is deprecated: Use the constructor that takes a FontOptions argument [-Wdeprecated-declarations]
+  124 |         g.setFont (juce::Font (10.0f, juce::Font::bold));
+      |                                                       ^
+In file included from /home/doare/src/JUCE/modules/juce_graphics/juce_graphics.h:141,
+                 from /home/doare/src/JUCE/modules/juce_gui_basics/juce_gui_basics.h:68,
+                 from /home/doare/src/JUCE/modules/juce_gui_extra/juce_gui_extra.h:68,
+                 from /home/doare/src/JUCE/modules/juce_audio_processors/juce_audio_processors.h:65,
+                 from /home/doare/src/Mango/lib/FxmeTools/FxmeTools/FxmeTools.h:21:
+/home/doare/src/JUCE/modules/juce_graphics/fonts/juce_Font.h:77:5: note: declared here
+   77 |     Font (float fontHeight, int styleFlags = plain);
+      |     ^~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/SplMeterComponent.h:133:55: warning: ‘juce::Font::Font(float, int)’ is deprecated: Use the constructor that takes a FontOptions argument [-Wdeprecated-declarations]
+  133 |         g.setFont (juce::Font (12.0f, juce::Font::bold));
+      |                                                       ^
+/home/doare/src/JUCE/modules/juce_graphics/fonts/juce_Font.h:77:5: note: declared here
+   77 |     Font (float fontHeight, int styleFlags = plain);
+      |     ^~~~
+In file included from /home/doare/src/JUCE/modules/juce_gui_basics/juce_gui_basics.h:229:
+/home/doare/src/JUCE/modules/juce_gui_basics/buttons/juce_Button.h: At global scope:
+/home/doare/src/JUCE/modules/juce_gui_basics/buttons/juce_Button.h:452:18: warning: ‘virtual void juce::Button::clicked(const juce::ModifierKeys&)’ was hidden [-Woverloaded-virtual=]
+  452 |     virtual void clicked (const ModifierKeys& modifiers);
+      |                  ^~~~~~~
+In file included from /home/doare/src/Mango/lib/FxmeTools/FxmeTools/FxmeTools.h:76:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/InfoButton.h:64:10: note:   by ‘virtual void fxme::InfoButton::clicked()’
+   64 |     void clicked() override
+      |          ^~~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/InfoButton.h: In member function ‘virtual void fxme::InfoButton::paintButton(juce::Graphics&, bool, bool)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/InfoButton.h:60:80: warning: ‘juce::Font::Font(float, int)’ is deprecated: Use the constructor that takes a FontOptions argument [-Wdeprecated-declarations]
+   60 |         g.setFont (juce::Font (d * 0.64f, juce::Font::bold | juce::Font::italic));
+      |                                                                                ^
+/home/doare/src/JUCE/modules/juce_graphics/fonts/juce_Font.h:77:5: note: declared here
+   77 |     Font (float fontHeight, int styleFlags = plain);
+      |     ^~~~
+In file included from /home/doare/src/Mango/lib/FxmeTools/FxmeTools/FxmeTools.h:45:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h: In function ‘std::array<fxme::Hex, 3> fxme::grid::triadAtVertex(fxme::Hex, int)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h:171:40: warning: conversion to ‘std::array<fxme::Hex, 6>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  171 |         return { x, x + d[(corner + 5) % 6], x + d[corner] };
+      |                           ~~~~~~~~~~~~~^~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h:171:52: warning: conversion to ‘std::array<fxme::Hex, 6>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  171 |         return { x, x + d[(corner + 5) % 6], x + d[corner] };
+      |                                                    ^~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h: In function ‘std::array<fxme::Hex, 6> fxme::grid::tabsAtVertex(fxme::Hex, int)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h:204:54: warning: conversion to ‘std::array<fxme::Hex, 6>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  204 |                 for (int k = 0; k < n; ++k) if (tabs[k] == cell) { dup = true; break; }
+      |                                                      ^
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h:205:43: warning: conversion to ‘std::array<fxme::Hex, 6>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  205 |                 if (! dup && n < 6) tabs[n++] = cell;
+      |                                          ~^~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/InfoButton.h: In constructor ‘fxme::InfoButton::Content::Content(const juce::String&, const juce::String&, fxme::InfoButton::Colours)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/InfoButton.h:79:63: warning: ‘juce::Font::Font(float, int)’ is deprecated: Use the constructor that takes a FontOptions argument [-Wdeprecated-declarations]
+   79 |             title.setFont (juce::Font (16.0f, juce::Font::bold));
+      |                                                               ^
+/home/doare/src/JUCE/modules/juce_graphics/fonts/juce_Font.h:77:5: note: declared here
+   77 |     Font (float fontHeight, int styleFlags = plain);
+      |     ^~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/InfoButton.h:92:44: warning: ‘juce::Font::Font(float, int)’ is deprecated: Use the constructor that takes a FontOptions argument [-Wdeprecated-declarations]
+   92 |             text.setFont (juce::Font (13.0f));
+      |                                            ^
+/home/doare/src/JUCE/modules/juce_graphics/fonts/juce_Font.h:77:5: note: declared here
+   77 |     Font (float fontHeight, int styleFlags = plain);
+      |     ^~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h: In function ‘std::vector<fxme::Hex> fxme::grid::selectionHexes(const fxme::Selection&)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h:238:43: warning: conversion to ‘std::array<fxme::Hex, 6>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  238 |                 return { x, x + d[(i + 5) % 6], x + d[i] };
+      |                                   ~~~~~~~~^~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h:238:55: warning: conversion to ‘std::array<fxme::Hex, 6>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  238 |                 return { x, x + d[(i + 5) % 6], x + d[i] };
+      |                                                       ^
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h:252:35: warning: conversion to ‘std::array<fxme::Hex, 6>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  252 |                 return { x, x + d[i], x + d[(i + 5) % 6], x + d[(i + 1) % 6] };
+      |                                   ^
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h:252:53: warning: conversion to ‘std::array<fxme::Hex, 6>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  252 |                 return { x, x + d[i], x + d[(i + 5) % 6], x + d[(i + 1) % 6] };
+      |                                             ~~~~~~~~^~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h:252:73: warning: conversion to ‘std::array<fxme::Hex, 6>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  252 |                 return { x, x + d[i], x + d[(i + 5) % 6], x + d[(i + 1) % 6] };
+      |                                                                 ~~~~~~~~^~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h:256:42: warning: conversion to ‘std::array<fxme::Hex, 6>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  256 |                 const Hex d1 = d[(i + 5) % 6];
+      |                                  ~~~~~~~~^~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h:257:34: warning: conversion to ‘std::array<fxme::Hex, 6>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  257 |                 const Hex d2 = d[i];
+      |                                  ^
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h:268:61: warning: conversion to ‘std::array<fxme::Hex, 6>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  268 |                 const int axis = std::abs (pitchOffset (d[i % 6])) % 12;
+      |                                                           ~~^~~
+In file included from /home/doare/src/JUCE/modules/juce_gui_basics/juce_gui_basics.h:205:
+/home/doare/src/JUCE/modules/juce_gui_basics/components/juce_Component.h: At global scope:
+/home/doare/src/JUCE/modules/juce_gui_basics/components/juce_Component.h:915:18: warning: ‘virtual bool juce::Component::hitTest(int, int)’ was hidden [-Woverloaded-virtual=]
+  915 |     virtual bool hitTest (int x, int y);
+      |                  ^~~~~~~
+In file included from /home/doare/src/Mango/lib/FxmeTools/FxmeTools/FxmeTools.h:77:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/SequencerRubber.h:341:15: note:   by ‘fxme::SequencerRubber::HitResult fxme::SequencerRubber::hitTest(juce::Point<int>) const’
+  341 |     HitResult hitTest (juce::Point<int> p) const
+      |               ^~~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h: In function ‘fxme::HexChord fxme::grid::resolve(const fxme::Selection&)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h:288:21: warning: conversion to ‘std::array<fxme::Hex, 4>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  288 |             c.hexes[i] = hs[std::min<size_t> ((size_t) i, hs.size() - 1)];
+      |                     ^
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/SequencerRubber.h: In member function ‘void fxme::SequencerRubber::setPlayheadStep(double)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/SequencerRubber.h:49:18: warning: comparing floating-point with ‘==’ or ‘!=’ is unsafe [-Wfloat-equal]
+   49 |         if (step != playheadStep_) { playheadStep_ = step; repaint(); }
+      |             ~~~~~^~~~~~~~~~~~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h: In function ‘std::vector<int> fxme::grid::voiceChord(const std::array<int, 4>&, int, int)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h:303:33: warning: conversion to ‘std::array<int, 4>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  303 |         const int bassPC  = pcs[bassIndex];
+      |                                 ^~~~~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h:312:40: warning: conversion to ‘std::array<int, 4>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  312 |             const int interval = ((pcs[i] - bassPC) % 12 + 12) % 12;
+      |                                        ^
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/SequencerRubber.h: In member function ‘virtual void fxme::SequencerRubber::paint(juce::Graphics&)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/SequencerRubber.h:82:22: warning: unused variable ‘pps’ [-Wunused-variable]
+   82 |         const double pps = pixelsPerStep();
+      |                      ^~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/SequencerRubber.h: In member function ‘virtual void fxme::SequencerRubber::mouseUp(const juce::MouseEvent&)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/SequencerRubber.h:212:43: warning: unused parameter ‘e’ [-Wunused-parameter]
+  212 |     void mouseUp (const juce::MouseEvent& e) override
+      |                   ~~~~~~~~~~~~~~~~~~~~~~~~^
+In file included from /home/doare/src/Mango/lib/FxmeTools/FxmeTools/FxmeTools.h:46:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/GridTransform.h: In function ‘std::optional<fxme::RingPos> fxme::toRing(const Selection&)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/GridTransform.h:58:12: warning: enumeration value ‘Center’ not handled in switch [-Wswitch-enum]
+   58 |     switch (s.mode)
+      |            ^
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/GridTransform.h:58:12: warning: enumeration value ‘Tab’ not handled in switch [-Wswitch-enum]
+In file included from /home/doare/src/Mango/lib/FxmeTools/FxmeTools/FxmeTools.h:32,
+                 from /home/doare/src/Mango/build/Mango_artefacts/JuceLibraryCode/JuceHeader.h:24,
+                 from /home/doare/src/Mango/Source/PluginEditor.h:18,
+                 from /home/doare/src/Mango/Source/PluginEditor.cpp:9:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/lookandfeels/FxmeLookAndFeel.h: In member function ‘virtual void fxme::FxmeLookAndFeel::drawToggleButton(juce::Graphics&, juce::ToggleButton&, bool, bool)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/lookandfeels/FxmeLookAndFeel.h:144:41: warning: unused parameter ‘shouldDrawButtonAsHighlighted’ [-Wunused-parameter]
+  144 |                             bool        shouldDrawButtonAsHighlighted,
+      |                             ~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/lookandfeels/FxmeLookAndFeel.h:145:41: warning: unused parameter ‘shouldDrawButtonAsDown’ [-Wunused-parameter]
+  145 |                             bool        shouldDrawButtonAsDown ) override
+      |                             ~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/GridTransform.h: In member function ‘fxme::Hex fxme::HexMove::apply(fxme::Hex, int) const’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/GridTransform.h:128:94: warning: conversion to ‘std::array<fxme::Hex, 6>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  128 |             case Kind::SectorDir: return current + grid::edgeDirs()[(((sector + q) % 6) + 6) % 6];
+      |                                                                     ~~~~~~~~~~~~~~~~~~~~~~~~~^~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/lookandfeels/FxmeLookAndFeel.h: In member function ‘virtual void fxme::FxmeLookAndFeel::drawButtonBackground(juce::Graphics&, juce::Button&, const juce::Colour&, bool, bool)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/lookandfeels/FxmeLookAndFeel.h:192:49: warning: unused parameter ‘backgroundColour’ [-Wunused-parameter]
+  192 |                             const juce::Colour& backgroundColour,
+      |                             ~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/lookandfeels/FxmeLookAndFeel.h:193:34: warning: unused parameter ‘shouldDrawButtonAsHighlighted’ [-Wunused-parameter]
+  193 |                             bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown) override
+      |                             ~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from /home/doare/src/Mango/lib/FxmeTools/FxmeTools/FxmeTools.h:33:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/FxmeSlider.h: In constructor ‘fxme::FxmeSlider::FxmeSlider(juce::AudioProcessorValueTreeState&, const juce::String&, const juce::String&, const juce::Colour&)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/FxmeSlider.h:29:36: warning: unused parameter ‘colour’ [-Wunused-parameter]
+   29 |                const juce::Colour& colour)
+      |                ~~~~~~~~~~~~~~~~~~~~^~~~~~
+In file included from /home/doare/src/Mango/lib/FxmeTools/FxmeTools/FxmeTools.cpp:7:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/SpectrumDisplay.cpp: In member function ‘void fxme::SpectrumDisplay::drawCursorReadout(juce::Graphics&, juce::Rectangle<float>) const’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/SpectrumDisplay.cpp:175:83: warning: ‘juce::Font::Font(float, int)’ is deprecated: Use the constructor that takes a FontOptions argument [-Wdeprecated-declarations]
+  175 |     const int tw = (int) juce::GlyphArrangement::getStringWidth (juce::Font (10.0f), txt) + 12;
+      |                                                                                   ^
+/home/doare/src/JUCE/modules/juce_graphics/fonts/juce_Font.h:77:5: note: declared here
+   77 |     Font (float fontHeight, int styleFlags = plain);
+      |     ^~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/SpectrumDisplay.cpp: In member function ‘virtual void fxme::SpectrumDisplay::paint(juce::Graphics&)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/SpectrumDisplay.cpp:230:55: warning: ‘juce::Font::Font(float, int)’ is deprecated: Use the constructor that takes a FontOptions argument [-Wdeprecated-declarations]
+  230 |         g.setFont (juce::Font (10.0f, juce::Font::bold));
+      |                                                       ^
+/home/doare/src/JUCE/modules/juce_graphics/fonts/juce_Font.h:77:5: note: declared here
+   77 |     Font (float fontHeight, int styleFlags = plain);
+      |     ^~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/SpectrumDisplay.cpp:260:95: warning: ‘juce::Font::Font(float, int)’ is deprecated: Use the constructor that takes a FontOptions argument [-Wdeprecated-declarations]
+  260 |             const int w = 14 + (int) juce::GlyphArrangement::getStringWidth (juce::Font (11.0f), label);
+      |                                                                                               ^
+/home/doare/src/JUCE/modules/juce_graphics/fonts/juce_Font.h:77:5: note: declared here
+   77 |     Font (float fontHeight, int styleFlags = plain);
+      |     ^~~~
+In file included from /home/doare/src/Mango/lib/FxmeTools/FxmeTools/FxmeTools.h:35:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/FxmeMeters.h: In constructor ‘fxme::FxmeHorizontalMeter::FxmeHorizontalMeter(std::function<float()>&&, juce::Colour, juce::Colour, float, float)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/FxmeMeters.h:233:17: warning: ‘fxme::FxmeHorizontalMeter::valueColour’ will be initialized after [-Wreorder]
+  233 |                 valueColour{juce::Colours::yellow};
+      |                 ^~~~~~~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/FxmeMeters.h:232:16: warning:   ‘juce::Colour fxme::FxmeHorizontalMeter::backgroundColour’ [-Wreorder]
+  232 |   juce::Colour backgroundColour{juce::Colours::black},
+      |                ^~~~~~~~~~~~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/FxmeMeters.h:162:3: warning:   when initialized here [-Wreorder]
+  162 |   FxmeHorizontalMeter
+      |   ^~~~~~~~~~~~~~~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/FxmeMeters.h: In constructor ‘fxme::FxmeVerticalMeter::FxmeVerticalMeter(std::function<float()>&&, juce::Colour, juce::Colour, float, float)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/FxmeMeters.h:299:17: warning: ‘fxme::FxmeVerticalMeter::valueColour’ will be initialized after [-Wreorder]
+  299 |                 valueColour{juce::Colours::yellow};
+      |                 ^~~~~~~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/FxmeMeters.h:298:16: warning:   ‘juce::Colour fxme::FxmeVerticalMeter::backgroundColour’ [-Wreorder]
+  298 |   juce::Colour backgroundColour{juce::Colours::black},
+      |                ^~~~~~~~~~~~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/FxmeMeters.h:240:3: warning:   when initialized here [-Wreorder]
+  240 |   FxmeVerticalMeter
+      |   ^~~~~~~~~~~~~~~~~
+In file included from /home/doare/src/Mango/lib/FxmeTools/FxmeTools/FxmeTools.h:52:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/dsp/Ambisonics.h: In static member function ‘static fxme::ambi::ShRotation fxme::ambi::ShRotation::fromMatrix(const fxme::ambi::Mat3&)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/dsp/Ambisonics.h:365:27: warning: comparing floating-point with ‘==’ or ‘!=’ is unsafe [-Wfloat-equal]
+  365 |                     if (u != 0.0f)
+      |                         ~~^~~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/dsp/Ambisonics.h:368:27: warning: comparing floating-point with ‘==’ or ‘!=’ is unsafe [-Wfloat-equal]
+  368 |                     if (v != 0.0f)
+      |                         ~~^~~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/dsp/Ambisonics.h:380:27: warning: comparing floating-point with ‘==’ or ‘!=’ is unsafe [-Wfloat-equal]
+  380 |                     if (w != 0.0f)
+      |                         ~~^~~~~~~
+In file included from /home/doare/src/Mango/lib/FxmeTools/FxmeTools/FxmeTools.h:43:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/Scale.h: In function ‘const std::vector<int>& fxme::scaleIntervals(ScaleType)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/Scale.h:49:12: warning: enumeration value ‘Count’ not handled in switch [-Wswitch-enum]
+   49 |     switch (type)
+      |            ^
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/Scale.h: In function ‘const char* fxme::scaleTypeName(ScaleType)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/Scale.h:61:12: warning: enumeration value ‘Count’ not handled in switch [-Wswitch-enum]
+   61 |     switch (type)
+      |            ^
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/Scale.h: In function ‘const char* fxme::pitchClassName(int)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/Scale.h:75:43: warning: conversion to ‘std::array<const char*, 12>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+   75 |     return names[((pitchClass % 12) + 12) % 12];
+      |                  ~~~~~~~~~~~~~~~~~~~~~~~~~^~~~
+In file included from /home/doare/src/Mango/lib/FxmeTools/FxmeTools/FxmeTools.cpp:10:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/presets/EmbeddedAudio.cpp: In static member function ‘static bool fxme::EmbeddedAudio::embedFile(juce::ValueTree, const juce::String&, const juce::File&)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/presets/EmbeddedAudio.cpp:49:34: warning: ‘juce::AudioFormatWriter* juce::AudioFormat::createWriterFor(juce::OutputStream*, double, unsigned int, int, const juce::StringPairArray&, int)’ is deprecated: Use the function taking an AudioFormatWriterOptions instead. [-Wdeprecated-declarations]
+   49 |             flac.createWriterFor (new juce::MemoryOutputStream (flacBytes, false),
+      |             ~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   50 |                                   reader->sampleRate, reader->numChannels, bits, {}, 5));
+      |                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from /home/doare/src/JUCE/modules/juce_audio_formats/juce_audio_formats.h:127,
+                 from /home/doare/src/JUCE/modules/juce_audio_utils/juce_audio_utils.h:68,
+                 from /home/doare/src/Mango/lib/FxmeTools/FxmeTools/FxmeTools.h:22:
+/home/doare/src/JUCE/modules/juce_audio_formats/format/juce_AudioFormat.h:179:24: note: declared here
+  179 |     AudioFormatWriter* createWriterFor (OutputStream* streamToWriteTo,
+      |                        ^~~~~~~~~~~~~~~
+In file included from /home/doare/src/Mango/lib/FxmeTools/FxmeTools/FxmeTools.h:45:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h: In function ‘std::array<fxme::Hex, 3> fxme::grid::triadAtVertex(fxme::Hex, int)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h:171:40: warning: conversion to ‘std::array<fxme::Hex, 6>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  171 |         return { x, x + d[(corner + 5) % 6], x + d[corner] };
+      |                           ~~~~~~~~~~~~~^~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h:171:52: warning: conversion to ‘std::array<fxme::Hex, 6>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  171 |         return { x, x + d[(corner + 5) % 6], x + d[corner] };
+      |                                                    ^~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h: In function ‘std::array<fxme::Hex, 6> fxme::grid::tabsAtVertex(fxme::Hex, int)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h:204:54: warning: conversion to ‘std::array<fxme::Hex, 6>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  204 |                 for (int k = 0; k < n; ++k) if (tabs[k] == cell) { dup = true; break; }
+      |                                                      ^
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h:205:43: warning: conversion to ‘std::array<fxme::Hex, 6>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  205 |                 if (! dup && n < 6) tabs[n++] = cell;
+      |                                          ~^~
+In file included from /home/doare/src/Mango/lib/FxmeTools/FxmeTools/FxmeTools.h:58:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/dsp/VuMeter.h: In member function ‘void fxme::VuMeter::process(const float*, int)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/dsp/VuMeter.h:53:38: warning: conversion to ‘std::vector<float, std::allocator<float> >::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+   53 |             float oldSample = window[currentSample];
+      |                                      ^~~~~~~~~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/dsp/VuMeter.h:57:20: warning: conversion to ‘std::vector<float, std::allocator<float> >::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+   57 |             window[currentSample] = sample;
+      |                    ^~~~~~~~~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/dsp/VuMeter.h: In member function ‘void fxme::VuMeter::setWindowDuration(double)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/dsp/VuMeter.h:95:24: warning: conversion to ‘std::vector<float, std::allocator<float> >::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+   95 |         window.assign (windowSize, 0.0f);
+      |                        ^~~~~~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h: In function ‘std::vector<fxme::Hex> fxme::grid::selectionHexes(const fxme::Selection&)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h:238:43: warning: conversion to ‘std::array<fxme::Hex, 6>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  238 |                 return { x, x + d[(i + 5) % 6], x + d[i] };
+      |                                   ~~~~~~~~^~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h:238:55: warning: conversion to ‘std::array<fxme::Hex, 6>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  238 |                 return { x, x + d[(i + 5) % 6], x + d[i] };
+      |                                                       ^
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h:252:35: warning: conversion to ‘std::array<fxme::Hex, 6>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  252 |                 return { x, x + d[i], x + d[(i + 5) % 6], x + d[(i + 1) % 6] };
+      |                                   ^
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h:252:53: warning: conversion to ‘std::array<fxme::Hex, 6>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  252 |                 return { x, x + d[i], x + d[(i + 5) % 6], x + d[(i + 1) % 6] };
+      |                                             ~~~~~~~~^~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h:252:73: warning: conversion to ‘std::array<fxme::Hex, 6>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  252 |                 return { x, x + d[i], x + d[(i + 5) % 6], x + d[(i + 1) % 6] };
+      |                                                                 ~~~~~~~~^~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h:256:42: warning: conversion to ‘std::array<fxme::Hex, 6>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  256 |                 const Hex d1 = d[(i + 5) % 6];
+      |                                  ~~~~~~~~^~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h:257:34: warning: conversion to ‘std::array<fxme::Hex, 6>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  257 |                 const Hex d2 = d[i];
+      |                                  ^
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h:268:61: warning: conversion to ‘std::array<fxme::Hex, 6>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  268 |                 const int axis = std::abs (pitchOffset (d[i % 6])) % 12;
+      |                                                           ~~^~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h: In function ‘fxme::HexChord fxme::grid::resolve(const fxme::Selection&)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h:288:21: warning: conversion to ‘std::array<fxme::Hex, 4>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  288 |             c.hexes[i] = hs[std::min<size_t> ((size_t) i, hs.size() - 1)];
+      |                     ^
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h: In function ‘std::vector<int> fxme::grid::voiceChord(const std::array<int, 4>&, int, int)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h:303:33: warning: conversion to ‘std::array<int, 4>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  303 |         const int bassPC  = pcs[bassIndex];
+      |                                 ^~~~~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/NeoRiemannGrid.h:312:40: warning: conversion to ‘std::array<int, 4>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  312 |             const int interval = ((pcs[i] - bassPC) % 12 + 12) % 12;
+      |                                        ^
+In file included from /home/doare/src/Mango/lib/FxmeTools/FxmeTools/FxmeTools.h:46:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/GridTransform.h: In function ‘std::optional<fxme::RingPos> fxme::toRing(const Selection&)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/GridTransform.h:58:12: warning: enumeration value ‘Center’ not handled in switch [-Wswitch-enum]
+   58 |     switch (s.mode)
+      |            ^
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/GridTransform.h:58:12: warning: enumeration value ‘Tab’ not handled in switch [-Wswitch-enum]
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/GridTransform.h: In member function ‘fxme::Hex fxme::HexMove::apply(fxme::Hex, int) const’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/midi/GridTransform.h:128:94: warning: conversion to ‘std::array<fxme::Hex, 6>::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+  128 |             case Kind::SectorDir: return current + grid::edgeDirs()[(((sector + q) % 6) + 6) % 6];
+      |                                                                     ~~~~~~~~~~~~~~~~~~~~~~~~~^~~
+In file included from /home/doare/src/Mango/lib/FxmeTools/FxmeTools/FxmeTools.h:74:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/SplMeterComponent.h: In member function ‘virtual void fxme::SplMeterComponent::paint(juce::Graphics&)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/SplMeterComponent.h:124:55: warning: ‘juce::Font::Font(float, int)’ is deprecated: Use the constructor that takes a FontOptions argument [-Wdeprecated-declarations]
+  124 |         g.setFont (juce::Font (10.0f, juce::Font::bold));
+      |                                                       ^
+In file included from /home/doare/src/JUCE/modules/juce_graphics/juce_graphics.h:141,
+                 from /home/doare/src/JUCE/modules/juce_gui_basics/juce_gui_basics.h:68,
+                 from /home/doare/src/JUCE/modules/juce_gui_extra/juce_gui_extra.h:68,
+                 from /home/doare/src/JUCE/modules/juce_audio_processors/juce_audio_processors.h:65,
+                 from /home/doare/src/Mango/build/Mango_artefacts/JuceLibraryCode/JuceHeader.h:15:
+/home/doare/src/JUCE/modules/juce_graphics/fonts/juce_Font.h:77:5: note: declared here
+   77 |     Font (float fontHeight, int styleFlags = plain);
+      |     ^~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/SplMeterComponent.h:133:55: warning: ‘juce::Font::Font(float, int)’ is deprecated: Use the constructor that takes a FontOptions argument [-Wdeprecated-declarations]
+  133 |         g.setFont (juce::Font (12.0f, juce::Font::bold));
+      |                                                       ^
+/home/doare/src/JUCE/modules/juce_graphics/fonts/juce_Font.h:77:5: note: declared here
+   77 |     Font (float fontHeight, int styleFlags = plain);
+      |     ^~~~
+In file included from /home/doare/src/JUCE/modules/juce_gui_basics/juce_gui_basics.h:229:
+/home/doare/src/JUCE/modules/juce_gui_basics/buttons/juce_Button.h: At global scope:
+/home/doare/src/JUCE/modules/juce_gui_basics/buttons/juce_Button.h:452:18: warning: ‘virtual void juce::Button::clicked(const juce::ModifierKeys&)’ was hidden [-Woverloaded-virtual=]
+  452 |     virtual void clicked (const ModifierKeys& modifiers);
+      |                  ^~~~~~~
+In file included from /home/doare/src/Mango/lib/FxmeTools/FxmeTools/FxmeTools.h:76:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/InfoButton.h:64:10: note:   by ‘virtual void fxme::InfoButton::clicked()’
+   64 |     void clicked() override
+      |          ^~~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/InfoButton.h: In member function ‘virtual void fxme::InfoButton::paintButton(juce::Graphics&, bool, bool)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/InfoButton.h:60:80: warning: ‘juce::Font::Font(float, int)’ is deprecated: Use the constructor that takes a FontOptions argument [-Wdeprecated-declarations]
+   60 |         g.setFont (juce::Font (d * 0.64f, juce::Font::bold | juce::Font::italic));
+      |                                                                                ^
+/home/doare/src/JUCE/modules/juce_graphics/fonts/juce_Font.h:77:5: note: declared here
+   77 |     Font (float fontHeight, int styleFlags = plain);
+      |     ^~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/InfoButton.h: In constructor ‘fxme::InfoButton::Content::Content(const juce::String&, const juce::String&, fxme::InfoButton::Colours)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/InfoButton.h:79:63: warning: ‘juce::Font::Font(float, int)’ is deprecated: Use the constructor that takes a FontOptions argument [-Wdeprecated-declarations]
+   79 |             title.setFont (juce::Font (16.0f, juce::Font::bold));
+      |                                                               ^
+/home/doare/src/JUCE/modules/juce_graphics/fonts/juce_Font.h:77:5: note: declared here
+   77 |     Font (float fontHeight, int styleFlags = plain);
+      |     ^~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/InfoButton.h:92:44: warning: ‘juce::Font::Font(float, int)’ is deprecated: Use the constructor that takes a FontOptions argument [-Wdeprecated-declarations]
+   92 |             text.setFont (juce::Font (13.0f));
+      |                                            ^
+/home/doare/src/JUCE/modules/juce_graphics/fonts/juce_Font.h:77:5: note: declared here
+   77 |     Font (float fontHeight, int styleFlags = plain);
+      |     ^~~~
+In file included from /home/doare/src/JUCE/modules/juce_gui_basics/juce_gui_basics.h:205:
+/home/doare/src/JUCE/modules/juce_gui_basics/components/juce_Component.h: At global scope:
+/home/doare/src/JUCE/modules/juce_gui_basics/components/juce_Component.h:915:18: warning: ‘virtual bool juce::Component::hitTest(int, int)’ was hidden [-Woverloaded-virtual=]
+  915 |     virtual bool hitTest (int x, int y);
+      |                  ^~~~~~~
+In file included from /home/doare/src/Mango/lib/FxmeTools/FxmeTools/FxmeTools.h:77:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/SequencerRubber.h:341:15: note:   by ‘fxme::SequencerRubber::HitResult fxme::SequencerRubber::hitTest(juce::Point<int>) const’
+  341 |     HitResult hitTest (juce::Point<int> p) const
+      |               ^~~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/SequencerRubber.h: In member function ‘void fxme::SequencerRubber::setPlayheadStep(double)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/SequencerRubber.h:49:18: warning: comparing floating-point with ‘==’ or ‘!=’ is unsafe [-Wfloat-equal]
+   49 |         if (step != playheadStep_) { playheadStep_ = step; repaint(); }
+      |             ~~~~~^~~~~~~~~~~~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/SequencerRubber.h: In member function ‘virtual void fxme::SequencerRubber::paint(juce::Graphics&)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/SequencerRubber.h:82:22: warning: unused variable ‘pps’ [-Wunused-variable]
+   82 |         const double pps = pixelsPerStep();
+      |                      ^~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/SequencerRubber.h: In member function ‘virtual void fxme::SequencerRubber::mouseUp(const juce::MouseEvent&)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/SequencerRubber.h:212:43: warning: unused parameter ‘e’ [-Wunused-parameter]
+  212 |     void mouseUp (const juce::MouseEvent& e) override
+      |                   ~~~~~~~~~~~~~~~~~~~~~~~~^
+In file included from /home/doare/src/Mango/lib/FxmeTools/FxmeTools/FxmeTools.h:52:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/dsp/Ambisonics.h: In static member function ‘static fxme::ambi::ShRotation fxme::ambi::ShRotation::fromMatrix(const fxme::ambi::Mat3&)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/dsp/Ambisonics.h:365:27: warning: comparing floating-point with ‘==’ or ‘!=’ is unsafe [-Wfloat-equal]
+  365 |                     if (u != 0.0f)
+      |                         ~~^~~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/dsp/Ambisonics.h:368:27: warning: comparing floating-point with ‘==’ or ‘!=’ is unsafe [-Wfloat-equal]
+  368 |                     if (v != 0.0f)
+      |                         ~~^~~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/dsp/Ambisonics.h:380:27: warning: comparing floating-point with ‘==’ or ‘!=’ is unsafe [-Wfloat-equal]
+  380 |                     if (w != 0.0f)
+      |                         ~~^~~~~~~
+In file included from /home/doare/src/Mango/lib/FxmeTools/FxmeTools/FxmeTools.h:58:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/dsp/VuMeter.h: In member function ‘void fxme::VuMeter::process(const float*, int)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/dsp/VuMeter.h:53:38: warning: conversion to ‘std::vector<float, std::allocator<float> >::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+   53 |             float oldSample = window[currentSample];
+      |                                      ^~~~~~~~~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/dsp/VuMeter.h:57:20: warning: conversion to ‘std::vector<float, std::allocator<float> >::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+   57 |             window[currentSample] = sample;
+      |                    ^~~~~~~~~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/dsp/VuMeter.h: In member function ‘void fxme::VuMeter::setWindowDuration(double)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/dsp/VuMeter.h:95:24: warning: conversion to ‘std::vector<float, std::allocator<float> >::size_type’ {aka ‘long unsigned int’} from ‘int’ may change the sign of the result [-Wsign-conversion]
+   95 |         window.assign (windowSize, 0.0f);
+      |                        ^~~~~~~~~~
+In file included from /home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.h:145,
+                 from /home/doare/src/JUCE/modules/juce_audio_processors/juce_audio_processors.h:64:
+/home/doare/src/JUCE/modules/juce_audio_processors_headless/processors/juce_AudioProcessor.h: At global scope:
+/home/doare/src/JUCE/modules/juce_audio_processors_headless/processors/juce_AudioProcessor.h:291:18: warning: ‘virtual void juce::AudioProcessor::processBlock(juce::AudioBuffer<double>&, juce::MidiBuffer&)’ was hidden [-Woverloaded-virtual=]
+  291 |     virtual void processBlock (AudioBuffer<double>& buffer,
+      |                  ^~~~~~~~~~~~
+/home/doare/src/Mango/Source/PluginProcessor.h:33:10: note:   by ‘virtual void MangoAudioProcessor::processBlock(juce::AudioBuffer<float>&, juce::MidiBuffer&)’
+   33 |     void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
+      |          ^~~~~~~~~~~~
+In file included from /home/doare/src/Mango/lib/FxmeTools/FxmeTools/FxmeTools.h:74:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/SplMeterComponent.h: In member function ‘virtual void fxme::SplMeterComponent::paint(juce::Graphics&)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/SplMeterComponent.h:124:55: warning: ‘juce::Font::Font(float, int)’ is deprecated: Use the constructor that takes a FontOptions argument [-Wdeprecated-declarations]
+  124 |         g.setFont (juce::Font (10.0f, juce::Font::bold));
+      |                                                       ^
+In file included from /home/doare/src/JUCE/modules/juce_graphics/juce_graphics.h:141,
+                 from /home/doare/src/JUCE/modules/juce_gui_basics/juce_gui_basics.h:68,
+                 from /home/doare/src/JUCE/modules/juce_gui_extra/juce_gui_extra.h:68,
+                 from /home/doare/src/JUCE/modules/juce_audio_processors/juce_audio_processors.h:65,
+                 from /home/doare/src/Mango/build/Mango_artefacts/JuceLibraryCode/JuceHeader.h:15:
+/home/doare/src/JUCE/modules/juce_graphics/fonts/juce_Font.h:77:5: note: declared here
+   77 |     Font (float fontHeight, int styleFlags = plain);
+      |     ^~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/SplMeterComponent.h:133:55: warning: ‘juce::Font::Font(float, int)’ is deprecated: Use the constructor that takes a FontOptions argument [-Wdeprecated-declarations]
+  133 |         g.setFont (juce::Font (12.0f, juce::Font::bold));
+      |                                                       ^
+/home/doare/src/JUCE/modules/juce_graphics/fonts/juce_Font.h:77:5: note: declared here
+   77 |     Font (float fontHeight, int styleFlags = plain);
+      |     ^~~~
+In file included from /home/doare/src/JUCE/modules/juce_gui_basics/juce_gui_basics.h:229:
+/home/doare/src/JUCE/modules/juce_gui_basics/buttons/juce_Button.h: At global scope:
+/home/doare/src/JUCE/modules/juce_gui_basics/buttons/juce_Button.h:452:18: warning: ‘virtual void juce::Button::clicked(const juce::ModifierKeys&)’ was hidden [-Woverloaded-virtual=]
+  452 |     virtual void clicked (const ModifierKeys& modifiers);
+      |                  ^~~~~~~
+In file included from /home/doare/src/Mango/lib/FxmeTools/FxmeTools/FxmeTools.h:76:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/InfoButton.h:64:10: note:   by ‘virtual void fxme::InfoButton::clicked()’
+   64 |     void clicked() override
+      |          ^~~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/InfoButton.h: In member function ‘virtual void fxme::InfoButton::paintButton(juce::Graphics&, bool, bool)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/InfoButton.h:60:80: warning: ‘juce::Font::Font(float, int)’ is deprecated: Use the constructor that takes a FontOptions argument [-Wdeprecated-declarations]
+   60 |         g.setFont (juce::Font (d * 0.64f, juce::Font::bold | juce::Font::italic));
+      |                                                                                ^
+/home/doare/src/JUCE/modules/juce_graphics/fonts/juce_Font.h:77:5: note: declared here
+   77 |     Font (float fontHeight, int styleFlags = plain);
+      |     ^~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/InfoButton.h: In constructor ‘fxme::InfoButton::Content::Content(const juce::String&, const juce::String&, fxme::InfoButton::Colours)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/InfoButton.h:79:63: warning: ‘juce::Font::Font(float, int)’ is deprecated: Use the constructor that takes a FontOptions argument [-Wdeprecated-declarations]
+   79 |             title.setFont (juce::Font (16.0f, juce::Font::bold));
+      |                                                               ^
+/home/doare/src/JUCE/modules/juce_graphics/fonts/juce_Font.h:77:5: note: declared here
+   77 |     Font (float fontHeight, int styleFlags = plain);
+      |     ^~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/InfoButton.h:92:44: warning: ‘juce::Font::Font(float, int)’ is deprecated: Use the constructor that takes a FontOptions argument [-Wdeprecated-declarations]
+   92 |             text.setFont (juce::Font (13.0f));
+      |                                            ^
+/home/doare/src/JUCE/modules/juce_graphics/fonts/juce_Font.h:77:5: note: declared here
+   77 |     Font (float fontHeight, int styleFlags = plain);
+      |     ^~~~
+In file included from /home/doare/src/JUCE/modules/juce_gui_basics/juce_gui_basics.h:205:
+/home/doare/src/JUCE/modules/juce_gui_basics/components/juce_Component.h: At global scope:
+/home/doare/src/JUCE/modules/juce_gui_basics/components/juce_Component.h:915:18: warning: ‘virtual bool juce::Component::hitTest(int, int)’ was hidden [-Woverloaded-virtual=]
+  915 |     virtual bool hitTest (int x, int y);
+      |                  ^~~~~~~
+In file included from /home/doare/src/Mango/lib/FxmeTools/FxmeTools/FxmeTools.h:77:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/SequencerRubber.h:341:15: note:   by ‘fxme::SequencerRubber::HitResult fxme::SequencerRubber::hitTest(juce::Point<int>) const’
+  341 |     HitResult hitTest (juce::Point<int> p) const
+      |               ^~~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/SequencerRubber.h: In member function ‘void fxme::SequencerRubber::setPlayheadStep(double)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/SequencerRubber.h:49:18: warning: comparing floating-point with ‘==’ or ‘!=’ is unsafe [-Wfloat-equal]
+   49 |         if (step != playheadStep_) { playheadStep_ = step; repaint(); }
+      |             ~~~~~^~~~~~~~~~~~~~~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/SequencerRubber.h: In member function ‘virtual void fxme::SequencerRubber::paint(juce::Graphics&)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/SequencerRubber.h:82:22: warning: unused variable ‘pps’ [-Wunused-variable]
+   82 |         const double pps = pixelsPerStep();
+      |                      ^~~
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/SequencerRubber.h: In member function ‘virtual void fxme::SequencerRubber::mouseUp(const juce::MouseEvent&)’:
+/home/doare/src/Mango/lib/FxmeTools/FxmeTools/components/SequencerRubber.h:212:43: warning: unused parameter ‘e’ [-Wunused-parameter]
+  212 |     void mouseUp (const juce::MouseEvent& e) override
+      |                   ~~~~~~~~~~~~~~~~~~~~~~~~^
+In file included from /home/doare/src/JUCE/modules/juce_audio_processors_headless/juce_audio_processors_headless.h:145,
+                 from /home/doare/src/JUCE/modules/juce_audio_processors/juce_audio_processors.h:64:
+/home/doare/src/JUCE/modules/juce_audio_processors_headless/processors/juce_AudioProcessor.h: At global scope:
+/home/doare/src/JUCE/modules/juce_audio_processors_headless/processors/juce_AudioProcessor.h:291:18: warning: ‘virtual void juce::AudioProcessor::processBlock(juce::AudioBuffer<double>&, juce::MidiBuffer&)’ was hidden [-Woverloaded-virtual=]
+  291 |     virtual void processBlock (AudioBuffer<double>& buffer,
+      |                  ^~~~~~~~~~~~
+In file included from /home/doare/src/Mango/Source/PluginEditor.h:19:
+/home/doare/src/Mango/Source/PluginProcessor.h:33:10: note:   by ‘virtual void MangoAudioProcessor::processBlock(juce::AudioBuffer<float>&, juce::MidiBuffer&)’
+   33 |     void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
+      |          ^~~~~~~~~~~~
+[ 22%] Linking CXX static library Mango_artefacts/Release/libMango_SharedCode.a
+[ 62%] Built target Mango
+[ 64%] Linking CXX executable Mango_artefacts/Release/Standalone/Mango
+[ 66%] Linking CXX shared module Mango_artefacts/Release/VST3/Mango.vst3/Contents/x86_64-linux/Mango.so
+lto-wrapper: warning: using serial compilation of 69 LTRANS jobs
+lto-wrapper: note: see the ‘-flto’ option documentation for more information
+lto-wrapper: warning: using serial compilation of 80 LTRANS jobs
+lto-wrapper: note: see the ‘-flto’ option documentation for more information
