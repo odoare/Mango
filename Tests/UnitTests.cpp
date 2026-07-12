@@ -26,6 +26,7 @@
 #include <FxmeTools/dsp/BitCrusher.h>
 #include <FxmeTools/dsp/DelayLine.h>
 #include <FxmeTools/dsp/Saturator.h>
+#include <FxmeTools/dsp/GrainLooper.h>
 #include <FxmeTools/midi/StringSequencer.h>
 #include <FxmeTools/midi/SequencerEngine.h>
 #include <Dsp/OverrideParser.h>
@@ -202,6 +203,62 @@ static int testSaturator()
 }
 
 //==============================================================================
+static int testGrainLooperAttack()
+{
+    // Record a 100-sample DC grain at 1 kHz, then feed zeros: the output is
+    // (mix-faded) grain envelope only, so the mean over a settled window
+    // reflects the attack shape. mean(t^g) = 1/(g+1): g=6 -> ~0.14,
+    // linear g=1 -> ~0.5, g=1/6 -> ~0.86; no attack -> ~1.
+    auto meanLoopLevel = [] (float attackFraction, float gamma)
+    {
+        fxme::GrainLooper l;
+        l.prepare (1000.0, 1.0f);
+        l.setCrossfade (0.001f);            // 1-sample seams: negligible
+        l.setAttack (attackFraction, gamma);
+        l.trigger (0.1f);                   // 100 samples
+
+        double acc = 0.0;
+        int count = 0;
+        for (int i = 0; i < 500; ++i)
+        {
+            const float out = l.processSample (i < 100 ? 1.0f : 0.0f);
+            if (i >= 200) { acc += out; ++count; }   // mix fully settled
+        }
+        return acc / count;
+    };
+
+    CHECK (meanLoopLevel (0.0f, 1.0f)        > 0.9);    // attack off
+    CHECK (meanLoopLevel (1.0f, 6.0f)        < 0.25);   // slow swell
+    const double lin = meanLoopLevel (1.0f, 1.0f);
+    CHECK (std::fabs (lin - 0.5) < 0.1);                // linear
+    CHECK (meanLoopLevel (1.0f, 1.0f / 6.0f) > 0.75);   // fast
+
+    // Release, same measurement (mean(remaining^g) = 1/(g+1) too).
+    auto meanWithRelease = [] (float fraction, float gamma)
+    {
+        fxme::GrainLooper l;
+        l.prepare (1000.0, 1.0f);
+        l.setCrossfade (0.001f);
+        l.setRelease (fraction, gamma);
+        l.trigger (0.1f);
+
+        double acc = 0.0;
+        int count = 0;
+        for (int i = 0; i < 500; ++i)
+        {
+            const float out = l.processSample (i < 100 ? 1.0f : 0.0f);
+            if (i >= 200) { acc += out; ++count; }
+        }
+        return acc / count;
+    };
+
+    CHECK (meanWithRelease (0.0f, 1.0f) > 0.9);    // release off
+    CHECK (meanWithRelease (1.0f, 6.0f) < 0.25);   // fast: exp-decay-like tail
+    CHECK (meanWithRelease (1.0f, 1.0f / 6.0f) > 0.75);   // slow: holds then drops
+    return 0;
+}
+
+//==============================================================================
 static int testStringSequencerAddWithId()
 {
     fxme::StringSequencer seq;
@@ -326,6 +383,7 @@ int main()
     if (testBitCrusher())               return 1;
     if (testDelayLine())                return 1;
     if (testSaturator())                return 1;
+    if (testGrainLooperAttack())        return 1;
     if (testStringSequencerAddWithId()) return 1;
     if (testSequencerEngineEmptyBlocks()) return 1;
     if (testOverrideParser())           return 1;

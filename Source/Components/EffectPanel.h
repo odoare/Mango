@@ -49,6 +49,10 @@ public:
 
             case EffectType::Grain:
                 addKnob (prefix + "grain_fade", "Fade");
+                addKnob (prefix + "grain_att", "Attack");
+                addKnob (prefix + "grain_attcurve", "Att Curve");
+                addKnob (prefix + "grain_rel", "Release");
+                addKnob (prefix + "grain_relcurve", "Rel Curve");
                 addWeights (prefix + "grain_");
                 break;
 
