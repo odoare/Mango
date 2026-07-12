@@ -29,10 +29,11 @@ rel=0.5 acts as att=2/3, rel=1/3. The curves set the edge shapes: 0 slow,
 
 **Duration probabilities**: effects that need a rhythmic duration (gate rate, grain
 length, filter ramp) don't use a fixed value. You weight the probability of
-1/4, 1/8, 1/16, 1/32 and of straight/triplet/dotted; at each block entry the
-actual duration is drawn from those weights — e.g. with P(1/4)=1, P(1/8)=0.5,
-P(1/16)=0.1 the chance of an uncut quarter is 1/1.6. The draw is a pure function
-of (seed, lane, block, loop pass), so it repeats deterministically.
+1/4, 1/8, 1/16, 1/32 and of straight/triplet/dotted; the actual duration is
+drawn from those weights — e.g. with P(1/4)=1, P(1/8)=0.5, P(1/16)=0.1 the
+chance of an uncut quarter is 1/1.6. The draw is a pure function of
+(seed, lane, block): every pattern pass plays exactly the sequence the block
+visuals display, and changing the seed re-rolls every block.
 
 ## Per-block override language
 
@@ -63,9 +64,9 @@ Each lane header also has **M**ute and **S**olo toggles (muted / non-soloed
 lanes keep sequencing — draws stay deterministic — but stop processing audio).
 
 Parameter changes apply to the sounding blocks immediately: the active block
-is refreshed in place (same loop-pass random draw, new values), keeping the
-gate/ramp phase running. Host loop jumps re-enter blocks so every pass starts
-clean, and the same timeline position always reproduces the same draw.
+is refreshed in place (same random draw, new values), keeping the gate/ramp
+phase running. Host loop jumps re-enter blocks so every pass starts clean and
+plays the same drawn sequence.
 
 ## Building
 

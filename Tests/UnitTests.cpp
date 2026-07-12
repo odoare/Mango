@@ -208,8 +208,11 @@ static int testGrainLooperAttack()
     // Record a 100-sample DC grain at 1 kHz, then feed zeros: the output is
     // (mix-faded) grain envelope only, so the mean over a settled window
     // reflects the attack shape. mean(t^g) = 1/(g+1): g=6 -> ~0.14,
-    // linear g=1 -> ~0.5, g=1/6 -> ~0.86; no attack -> ~1.
-    auto meanLoopLevel = [] (float attackFraction, float gamma)
+    // linear g=1 -> ~0.5, g=1/6 -> ~0.86; no attack -> ~1. The mean over
+    // the first 100 samples (the recording pass-through) must match too:
+    // the first grain is shaped like the repetitions, not passed raw.
+    struct Levels { double first, loop; };
+    auto levels = [] (float attackFraction, float gamma)
     {
         fxme::GrainLooper l;
         l.prepare (1000.0, 1.0f);
@@ -217,21 +220,26 @@ static int testGrainLooperAttack()
         l.setAttack (attackFraction, gamma);
         l.trigger (0.1f);                   // 100 samples
 
-        double acc = 0.0;
-        int count = 0;
+        Levels lv { 0.0, 0.0 };
         for (int i = 0; i < 500; ++i)
         {
             const float out = l.processSample (i < 100 ? 1.0f : 0.0f);
-            if (i >= 200) { acc += out; ++count; }   // mix fully settled
+            if (i < 100)  lv.first += out / 100.0;
+            if (i >= 200) lv.loop  += out / 300.0;   // mix fully settled
         }
-        return acc / count;
+        return lv;
     };
 
-    CHECK (meanLoopLevel (0.0f, 1.0f)        > 0.9);    // attack off
-    CHECK (meanLoopLevel (1.0f, 6.0f)        < 0.25);   // slow swell
-    const double lin = meanLoopLevel (1.0f, 1.0f);
-    CHECK (std::fabs (lin - 0.5) < 0.1);                // linear
-    CHECK (meanLoopLevel (1.0f, 1.0f / 6.0f) > 0.75);   // fast
+    CHECK (levels (0.0f, 1.0f).loop        > 0.9);    // attack off
+    CHECK (levels (1.0f, 6.0f).loop        < 0.25);   // slow swell
+    const double lin = levels (1.0f, 1.0f).loop;
+    CHECK (std::fabs (lin - 0.5) < 0.1);              // linear
+    CHECK (levels (1.0f, 1.0f / 6.0f).loop > 0.75);   // fast
+
+    // The first (recording) grain carries the same envelope.
+    CHECK (levels (0.0f, 1.0f).first > 0.9);
+    CHECK (std::fabs (levels (1.0f, 1.0f).first - 0.5) < 0.1);
+    CHECK (levels (1.0f, 6.0f).first < 0.25);
 
     // Release, same measurement (mean(remaining^g) = 1/(g+1) too).
     auto meanWithRelease = [] (float fraction, float gamma)

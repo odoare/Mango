@@ -232,30 +232,12 @@ void MangoEngine::handleBlockEnter (Lane& lane, int blockId, bool isReEnter)
     ctx.mididurSeconds = mididurSeconds.load();
     ctx.isReEnter      = isReEnter;
 
-    if (isReEnter)
-    {
-        // Parameter refresh of the sounding block: same pass, same draw input.
-        ctx.loopIndex = lane.activeLoopIndex;
-    }
-    else
-    {
-        // The pattern pass this entry belongs to, exact regardless of buffer
-        // chunking: the absolute enter position is k * patternLen + blockStart.
-        const double patLen = lane.seq.getPatternLengthBeats();
-        if (const auto* b = lane.seq.blockById (blockId); b != nullptr && patLen > 0.0)
-        {
-            const double blockStartBeats = b->startStep * lane.seq.getStepSizeBeats();
-            ctx.loopIndex = (int64_t) std::llround ((chunkStartBeats - blockStartBeats) / patLen);
-        }
-    }
-
     const auto it = overrides.find (overrideKey (lane.laneIndex, blockId));
     ctx.overrides = it != overrides.end() ? &it->second : nullptr;
 
     currentEffect (lane).onBlockEnter (ctx);
-    lane.active          = true;
-    lane.activeBlockId   = blockId;
-    lane.activeLoopIndex = ctx.loopIndex;
+    lane.active        = true;
+    lane.activeBlockId = blockId;
 }
 
 void MangoEngine::handleBlockExit (Lane& lane)
@@ -303,7 +285,6 @@ void MangoEngine::process (juce::AudioBuffer<float>& buffer,
     if (pendingStart)
     {
         pendingStart = false;
-        chunkStartBeats = absoluteBeats;
         for (auto& lane : lanes)
             lane.engine->start (lane.seq);
     }
@@ -319,7 +300,6 @@ void MangoEngine::process (juce::AudioBuffer<float>& buffer,
         if (std::abs (ppq - absoluteBeats) > 1.0e-3)
         {
             absoluteBeats = ppq;
-            chunkStartBeats = absoluteBeats;
             for (auto& lane : lanes)
                 lane.engine->relocate (absoluteBeats, lane.seq);
         }
@@ -337,7 +317,6 @@ void MangoEngine::process (juce::AudioBuffer<float>& buffer,
             lane.seenParamVersion = version;
             if (lane.active && lane.activeBlockId >= 0)
             {
-                chunkStartBeats = absoluteBeats;
                 handleBlockEnter (lane, lane.activeBlockId, true);
             }
         }
@@ -353,7 +332,6 @@ void MangoEngine::process (juce::AudioBuffer<float>& buffer,
     {
         const int    n     = juce::jmin (kChunk, numSamples - offset);
         const double delta = n * currentBpm / (60.0 * sampleRate);
-        chunkStartBeats = absoluteBeats;
 
         for (int row = 0; row < numLanes; ++row)
         {

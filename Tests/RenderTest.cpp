@@ -146,7 +146,7 @@ static void testSeedDeterminism()
         setParam (p, "l0_gate_w32", 0.4f);
         setParam (p, "l0_gate_wtrip", 0.5f);
         setParam (p, "seed", seed);
-        return render (p, 8.0);   // 4 pattern passes -> 4 independent draws
+        return render (p, 8.0);   // 4 pattern passes
     };
 
     const auto a = renderWithSeed (42.0f);
@@ -396,6 +396,47 @@ static void testMuteSolo()
 }
 
 //==============================================================================
+/** With random duration weights, every pattern pass must play the same
+    drawn sequence — the one the block visuals display (draws depend on
+    seed/lane/block only, never on the pass). Pattern = 16 sixteenths = 2 s
+    at the 120 bpm free-run; render two passes and check both follow the
+    same (independently recomputed) drawn duration. */
+static void testPassRepeatability()
+{
+    // Recompute the expected draw exactly as the engine does, choosing a
+    // seed whose draw differs from the 1-beat fallback so the check cannot
+    // pass by accident.
+    fxme::WeightedDurationTable table;
+    table.baseWeights[0] = 1.0f; table.baseWeights[1] = 0.8f;
+    table.baseWeights[2] = 0.6f; table.baseWeights[3] = 0.4f;
+    uint64_t seed = 0;
+    double d = 1.0;
+    for (uint64_t s = 1; s < 50 && d == 1.0; ++s)
+    {
+        seed = s;
+        d = table.drawBeats (fxme::detrand::u01 (seed, 0, 0, 0));
+    }
+    CHECK (d != 1.0);
+
+    MangoAudioProcessor p;
+    addFullBlock (p, 0);   // block id 0
+    setParam (p, "l0_gate_w4", 1.0f);
+    setParam (p, "l0_gate_w8", 0.8f);
+    setParam (p, "l0_gate_w16", 0.6f);
+    setParam (p, "l0_gate_w32", 0.4f);
+    setParam (p, "seed", (float) seed);
+
+    const auto out = render (p, 4.0);
+    for (double passStart : { 0.0, 2.0 })
+    {
+        const double durSec = d * 0.5;   // beats -> seconds at 120 bpm
+        CHECK (rmsOf (out, passStart + 0.4 * durSec, passStart + 0.6 * durSec) > 0.6f);
+        CHECK (rmsOf (out, passStart + 1.4 * durSec, passStart + 1.6 * durSec) < 0.01f);
+    }
+    std::printf ("pass repeatability: both passes follow the drawn %.3f beats.\n", d);
+}
+
+//==============================================================================
 /** A host loop jump back into the same block must re-enter it: the pass at
     the same timeline position reproduces the same draw (by design), and the
     gate phase restarts from "open" at the block start. A dotted quarter
@@ -459,6 +500,7 @@ static void dumpEditorSnapshot (const juce::String& path)
         p.engine.sequencerFor (5).addBlock (0, 8);    // quant
     }
     p.engine.rebuildOverrides();
+    setParam (p, "numsteps", 32.0f);   // > the old 20 px/step limit: must still fit
     setParam (p, "l0_gate_att", 0.2f);
     setParam (p, "l0_gate_rel", 0.25f);
     setParam (p, "l0_gate_relcurve", 1.0f);
@@ -517,6 +559,7 @@ int main (int argc, char* argv[])
     testGateCurves();
     testAttRelSharing();
     testMuteSolo();
+    testPassRepeatability();
     testLoopJumpReenter();
 
     if (failures == 0)

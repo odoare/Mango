@@ -67,7 +67,7 @@ public:
     void onBlockEnter (const BlockContext& ctx) override
     {
         const float u = fxme::detrand::u01 (ctx.seed, (uint64_t) ctx.laneIndex,
-                                            (uint64_t) ctx.blockId, (uint64_t) ctx.loopIndex, 0);
+                                            (uint64_t) ctx.blockId, 0);
         const double beats      = resolveTable (ctx, weights).drawBeats (u);
         const float  defaultSec = (float) (beats * 60.0 / ctx.bpm);
         const float  durSec     = juce::jmax (0.001f, overrideDurSeconds (ctx, OvKey::Dur, defaultSec));

@@ -46,6 +46,9 @@ public:
             row.rubber = std::make_unique<LockedRubber> (
                 processor.engine.sequencerFor (i), processor.engine.lock(),
                 makeBlockPainter (i));
+            // Always fit the whole pattern: the six lanes, the ruler and the
+            // playhead must stay aligned whatever the step count.
+            row.rubber->setMinPixelsPerStep (1);
             addAndMakeVisible (*row.rubber);
 
             row.rubber->onBlockSelected = [this, i] (int blockId)

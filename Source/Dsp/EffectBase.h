@@ -28,12 +28,13 @@
 namespace mng
 {
 
-/** Everything an effect may need when its block starts sounding. */
+/** Everything an effect may need when its block starts sounding. Random
+    draws are keyed on (seed, laneIndex, blockId, drawIndex) only — every
+    pattern pass replays the same drawn sequence, exactly as displayed. */
 struct BlockContext
 {
     int      laneIndex  = 0;       // stable lane identity (not display position)
     int      blockId    = -1;
-    int64_t  loopIndex  = 0;       // pattern pass number on the host timeline
     uint64_t seed       = 0;       // global seed parameter
     double   sampleRate = 44100.0;
     double   bpm        = 120.0;

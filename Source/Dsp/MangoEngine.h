@@ -18,10 +18,10 @@
     (see LaneRackComponent's locked rubber).
 
     Determinism: every random draw is fxme::detrand::u01(seed, laneIndex,
-    blockId, loopIndex, k) — a pure function of the timeline. loopIndex is
-    the pattern pass number computed from the absolute beat position (host
-    ppq when synced, an internal accumulator when free-running), so looping
-    a section in the DAW or re-bouncing reproduces the same glitches.
+    blockId, drawIndex) — a pure function of the seed and the block, NOT of
+    time. Every pattern pass therefore plays exactly the drawn sequence the
+    block visuals display, and looping a section in the DAW or re-bouncing
+    reproduces the same glitches; changing the seed re-rolls every block.
 
     Author: Olivier Doaré, github.com/odoare
     (c) 2026 Olivier Doaré
@@ -81,7 +81,7 @@ public:
 
     /** A parameter of this lane changed: its active block is re-entered on
         the next process() so the audible result updates immediately (same
-        loop-pass draw, new parameter values). Any thread. */
+        block draw, new parameter values). Any thread. */
     void noteLaneParamsChanged (int laneIndex) noexcept
     {
         if (laneIndex >= 0 && laneIndex < numLanes)
@@ -121,7 +121,6 @@ private:
         int      currentType     = 0;      // audio-thread view of typeParam
         bool     active          = false;  // an entered block is sounding
         int      activeBlockId   = -1;
-        int64_t  activeLoopIndex = 0;      // the pass the active block was drawn on
         uint32_t seenParamVersion = 0;
     };
 
@@ -151,7 +150,6 @@ private:
     double currentBpm = 120.0;
     bool   pendingStart = true;   // engines start on the first process() (bpm known)
     double absoluteBeats = 0.0;        // audio thread; host ppq when synced
-    double chunkStartBeats = 0.0;      // absolute beats at the current sub-block
     std::atomic<float> mididurSeconds { 1.0f / 440.0f };
 
     std::array<std::atomic<double>, numLanes> guiStep {};
