@@ -104,6 +104,7 @@ public:
     double guiPlayheadStep (int laneIndex) const { return guiStep[(size_t) laneIndex].load(); }
     int    guiActiveBlock (int laneIndex) const  { return guiActive[(size_t) laneIndex].load(); }
     float  guiMididur() const                    { return mididurSeconds.load(); }
+    double guiBpm() const                        { return publishedBpm.load(); }
 
 private:
     static constexpr int kChunk = 32;
@@ -156,6 +157,7 @@ private:
     std::array<std::atomic<double>, numLanes> guiStep {};
     std::array<std::atomic<int>, numLanes>    guiActive {};
     std::array<std::atomic<uint32_t>, numLanes> laneParamVersion {};
+    std::atomic<double> publishedBpm { 120.0 };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MangoEngine)
 };

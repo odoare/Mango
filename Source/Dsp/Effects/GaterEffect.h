@@ -84,8 +84,8 @@ public:
             overrideOr (ctx, OvKey::AttCurve, attCurveParam->load()));
         const float relCurve = juce::jlimit (0.0f, 1.0f,
             overrideOr (ctx, OvKey::RelCurve, relCurveParam->load()));
-        attGamma = std::pow (kCurveRange, 1.0f - 2.0f * attCurve);
-        relGamma = std::pow (kCurveRange, 2.0f * relCurve - 1.0f);
+        attGamma = attackGammaFor (attCurve);
+        relGamma = releaseGammaFor (relCurve);
 
         // The sequence always starts with an open gate; a parameter refresh
         // keeps the running phase and just applies the new timing.
@@ -120,8 +120,6 @@ public:
     }
 
 private:
-    static constexpr float kCurveRange = 6.0f;   // exponent at the curve extremes
-
     DurationWeights weights;
     std::atomic<float>* attParam      = nullptr;
     std::atomic<float>* relParam      = nullptr;

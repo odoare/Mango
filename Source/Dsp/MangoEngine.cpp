@@ -379,6 +379,7 @@ void MangoEngine::process (juce::AudioBuffer<float>& buffer,
         }
 
     // Publish GUI state.
+    publishedBpm.store (currentBpm);
     for (const auto& lane : lanes)
     {
         guiStep[(size_t) lane.laneIndex].store (lane.engine->playheadStep (lane.seq));

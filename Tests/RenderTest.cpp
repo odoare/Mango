@@ -427,11 +427,22 @@ static void dumpEditorSnapshot (const juce::String& path)
     MangoAudioProcessor p;
     {
         const juce::ScopedLock sl (p.engine.lock());
-        const int id = p.engine.sequencerFor (0).addBlock (0, 4);
+        const int id = p.engine.sequencerFor (0).addBlock (0, 6);
         p.engine.sequencerFor (0).setContent (id, "dur=0.125");
-        p.engine.sequencerFor (2).addBlock (4, 6);
+        p.engine.sequencerFor (1).addBlock (2, 8);    // grain
+        p.engine.sequencerFor (2).addBlock (8, 6);    // delay
+        p.engine.sequencerFor (3).addBlock (4, 6);    // dist
+        p.engine.sequencerFor (4).addBlock (10, 6);   // filter
+        p.engine.sequencerFor (5).addBlock (0, 8);    // quant
     }
     p.engine.rebuildOverrides();
+    setParam (p, "l0_gate_att", 0.2f);
+    setParam (p, "l0_gate_rel", 0.25f);
+    setParam (p, "l0_gate_relcurve", 1.0f);
+    setParam (p, "l1_grain_att", 0.35f);
+    setParam (p, "l1_grain_rel", 0.5f);
+    setParam (p, "l1_grain_relcurve", 0.8f);
+    setParam (p, "l5_qnt_bits", 2.0f);
 
     auto writePng = [] (juce::Component& c, const juce::File& file)
     {

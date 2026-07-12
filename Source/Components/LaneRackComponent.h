@@ -22,6 +22,8 @@
 #include <JuceHeader.h>
 #include "../PluginProcessor.h"
 #include "../Theme.h"
+#include "../Dsp/DurationWeights.h"
+#include "BlockGraphics.h"
 
 namespace mng
 {
@@ -41,10 +43,9 @@ public:
             row.header = std::make_unique<LaneHeader> (*this, i);
             addAndMakeVisible (*row.header);
 
-            const auto accent = theme::laneColour (i);
             row.rubber = std::make_unique<LockedRubber> (
                 processor.engine.sequencerFor (i), processor.engine.lock(),
-                makeBlockPainter (accent));
+                makeBlockPainter (i));
             addAndMakeVisible (*row.rubber);
 
             row.rubber->onBlockSelected = [this, i] (int blockId)
@@ -251,24 +252,162 @@ private:
     };
 
     //==========================================================================
-    fxme::SequencerRubber::BlockPainter makeBlockPainter (juce::Colour accent)
+    fxme::SequencerRubber::BlockPainter makeBlockPainter (int laneIndex)
     {
-        return [accent] (juce::Graphics& g, juce::Rectangle<int> r,
-                         const fxme::SeqBlock& b, bool selected, bool playing)
+        return [this, laneIndex] (juce::Graphics& g, juce::Rectangle<int> r,
+                                  const fxme::SeqBlock& b, bool selected, bool playing)
         {
-            auto fill = accent.withAlpha (playing ? 0.95f : selected ? 0.8f : 0.55f);
-            g.setColour (fill);
+            const auto accent = theme::laneColour (laneIndex);
+            g.setColour (accent.withAlpha (playing ? 0.95f : selected ? 0.8f : 0.55f));
             g.fillRoundedRectangle (r.toFloat(), 3.0f);
+
+            paintEffectVisual (g, r.toFloat().reduced (2.0f), laneIndex, b);
 
             if (! b.content.empty())
             {
                 g.setColour (juce::Colours::white.withAlpha (0.9f));
                 g.drawRoundedRectangle (r.toFloat().reduced (1.0f), 3.0f, 1.0f);
-                g.setFont (juce::Font (juce::FontOptions (10.0f)));
-                g.drawText (juce::String (b.content), r.reduced (4, 1),
-                            juce::Justification::centredLeft);
+
+                // The block's override string, with a soft dark backing so it
+                // stays readable on top of the visuals.
+                g.setFont (juce::Font (juce::FontOptions (12.5f)));
+                const auto textArea = r.reduced (5, 2);
+                g.setColour (juce::Colours::black.withAlpha (0.55f));
+                g.drawText (juce::String (b.content), textArea.translated (1, 1),
+                            juce::Justification::topLeft);
+                g.setColour (juce::Colours::white);
+                g.drawText (juce::String (b.content), textArea,
+                            juce::Justification::topLeft);
             }
         };
+    }
+
+    /** Paints the effect-specific picture inside one block, from the lane's
+        parameters, the block's overrides and — for the weight-drawn
+        durations — the actual pass-0 deterministic draw. */
+    void paintEffectVisual (juce::Graphics& g, juce::Rectangle<float> r,
+                            int laneIndex, const fxme::SeqBlock& b)
+    {
+        auto& apvts = processor.apvts;
+        const auto prefix = pid::lanePrefix (laneIndex);
+        auto param = [&] (const char* suffix)
+        {
+            return apvts.getRawParameterValue (prefix + suffix)->load();
+        };
+
+        // Benign unlocked reads: GUI-only, a transient stale value at worst.
+        const double stepBeats  = processor.engine.sequencerFor (laneIndex).getStepSizeBeats();
+        const double blockBeats = (b.endStep - b.startStep) * stepBeats;
+        const double bpm        = processor.engine.guiBpm();
+        const float  mididur    = processor.engine.guiMididur();
+
+        std::optional<ParsedOverrides> ov;
+        if (! b.content.empty())
+            ov = parseOverrides (b.content);
+
+        auto ovOr = [&] (OvKey k, float fallback)
+        {
+            if (ov)
+                if (const auto* e = ov->find (k))
+                    return e->eval (mididur);
+            return fallback;
+        };
+        auto ovDurBeats = [&] (double fallbackBeats)
+        {
+            if (ov)
+                if (const auto* e = ov->find (OvKey::Dur))
+                    return e->kind == Expr::MididurScaled
+                         ? (double) e->eval (mididur) * bpm / 60.0   // seconds -> beats
+                         : (double) e->value * 4.0;                  // whole-note fraction
+            return fallbackBeats;
+        };
+
+        // The duration this block draws on pass 0 (same hash as the engine).
+        auto drawnBeats = [&] (const char* weightPrefix)
+        {
+            static constexpr OvKey baseKeys[] = { OvKey::W4, OvKey::W8, OvKey::W16, OvKey::W32 };
+            static constexpr OvKey modKeys[]  = { OvKey::Wstr, OvKey::Wtrip, OvKey::Wdot };
+            fxme::WeightedDurationTable t;
+            for (int i = 0; i < fxme::kNumNoteBases; ++i)
+                t.baseWeights[i] = ovOr (baseKeys[i],
+                    apvts.getRawParameterValue (prefix + weightPrefix
+                                                + DurationWeights::baseSuffixes[i])->load());
+            for (int i = 0; i < fxme::kNumNoteMods; ++i)
+                t.modWeights[i] = ovOr (modKeys[i],
+                    apvts.getRawParameterValue (prefix + weightPrefix
+                                                + DurationWeights::modSuffixes[i])->load());
+            const auto seed = (uint64_t) (int64_t) apvts.getRawParameterValue (pid::seed)->load();
+            return t.drawBeats (fxme::detrand::u01 (seed, (uint64_t) laneIndex,
+                                                    (uint64_t) b.id, 0, 0));
+        };
+
+        const auto curveColour  = juce::Colours::white.withAlpha (0.85f);
+        const auto filterColour = juce::Colour (0xff14101a).withAlpha (0.85f);
+
+        switch ((EffectType) (int) apvts.getRawParameterValue (pid::laneType (laneIndex))->load())
+        {
+            case EffectType::Gater:
+            {
+                const double dur = juce::jmax (1.0e-3, ovDurBeats (drawnBeats ("gate_")));
+                blockgfx::EnvShape s;
+                s.cycleBeats = 2.0 * dur;
+                s.openBeats  = dur;
+                s.attFrac    = juce::jlimit (0.0f, 0.25f, ovOr (OvKey::Att, param ("gate_att")));
+                s.relFrac    = juce::jlimit (0.0f, 0.25f, ovOr (OvKey::Rel, param ("gate_rel")));
+                s.attGamma   = attackGammaFor (ovOr (OvKey::AttCurve, param ("gate_attcurve")));
+                s.relGamma   = releaseGammaFor (ovOr (OvKey::RelCurve, param ("gate_relcurve")));
+                blockgfx::paintEnvCurve (g, r, blockBeats, s, curveColour);
+                break;
+            }
+
+            case EffectType::Grain:
+            {
+                const double dur = juce::jmax (1.0e-3, ovDurBeats (drawnBeats ("grain_")));
+                blockgfx::EnvShape s;
+                s.cycleBeats = dur;   // repetitions are contiguous
+                s.openBeats  = dur;
+                s.attFrac    = juce::jlimit (0.0f, 1.0f, ovOr (OvKey::Att, param ("grain_att")));
+                s.relFrac    = juce::jlimit (0.0f, 1.0f, ovOr (OvKey::Rel, param ("grain_rel")));
+                s.attGamma   = attackGammaFor (ovOr (OvKey::AttCurve, param ("grain_attcurve")));
+                s.relGamma   = releaseGammaFor (ovOr (OvKey::RelCurve, param ("grain_relcurve")));
+                blockgfx::paintMirroredEnv (g, r, blockBeats, s, curveColour);
+                break;
+            }
+
+            case EffectType::Delay:
+            {
+                double delayBeats = param ("dly_dur") * bpm / 60.0;
+                if (ov)
+                    if (const auto* e = ov->find (OvKey::Dur))
+                        delayBeats = e->kind == Expr::MididurScaled
+                                   ? (double) e->eval (mididur) * bpm / 60.0
+                                   : (double) e->value * 4.0;
+                const float fb = ovOr (OvKey::Fb, param ("dly_fb"));
+                blockgfx::paintDelayLines (g, r, blockBeats, delayBeats, fb, curveColour);
+                break;
+            }
+
+            case EffectType::Distortion:
+                blockgfx::paintDistWave (g, r, ovOr (OvKey::Drive, param ("dist_drive")),
+                                         curveColour);
+                break;
+
+            case EffectType::FilterEnv:
+            {
+                const double ramp = juce::jmax (1.0e-3, ovDurBeats (drawnBeats ("flt_")));
+                const bool formant = (int) ovOr (OvKey::Mode, param ("flt_mode")) == 2;
+                const bool rising = formant
+                    ? ovOr (OvKey::V1, param ("flt_v1")) >= ovOr (OvKey::V0, param ("flt_v0"))
+                    : ovOr (OvKey::F1, param ("flt_f1")) >= ovOr (OvKey::F0, param ("flt_f0"));
+                blockgfx::paintRampCurve (g, r, blockBeats, ramp, rising, filterColour);
+                break;
+            }
+
+            case EffectType::Quantizer:
+                blockgfx::paintStairsWave (g, r, ovOr (OvKey::Bits, param ("qnt_bits")),
+                                           curveColour);
+                break;
+        }
     }
 
     void moveRow (int row, int delta)
@@ -284,6 +423,15 @@ private:
             rows[(size_t) i].rubber->setPlayheadStep (processor.engine.guiPlayheadStep (i));
             rows[(size_t) i].rubber->setActiveBlockId (processor.engine.guiActiveBlock (i));
         }
+
+        // The block visuals follow the lane parameters; refresh them at
+        // ~10 Hz so knob moves show up even while the transport is stopped.
+        if (++visualTick >= 3)
+        {
+            visualTick = 0;
+            for (auto& row : rows)
+                row.rubber->repaint();
+        }
     }
 
     struct Row
@@ -294,6 +442,7 @@ private:
 
     MangoAudioProcessor& processor;
     std::array<Row, numLanes> rows;   // indexed by lane identity
+    int visualTick = 0;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LaneRackComponent)
 };

@@ -46,6 +46,14 @@ struct BlockContext
     bool isReEnter = false;
 };
 
+/** Curve parameter (0 slow, 0.5 linear, 1 very fast) -> envelope exponent.
+    Attack gain = ramp^gamma; release gain = remaining^gamma, so the release
+    mapping is mirrored (fast release = big exponent = exponential-decay
+    tail). Shared by the effects and the block visuals. */
+inline constexpr float kCurveRange = 6.0f;
+inline float attackGammaFor (float curve)  { return std::pow (kCurveRange, 1.0f - 2.0f * curve); }
+inline float releaseGammaFor (float curve) { return std::pow (kCurveRange, 2.0f * curve - 1.0f); }
+
 /** The override for `key`, or `fallback` when the block doesn't set it. */
 inline float overrideOr (const BlockContext& ctx, OvKey key, float fallback)
 {

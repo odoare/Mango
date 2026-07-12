@@ -30,7 +30,6 @@ class GrainDupEffect : public EffectBase
 {
 public:
     static constexpr float kMaxGrainSeconds = 2.0f;
-    static constexpr float kCurveRange      = 6.0f;   // attack exponent at the extremes
 
     static void addParameters (std::vector<std::unique_ptr<juce::RangedAudioParameter>>& params,
                                const juce::String& lanePrefix, const juce::String& nameP)
@@ -98,8 +97,8 @@ public:
                                              overrideOr (ctx, OvKey::Rel, relParam->load()));
         const float relCurve = juce::jlimit (0.0f, 1.0f,
                                              overrideOr (ctx, OvKey::RelCurve, relCurveParam->load()));
-        const float attGamma = std::pow (kCurveRange, 1.0f - 2.0f * attCurve);
-        const float relGamma = std::pow (kCurveRange, 2.0f * relCurve - 1.0f);
+        const float attGamma = attackGammaFor (attCurve);
+        const float relGamma = releaseGammaFor (relCurve);
 
         for (auto& l : loopers)
         {
