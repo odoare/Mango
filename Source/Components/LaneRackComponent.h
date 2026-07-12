@@ -169,6 +169,14 @@ private:
             }
             upButton.onClick   = [this] { rack.moveRow (row, -1); };
             downButton.onClick = [this] { rack.moveRow (row, +1); };
+
+            const auto prefix = pid::lanePrefix (laneIndex);
+            setupToggle (muteButton, "M", juce::Colour (0xffd9b13a));
+            setupToggle (soloButton, "S", juce::Colour (0xff9ac93c));
+            muteAtt = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment> (
+                rack.processor.apvts, prefix + "mute", muteButton);
+            soloAtt = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment> (
+                rack.processor.apvts, prefix + "solo", soloButton);
         }
 
         void setRow (int newRow)
@@ -192,17 +200,54 @@ private:
             upButton.setBounds (arrows.removeFromTop (16));
             downButton.setBounds (arrows.removeFromBottom (16));
             r.removeFromLeft (2);
+
+            auto ms = r.removeFromRight (22).withSizeKeepingCentre (20, 42);
+            muteButton.setBounds (ms.removeFromTop (20));
+            soloButton.setBounds (ms.removeFromBottom (20));
+            r.removeFromRight (2);
+
             typeBox.setBounds (r.withSizeKeepingCentre (r.getWidth(), 24));
         }
 
     private:
+        /** A square letter toggle small enough for the lane header (the
+            stock LookAndFeel text indents leave no room at this size). */
+        struct MiniToggle : juce::TextButton
+        {
+            void paintButton (juce::Graphics& g, bool highlighted, bool) override
+            {
+                const bool on = getToggleState();
+                auto bg = findColour (on ? buttonOnColourId : buttonColourId);
+                g.setColour (highlighted ? bg.brighter (0.2f) : bg);
+                g.fillRoundedRectangle (getLocalBounds().toFloat().reduced (1.0f), 4.0f);
+                g.setColour (findColour (on ? textColourOnId : textColourOffId));
+                g.setFont (juce::Font (juce::FontOptions ((float) getHeight() * 0.62f,
+                                                          juce::Font::bold)));
+                g.drawText (getButtonText(), getLocalBounds(), juce::Justification::centred);
+            }
+        };
+
+        void setupToggle (juce::TextButton& b, const juce::String& text, juce::Colour accent)
+        {
+            b.setButtonText (text);
+            b.setClickingTogglesState (true);
+            b.setMouseClickGrabsKeyboardFocus (false);
+            b.setColour (juce::TextButton::buttonColourId, juce::Colour (0xff2b2b2b));
+            b.setColour (juce::TextButton::buttonOnColourId, accent);
+            b.setColour (juce::TextButton::textColourOffId, theme::text);
+            b.setColour (juce::TextButton::textColourOnId, juce::Colours::black);
+            addAndMakeVisible (b);
+        }
+
         LaneRackComponent& rack;
         const int laneIndex;
         int row = 0;
 
         juce::ArrowButton upButton, downButton;
+        MiniToggle muteButton, soloButton;
         juce::ComboBox typeBox;
         std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> typeAtt;
+        std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> muteAtt, soloAtt;
     };
 
     //==========================================================================

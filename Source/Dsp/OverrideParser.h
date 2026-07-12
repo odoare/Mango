@@ -60,12 +60,13 @@ enum class OvKey
 {
     Dur = 0, Fb, Att, Rel, Q, F0, F1, V0, V1,
     Bits, Drive, Bias, Sag, Mix, Model, Mode, Fade,
+    W4, W8, W16, W32, Wstr, Wtrip, Wdot,   // duration probability weights
     Count
 };
 
 struct ParsedOverrides
 {
-    static constexpr int kMaxEntries = 8;
+    static constexpr int kMaxEntries = 16;
 
     struct Entry { OvKey key = OvKey::Count; Expr expr; };
     Entry entries[kMaxEntries];
@@ -92,7 +93,8 @@ namespace detail
 {
     inline const char* keyNames[(int) OvKey::Count] = {
         "dur", "fb", "att", "rel", "q", "f0", "f1", "v0", "v1",
-        "bits", "drive", "bias", "sag", "mix", "model", "mode", "fade"
+        "bits", "drive", "bias", "sag", "mix", "model", "mode", "fade",
+        "w4", "w8", "w16", "w32", "wstr", "wtrip", "wdot"
     };
 
     inline std::optional<OvKey> keyFromString (const std::string& s)

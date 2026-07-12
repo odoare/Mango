@@ -91,7 +91,7 @@ public:
     {
         const float u = fxme::detrand::u01 (ctx.seed, (uint64_t) ctx.laneIndex,
                                             (uint64_t) ctx.blockId, (uint64_t) ctx.loopIndex, 0);
-        const double beats      = weights.table().drawBeats (u);
+        const double beats      = resolveTable (ctx, weights).drawBeats (u);
         const float  defaultSec = (float) (beats * 60.0 / ctx.bpm);
         const float  rampSec    = juce::jmax (0.001f, overrideDurSeconds (ctx, OvKey::Dur, defaultSec));
         rampSamples = juce::jmax (kControlInterval, (int) std::lround (rampSec * ctx.sampleRate));
@@ -105,9 +105,12 @@ public:
         v1   = juce::jlimit (0, fxme::FormantFilter::kNumVowels - 1,
                              (int) overrideOr (ctx, OvKey::V1, v1Param->load()));
 
-        pos = 0;
         sinceControl = kControlInterval;   // force a coefficient update on entry
-        reset();
+        if (! ctx.isReEnter)               // parameter refresh keeps the ramp phase
+        {
+            pos = 0;
+            reset();
+        }
     }
 
     void onBlockExit() override {}

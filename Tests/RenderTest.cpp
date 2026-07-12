@@ -270,6 +270,128 @@ static void testHostSync()
 }
 
 //==============================================================================
+/** Changing a weight while a block is sounding must retime the gate
+    immediately — no block re-entry, no transport restart. */
+static void testLiveWeightChange()
+{
+    MangoAudioProcessor p;
+    addFullBlock (p, 0);   // one block spanning the whole 2 s pattern
+    p.prepareToPlay (kSampleRate, kBlockSize);
+
+    std::vector<float> out;
+    juce::AudioBuffer<float> buffer (2, kBlockSize);
+    juce::MidiBuffer midi;
+    const int numBlocks = (int) std::ceil (1.2 * kSampleRate / kBlockSize);
+    bool switched = false;
+
+    for (int blk = 0; blk < numBlocks; ++blk)
+    {
+        const double t = blk * kBlockSize / kSampleRate;
+        if (! switched && t >= 0.6)   // mid-block, inside the closed phase
+        {
+            // Quarters -> straight thirty-seconds (0.0625 s at 120 bpm).
+            setParam (p, "l0_gate_w4", 0.0f);
+            setParam (p, "l0_gate_w32", 1.0f);
+            switched = true;
+        }
+        for (int i = 0; i < kBlockSize; ++i)
+        {
+            buffer.setSample (0, i, 1.0f);
+            buffer.setSample (1, i, 1.0f);
+        }
+        p.processBlock (buffer, midi);
+        for (int i = 0; i < kBlockSize; ++i)
+            out.push_back (buffer.getSample (0, i));
+    }
+
+    // Before the change: quarter gate at 120 bpm = open [0,0.5), closed [0.5,1).
+    CHECK (rmsOf (out, 0.05, 0.45) > 0.9f);
+    CHECK (rmsOf (out, 0.52, 0.58) < 0.01f);
+
+    // After the change the gate must cycle fast (~16 cycles/s): within
+    // [0.75, 1.05] both loud and quiet 15 ms slices must exist.
+    int loud = 0, quiet = 0;
+    for (double t = 0.75; t < 1.05; t += 0.015)
+    {
+        const float r = rmsOf (out, t, t + 0.015);
+        loud  += r > 0.5f ? 1 : 0;
+        quiet += r < 0.1f ? 1 : 0;
+    }
+    CHECK (loud >= 3 && quiet >= 3);
+    std::printf ("live weight change: gate retimes mid-block (loud %d / quiet %d slices).\n",
+                 loud, quiet);
+}
+
+//==============================================================================
+static void testMuteSolo()
+{
+    MangoAudioProcessor p;
+    addFullBlock (p, 0);
+    setParam (p, "l0_mute", 1.0f);
+    auto out = render (p, 1.0);
+    CHECK (rmsOf (out, 0.55, 0.95) > 0.5f);   // gate bypassed: closed phase passes
+
+    setParam (p, "l0_mute", 0.0f);
+    setParam (p, "l3_solo", 1.0f);            // solo elsewhere also bypasses lane 0
+    out = render (p, 1.0);
+    CHECK (rmsOf (out, 0.55, 0.95) > 0.5f);
+
+    setParam (p, "l3_solo", 0.0f);
+    out = render (p, 1.0);
+    CHECK (rmsOf (out, 0.55, 0.95) < 0.01f);  // gating again
+    std::printf ("mute/solo: lane bypass works.\n");
+}
+
+//==============================================================================
+/** A host loop jump back into the same block must re-enter it: the pass at
+    the same timeline position reproduces the same draw (by design), and the
+    gate phase restarts from "open" at the block start. A dotted quarter
+    (1.5 beats) does not divide the 4-beat pattern, so a missing re-enter
+    would leave the gate phase-misaligned on the second pass. */
+static void testLoopJumpReenter()
+{
+    MangoAudioProcessor p;
+    addFullBlock (p, 0);
+    setParam (p, "l0_gate_wstr", 0.0f);
+    setParam (p, "l0_gate_wdot", 1.0f);   // only dotted quarters possible
+
+    FakePlayHead playHead;
+    playHead.bpm = 120.0;
+    p.setPlayHead (&playHead);
+    p.prepareToPlay (kSampleRate, kBlockSize);
+
+    // Loop the 4-beat (2 s) pattern twice via ppq wrapping.
+    std::vector<float> out;
+    juce::AudioBuffer<float> buffer (2, kBlockSize);
+    juce::MidiBuffer midi;
+    const int numBlocks = (int) std::ceil (4.0 * kSampleRate / kBlockSize);
+    for (int blk = 0; blk < numBlocks; ++blk)
+    {
+        const double beats = blk * kBlockSize * playHead.bpm / (60.0 * kSampleRate);
+        playHead.ppq = std::fmod (beats, 4.0);
+        for (int i = 0; i < kBlockSize; ++i)
+        {
+            buffer.setSample (0, i, 1.0f);
+            buffer.setSample (1, i, 1.0f);
+        }
+        p.processBlock (buffer, midi);
+        for (int i = 0; i < kBlockSize; ++i)
+            out.push_back (buffer.getSample (0, i));
+    }
+    p.setPlayHead (nullptr);
+
+    // Dotted quarter = 0.75 s: each pass must start open [0, 0.75) then
+    // close [0.75, 1.5). Without the re-enter, pass 2 would still be open
+    // in [2.8, 3.4] (stale phase from pass 1).
+    for (double passStart : { 0.0, 2.0 })
+    {
+        CHECK (rmsOf (out, passStart + 0.05, passStart + 0.70) > 0.9f);
+        CHECK (rmsOf (out, passStart + 0.80, passStart + 1.45) < 0.01f);
+    }
+    std::printf ("loop jump: block re-enters, gate phase restarts each pass.\n");
+}
+
+//==============================================================================
 static void dumpEditorSnapshot (const juce::String& path)
 {
     MangoAudioProcessor p;
@@ -327,6 +449,9 @@ int main (int argc, char* argv[])
     testQuantizer();
     testStateRoundTrip();
     testHostSync();
+    testLiveWeightChange();
+    testMuteSolo();
+    testLoopJumpReenter();
 
     if (failures == 0)
         std::printf ("RenderTest: all checks passed.\n");

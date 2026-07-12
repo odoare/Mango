@@ -59,7 +59,7 @@ public:
     {
         const float u = fxme::detrand::u01 (ctx.seed, (uint64_t) ctx.laneIndex,
                                             (uint64_t) ctx.blockId, (uint64_t) ctx.loopIndex, 0);
-        const double beats      = weights.table().drawBeats (u);
+        const double beats      = resolveTable (ctx, weights).drawBeats (u);
         const float  defaultSec = (float) (beats * 60.0 / ctx.bpm);
         const float  durSec     = juce::jlimit (0.005f, kMaxGrainSeconds,
                                                 overrideDurSeconds (ctx, OvKey::Dur, defaultSec));
@@ -67,9 +67,15 @@ public:
                                                 overrideOr (ctx, OvKey::Fade, fadeParam->load()));
 
         for (auto& l : loopers)
-        {
             l.setCrossfade (fade);
-            l.trigger (durSec);
+
+        // On a parameter refresh keep the looping grain unless its duration
+        // actually changed (re-triggering records a fresh grain).
+        if (! ctx.isReEnter || std::abs (durSec - lastDurSec) > 1.0e-4f)
+        {
+            for (auto& l : loopers)
+                l.trigger (durSec);
+            lastDurSec = durSec;
         }
     }
 
@@ -93,6 +99,7 @@ private:
     DurationWeights weights;
     std::atomic<float>* fadeParam = nullptr;
     std::vector<fxme::GrainLooper> loopers;
+    float lastDurSec = -1.0f;
 };
 
 } // namespace mng

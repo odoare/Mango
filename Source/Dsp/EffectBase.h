@@ -39,6 +39,11 @@ struct BlockContext
     double   bpm        = 120.0;
     float    mididurSeconds = 1.0f / 440.0f;
     const ParsedOverrides* overrides = nullptr;   // nullptr: none / parse error
+
+    /** True when this is a parameter-change refresh of an already-sounding
+        block (same loop pass, same random draw input): effects should apply
+        the new values but preserve their running phase where possible. */
+    bool isReEnter = false;
 };
 
 /** The override for `key`, or `fallback` when the block doesn't set it. */

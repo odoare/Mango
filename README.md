@@ -45,6 +45,7 @@ v0=a v1=u               formant glide from A to U
   time in seconds (`mididur`, `mididur*2`, `mididur/4`, `3*mididur`).
 - Other keys are in the parameter's native unit:
   `fb att rel q f0 f1 v0 v1 bits drive bias sag mix model mode fade`
+  and the duration probability weights `w4 w8 w16 w32 wstr wtrip wdot`
   (each effect reads the keys it understands).
 - **`mididur`** is 1/f of the last MIDI note-on the plugin received, sampled when
   the block starts.
@@ -52,6 +53,13 @@ v0=a v1=u               formant glide from A to U
 ## Global controls
 
 Dry/Wet, Seed (0–99999), the shared grid (step size 1/16…1/1, 1–64 steps).
+Each lane header also has **M**ute and **S**olo toggles (muted / non-soloed
+lanes keep sequencing — draws stay deterministic — but stop processing audio).
+
+Parameter changes apply to the sounding blocks immediately: the active block
+is refreshed in place (same loop-pass random draw, new values), keeping the
+gate/ramp phase running. Host loop jumps re-enter blocks so every pass starts
+clean, and the same timeline position always reproduces the same draw.
 
 ## Building
 

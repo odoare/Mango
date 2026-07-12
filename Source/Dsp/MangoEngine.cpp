@@ -83,6 +83,10 @@ void MangoEngine::addLaneParameters (std::vector<std::unique_ptr<juce::RangedAud
 
         params.push_back (std::make_unique<juce::AudioParameterChoice> (
             pid::laneType (i), nameP + "Effect", effectTypeNames(), i % kNumEffectTypes));
+        params.push_back (std::make_unique<juce::AudioParameterBool> (
+            prefix + "mute", nameP + "Mute", false));
+        params.push_back (std::make_unique<juce::AudioParameterBool> (
+            prefix + "solo", nameP + "Solo", false));
 
         GaterEffect::addParameters      (params, prefix, nameP);
         GrainDupEffect::addParameters   (params, prefix, nameP);
@@ -101,6 +105,8 @@ void MangoEngine::bindParameters (juce::AudioProcessorValueTreeState& apvts)
     {
         const auto prefix = pid::lanePrefix (lane.laneIndex);
         lane.typeParam   = apvts.getRawParameterValue (pid::laneType (lane.laneIndex));
+        lane.muteParam   = apvts.getRawParameterValue (prefix + "mute");
+        lane.soloParam   = apvts.getRawParameterValue (prefix + "solo");
         lane.currentType = (int) lane.typeParam->load();
 
         for (int t = 0; t < kNumEffectTypes; ++t)
@@ -215,7 +221,7 @@ bool MangoEngine::blockHasParseError (int laneIndex, int blockId) const
 }
 
 //==============================================================================
-void MangoEngine::handleBlockEnter (Lane& lane, int blockId)
+void MangoEngine::handleBlockEnter (Lane& lane, int blockId, bool isReEnter)
 {
     BlockContext ctx;
     ctx.laneIndex      = lane.laneIndex;
@@ -224,22 +230,32 @@ void MangoEngine::handleBlockEnter (Lane& lane, int blockId)
     ctx.sampleRate     = sampleRate;
     ctx.bpm            = currentBpm;
     ctx.mididurSeconds = mididurSeconds.load();
+    ctx.isReEnter      = isReEnter;
 
-    // The pattern pass this entry belongs to, exact regardless of buffer
-    // chunking: the absolute enter position is k * patternLen + blockStart.
-    const double patLen = lane.seq.getPatternLengthBeats();
-    if (const auto* b = lane.seq.blockById (blockId); b != nullptr && patLen > 0.0)
+    if (isReEnter)
     {
-        const double blockStartBeats = b->startStep * lane.seq.getStepSizeBeats();
-        ctx.loopIndex = (int64_t) std::llround ((chunkStartBeats - blockStartBeats) / patLen);
+        // Parameter refresh of the sounding block: same pass, same draw input.
+        ctx.loopIndex = lane.activeLoopIndex;
+    }
+    else
+    {
+        // The pattern pass this entry belongs to, exact regardless of buffer
+        // chunking: the absolute enter position is k * patternLen + blockStart.
+        const double patLen = lane.seq.getPatternLengthBeats();
+        if (const auto* b = lane.seq.blockById (blockId); b != nullptr && patLen > 0.0)
+        {
+            const double blockStartBeats = b->startStep * lane.seq.getStepSizeBeats();
+            ctx.loopIndex = (int64_t) std::llround ((chunkStartBeats - blockStartBeats) / patLen);
+        }
     }
 
     const auto it = overrides.find (overrideKey (lane.laneIndex, blockId));
     ctx.overrides = it != overrides.end() ? &it->second : nullptr;
 
     currentEffect (lane).onBlockEnter (ctx);
-    lane.active        = true;
-    lane.activeBlockId = blockId;
+    lane.active          = true;
+    lane.activeBlockId   = blockId;
+    lane.activeLoopIndex = ctx.loopIndex;
 }
 
 void MangoEngine::handleBlockExit (Lane& lane)
@@ -295,19 +311,43 @@ void MangoEngine::process (juce::AudioBuffer<float>& buffer,
     const bool hostPlaying = position && position->getIsPlaying();
     if (hostPlaying && position->getPpqPosition())
     {
-        // Follow the host timeline; resync on jumps (loops, relocates).
+        // Follow the host timeline. On a jump (loop wrap, relocate) every
+        // lane exits and re-enters — even into the same block — so the new
+        // pass gets its own draw (relocate(), unlike setPositionBeats,
+        // guarantees that).
         const double ppq = juce::jmax (0.0, *position->getPpqPosition());
         if (std::abs (ppq - absoluteBeats) > 1.0e-3)
         {
             absoluteBeats = ppq;
             chunkStartBeats = absoluteBeats;
             for (auto& lane : lanes)
-                lane.engine->setPositionBeats (absoluteBeats, lane.seq);
+                lane.engine->relocate (absoluteBeats, lane.seq);
         }
     }
 
     for (auto& lane : lanes)
+    {
         syncEffectType (lane);
+
+        // Lane parameters changed (weights, attack, ...): refresh the
+        // sounding block immediately instead of waiting for the next entry.
+        const uint32_t version = laneParamVersion[(size_t) lane.laneIndex].load();
+        if (version != lane.seenParamVersion)
+        {
+            lane.seenParamVersion = version;
+            if (lane.active && lane.activeBlockId >= 0)
+            {
+                chunkStartBeats = absoluteBeats;
+                handleBlockEnter (lane, lane.activeBlockId, true);
+            }
+        }
+    }
+
+    // Mute / solo: bypassed lanes still advance and fire enter/exit (draws
+    // stay deterministic), they just don't process audio.
+    bool anySolo = false;
+    for (const auto& lane : lanes)
+        anySolo = anySolo || lane.soloParam->load() > 0.5f;
 
     for (int offset = 0; offset < numSamples; offset += kChunk)
     {
@@ -319,7 +359,10 @@ void MangoEngine::process (juce::AudioBuffer<float>& buffer,
         {
             auto& lane = lanes[(size_t) order[(size_t) row]];
             lane.engine->advance (delta, lane.seq);
-            if (lane.active)
+
+            const bool audible = lane.muteParam->load() < 0.5f
+                              && (! anySolo || lane.soloParam->load() > 0.5f);
+            if (lane.active && audible)
                 currentEffect (lane).process (buffer, offset, n);
         }
 

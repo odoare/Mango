@@ -296,6 +296,17 @@ static int testOverrideParser()
     CHECK (near (vow->find (OvKey::V0)->value, 0.0f, 1e-7));
     CHECK (near (vow->find (OvKey::V1)->value, 4.0f, 1e-7));
 
+    // Probability-weight keys.
+    auto w = parseOverrides ("w4=0 w32=1 wtrip=0.5");
+    CHECK (w.has_value() && w->count == 3);
+    CHECK (near (w->find (OvKey::W4)->value, 0.0f, 1e-7));
+    CHECK (near (w->find (OvKey::W32)->value, 1.0f, 1e-7));
+    CHECK (near (w->find (OvKey::Wtrip)->value, 0.5f, 1e-7));
+
+    // More than 8 assignments (the old cap) parse fine.
+    auto many = parseOverrides ("dur=1 fb=1 att=1 rel=1 q=1 f0=1 f1=1 bits=1 w4=1 w8=1");
+    CHECK (many.has_value() && many->count == 10);
+
     // Errors: unknown key, malformed value, missing '=', division by zero.
     CHECK (! parseOverrides ("foo=1").has_value());
     CHECK (! parseOverrides ("dur=abc").has_value());

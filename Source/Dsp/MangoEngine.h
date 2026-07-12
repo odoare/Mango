@@ -79,6 +79,22 @@ public:
 
     void setMididurSeconds (float s) noexcept { mididurSeconds.store (s); }
 
+    /** A parameter of this lane changed: its active block is re-entered on
+        the next process() so the audible result updates immediately (same
+        loop-pass draw, new parameter values). Any thread. */
+    void noteLaneParamsChanged (int laneIndex) noexcept
+    {
+        if (laneIndex >= 0 && laneIndex < numLanes)
+            laneParamVersion[(size_t) laneIndex].fetch_add (1);
+    }
+
+    /** A global parameter affecting every lane changed (e.g. the seed). */
+    void noteGlobalParamsChanged() noexcept
+    {
+        for (auto& v : laneParamVersion)
+            v.fetch_add (1);
+    }
+
     void process (juce::AudioBuffer<float>& buffer,
                   const juce::Optional<juce::AudioPlayHead::PositionInfo>& position,
                   float dryWet);
@@ -99,14 +115,18 @@ private:
         std::unique_ptr<fxme::SequencerEngine> engine;
         std::array<std::unique_ptr<EffectBase>, kNumEffectTypes> effects;
         std::atomic<float>* typeParam = nullptr;
-        int  currentType   = 0;      // audio-thread view of typeParam
-        bool active        = false;  // an entered block is sounding
-        int  activeBlockId = -1;
+        std::atomic<float>* muteParam = nullptr;
+        std::atomic<float>* soloParam = nullptr;
+        int      currentType     = 0;      // audio-thread view of typeParam
+        bool     active          = false;  // an entered block is sounding
+        int      activeBlockId   = -1;
+        int64_t  activeLoopIndex = 0;      // the pass the active block was drawn on
+        uint32_t seenParamVersion = 0;
     };
 
     EffectBase& currentEffect (Lane& lane) { return *lane.effects[(size_t) lane.currentType]; }
 
-    void handleBlockEnter (Lane& lane, int blockId);
+    void handleBlockEnter (Lane& lane, int blockId, bool isReEnter = false);
     void handleBlockExit (Lane& lane);
     void syncEffectType (Lane& lane);
 
@@ -135,6 +155,7 @@ private:
 
     std::array<std::atomic<double>, numLanes> guiStep {};
     std::array<std::atomic<int>, numLanes>    guiActive {};
+    std::array<std::atomic<uint32_t>, numLanes> laneParamVersion {};
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MangoEngine)
 };

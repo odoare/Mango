@@ -15,6 +15,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "EffectBase.h"
 
 namespace mng
 {
@@ -65,5 +66,21 @@ struct DurationWeights
     std::atomic<float>* base[fxme::kNumNoteBases] = {};
     std::atomic<float>* mod[fxme::kNumNoteMods]   = {};
 };
+
+/** The lane's weight table with the block's w4..wdot overrides applied. */
+inline fxme::WeightedDurationTable resolveTable (const BlockContext& ctx,
+                                                 const DurationWeights& weights)
+{
+    auto t = weights.table();
+    static constexpr OvKey baseKeys[fxme::kNumNoteBases] = { OvKey::W4, OvKey::W8,
+                                                             OvKey::W16, OvKey::W32 };
+    static constexpr OvKey modKeys[fxme::kNumNoteMods]   = { OvKey::Wstr, OvKey::Wtrip,
+                                                             OvKey::Wdot };
+    for (int b = 0; b < fxme::kNumNoteBases; ++b)
+        t.baseWeights[b] = overrideOr (ctx, baseKeys[b], t.baseWeights[b]);
+    for (int m = 0; m < fxme::kNumNoteMods; ++m)
+        t.modWeights[m] = overrideOr (ctx, modKeys[m], t.modWeights[m]);
+    return t;
+}
 
 } // namespace mng

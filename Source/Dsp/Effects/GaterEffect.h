@@ -52,7 +52,7 @@ public:
     {
         const float u = fxme::detrand::u01 (ctx.seed, (uint64_t) ctx.laneIndex,
                                             (uint64_t) ctx.blockId, (uint64_t) ctx.loopIndex, 0);
-        const double beats      = weights.table().drawBeats (u);
+        const double beats      = resolveTable (ctx, weights).drawBeats (u);
         const float  defaultSec = (float) (beats * 60.0 / ctx.bpm);
         const float  durSec     = juce::jmax (0.001f, overrideDurSeconds (ctx, OvKey::Dur, defaultSec));
 
@@ -63,7 +63,10 @@ public:
         attackSamples  = (int) std::lround (attFrac * (float) gateSamples);
         releaseSamples = (int) std::lround (relFrac * (float) gateSamples);
 
-        pos = 0;   // the sequence always starts with an open gate
+        // The sequence always starts with an open gate; a parameter refresh
+        // keeps the running phase and just applies the new timing.
+        if (! ctx.isReEnter)
+            pos = 0;
     }
 
     void onBlockExit() override {}

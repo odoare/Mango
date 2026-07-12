@@ -19,15 +19,21 @@ MangoAudioProcessor::MangoAudioProcessor()
                       .withOutput ("Output", juce::AudioChannelSet::stereo(), true))
 {
     engine.bindParameters (apvts);
-    apvts.addParameterListener (pid::stepsize, this);
-    apvts.addParameterListener (pid::numsteps, this);
+
+    // Listen to every parameter so changes take effect on the sounding
+    // blocks immediately (see parameterChanged).
+    for (auto* p : getParameters())
+        if (auto* rp = dynamic_cast<juce::RangedAudioParameter*> (p))
+            apvts.addParameterListener (rp->paramID, this);
+
     applyGridFromParameters();
 }
 
 MangoAudioProcessor::~MangoAudioProcessor()
 {
-    apvts.removeParameterListener (pid::stepsize, this);
-    apvts.removeParameterListener (pid::numsteps, this);
+    for (auto* p : getParameters())
+        if (auto* rp = dynamic_cast<juce::RangedAudioParameter*> (p))
+            apvts.removeParameterListener (rp->paramID, this);
 }
 
 //==============================================================================
@@ -109,9 +115,24 @@ juce::AudioProcessorValueTreeState::ParameterLayout MangoAudioProcessor::createP
 }
 
 //==============================================================================
-void MangoAudioProcessor::parameterChanged (const juce::String&, float)
+void MangoAudioProcessor::parameterChanged (const juce::String& id, float)
 {
-    triggerAsyncUpdate();   // may fire on the audio thread; apply on the message thread
+    // May fire on any thread — only atomics / async triggers here.
+    if (id == pid::stepsize || id == pid::numsteps)
+    {
+        triggerAsyncUpdate();   // grid applies on the message thread
+        return;
+    }
+
+    if (id == pid::seed)
+    {
+        engine.noteGlobalParamsChanged();
+        return;
+    }
+
+    // Per-lane parameters ("l<i>_..."): refresh that lane's sounding block.
+    if (id.length() > 2 && id[0] == 'l' && id[2] == '_')
+        engine.noteLaneParamsChanged (id.substring (1, 2).getIntValue());
 }
 
 void MangoAudioProcessor::handleAsyncUpdate()
