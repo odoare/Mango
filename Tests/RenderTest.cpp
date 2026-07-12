@@ -323,6 +323,36 @@ static void testLiveWeightChange()
 }
 
 //==============================================================================
+/** The release-curve parameter shapes the gate edge: with rel = 0.25 the
+    release spans [0.375, 0.5) of the 0.5 s gate. For gain = r^gamma over a
+    full-level sine the release-window RMS is 0.707*sqrt(1/(2*gamma+1)):
+    fast (curve 1, gamma 6) ~ 0.20, linear ~ 0.41, slow (curve 0) ~ 0.61. */
+static void testGateCurves()
+{
+    auto releaseRms = [] (float curve)
+    {
+        MangoAudioProcessor p;
+        addFullBlock (p, 0);
+        setParam (p, "l0_gate_att", 0.0f);
+        setParam (p, "l0_gate_rel", 0.25f);
+        setParam (p, "l0_gate_relcurve", curve);
+        const auto out = render (p, 0.6);
+        return rmsOf (out, 0.375, 0.499);
+    };
+
+    const float fast = releaseRms (1.0f);
+    const float lin  = releaseRms (0.5f);
+    const float slow = releaseRms (0.0f);
+
+    CHECK (fast < 0.25f);
+    CHECK (std::abs (lin - 0.41f) < 0.05f);
+    CHECK (slow > 0.55f);
+    CHECK (fast < lin && lin < slow);
+    std::printf ("gate curves: release RMS fast %.2f / linear %.2f / slow %.2f\n",
+                 fast, lin, slow);
+}
+
+//==============================================================================
 static void testMuteSolo()
 {
     MangoAudioProcessor p;
@@ -450,6 +480,7 @@ int main (int argc, char* argv[])
     testStateRoundTrip();
     testHostSync();
     testLiveWeightChange();
+    testGateCurves();
     testMuteSolo();
     testLoopJumpReenter();
 

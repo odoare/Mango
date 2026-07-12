@@ -14,7 +14,7 @@ alike.
 
 | Effect  | What it does | Lane parameters |
 |---------|--------------|-----------------|
-| Gater   | Cuts the sound rhythmically: open(dur), closed(dur), ... starting open | duration probabilities, attack, release (0–25 % of dur) |
+| Gater   | Cuts the sound rhythmically: open(dur), closed(dur), ... starting open | duration probabilities, attack, release (0–25 % of dur), attack/release curves (0 slow … 0.5 linear … 1 fast, a fast release ≈ exponential decay) |
 | Grain   | Records a grain at block start, loops it for the whole block | duration probabilities, seam fade |
 | Delay   | Feedback delay (buffer persists across blocks) | time, feedback |
 | Dist    | Tube-style saturation (Standard / Dynamic / Triode / Class AB) | model, drive, bias, sag, mix |
@@ -44,7 +44,7 @@ v0=a v1=u               formant glide from A to U
   eighth) resolved against the host tempo; any expression with `mididur` is a
   time in seconds (`mididur`, `mididur*2`, `mididur/4`, `3*mididur`).
 - Other keys are in the parameter's native unit:
-  `fb att rel q f0 f1 v0 v1 bits drive bias sag mix model mode fade`
+  `fb att rel attcurve relcurve q f0 f1 v0 v1 bits drive bias sag mix model mode fade`
   and the duration probability weights `w4 w8 w16 w32 wstr wtrip wdot`
   (each effect reads the keys it understands).
 - **`mididur`** is 1/f of the last MIDI note-on the plugin received, sampled when

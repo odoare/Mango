@@ -42,6 +42,8 @@ public:
             case EffectType::Gater:
                 addKnob (prefix + "gate_att", "Attack");
                 addKnob (prefix + "gate_rel", "Release");
+                addKnob (prefix + "gate_attcurve", "Att Curve");
+                addKnob (prefix + "gate_relcurve", "Rel Curve");
                 addWeights (prefix + "gate_");
                 break;
 
