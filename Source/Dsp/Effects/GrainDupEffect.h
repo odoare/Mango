@@ -5,11 +5,13 @@
     Grain duplicator: at block entry a grain of the input is recorded and
     then looped for the whole block (fxme::GrainLooper per channel). The
     grain duration is drawn from the lane's probability weights, like the
-    gater; `fade` sets the grain-seam crossfade. Each repetition can also be
-    shaped by an attack and a release envelope: `att` / `rel` are lengths as
-    fractions of the grain, `attcurve` / `relcurve` their shapes (0 slow,
-    0.5 linear, 1 very fast; a fast release looks like an exponential
-    decay) — same convention as the gater.
+    gater; `fade` sets the grain-seam crossfade. Each individual repetition
+    is shaped by an attack and a release envelope (never the block as a
+    whole): `att` / `rel` are lengths as fractions (0..1) of the grain, and
+    when their sum exceeds 1 they share the grain proportionally to their
+    values (att=1, rel=0.5 -> 2/3 and 1/3). `attcurve` / `relcurve` set the
+    shapes (0 slow, 0.5 linear, 1 very fast; a fast release looks like an
+    exponential decay) — same conventions as the gater.
 
     Overrides: dur, fade, att, attcurve, rel, relcurve.
 
@@ -86,15 +88,14 @@ public:
         const float  fade       = juce::jlimit (0.001f, 0.5f,
                                                 overrideOr (ctx, OvKey::Fade, fadeParam->load()));
 
-        // Shaped per-repetition attack/release (gater curve convention:
-        // 0 slow, 0.5 linear, 1 fast; the release exponent applies to the
-        // remaining ramp, so its mapping is mirrored).
-        const float attFrac  = juce::jlimit (0.0f, 1.0f,
-                                             overrideOr (ctx, OvKey::Att, attParam->load()));
+        // Shaped per-repetition attack/release (gater conventions: curve
+        // 0 slow, 0.5 linear, 1 fast; lengths share the grain
+        // proportionally when their sum exceeds 1).
+        float attFrac = overrideOr (ctx, OvKey::Att, attParam->load());
+        float relFrac = overrideOr (ctx, OvKey::Rel, relParam->load());
+        normaliseAttackRelease (attFrac, relFrac);
         const float attCurve = juce::jlimit (0.0f, 1.0f,
                                              overrideOr (ctx, OvKey::AttCurve, attCurveParam->load()));
-        const float relFrac  = juce::jlimit (0.0f, 1.0f,
-                                             overrideOr (ctx, OvKey::Rel, relParam->load()));
         const float relCurve = juce::jlimit (0.0f, 1.0f,
                                              overrideOr (ctx, OvKey::RelCurve, relCurveParam->load()));
         const float attGamma = attackGammaFor (attCurve);

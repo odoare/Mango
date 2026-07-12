@@ -14,8 +14,14 @@ alike.
 
 | Effect  | What it does | Lane parameters |
 |---------|--------------|-----------------|
-| Gater   | Cuts the sound rhythmically: open(dur), closed(dur), ... starting open | duration probabilities, attack, release (0–25 % of dur), attack/release curves (0 slow … 0.5 linear … 1 fast, a fast release ≈ exponential decay) |
-| Grain   | Records a grain at block start, loops it for the whole block | duration probabilities, seam fade, per-repetition attack/release + curves (0 slow … 0.5 linear … 1 fast) |
+| Gater   | Cuts the sound rhythmically: open(dur), closed(dur), ... starting open | duration probabilities, attack/release lengths + curves |
+| Grain   | Records a grain at block start, loops it for the whole block | duration probabilities, seam fade, per-repetition attack/release lengths + curves |
+
+Attack/release lengths are fractions (0–1) of the shaped duration (the gate's
+open phase, or one grain repetition — never the whole block). If their sum
+exceeds 1 they share the duration proportionally to their values: att=1,
+rel=0.5 acts as att=2/3, rel=1/3. The curves set the edge shapes: 0 slow,
+0.5 linear, 1 very fast (a fast release ≈ exponential decay).
 | Delay   | Feedback delay (buffer persists across blocks) | time, feedback |
 | Dist    | Tube-style saturation (Standard / Dynamic / Triode / Class AB) | model, drive, bias, sag, mix |
 | Filter  | LP / HP sweep from start to end frequency, or a formant vowel glide, repeating at a drawn rhythmic rate | mode, Q, start/end freq, start/end vowel, ramp probabilities |

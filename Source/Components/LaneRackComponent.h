@@ -352,8 +352,9 @@ private:
                 blockgfx::EnvShape s;
                 s.cycleBeats = 2.0 * dur;
                 s.openBeats  = dur;
-                s.attFrac    = juce::jlimit (0.0f, 0.25f, ovOr (OvKey::Att, param ("gate_att")));
-                s.relFrac    = juce::jlimit (0.0f, 0.25f, ovOr (OvKey::Rel, param ("gate_rel")));
+                s.attFrac    = ovOr (OvKey::Att, param ("gate_att"));
+                s.relFrac    = ovOr (OvKey::Rel, param ("gate_rel"));
+                normaliseAttackRelease (s.attFrac, s.relFrac);
                 s.attGamma   = attackGammaFor (ovOr (OvKey::AttCurve, param ("gate_attcurve")));
                 s.relGamma   = releaseGammaFor (ovOr (OvKey::RelCurve, param ("gate_relcurve")));
                 blockgfx::paintEnvCurve (g, r, blockBeats, s, curveColour);
@@ -366,8 +367,9 @@ private:
                 blockgfx::EnvShape s;
                 s.cycleBeats = dur;   // repetitions are contiguous
                 s.openBeats  = dur;
-                s.attFrac    = juce::jlimit (0.0f, 1.0f, ovOr (OvKey::Att, param ("grain_att")));
-                s.relFrac    = juce::jlimit (0.0f, 1.0f, ovOr (OvKey::Rel, param ("grain_rel")));
+                s.attFrac    = ovOr (OvKey::Att, param ("grain_att"));
+                s.relFrac    = ovOr (OvKey::Rel, param ("grain_rel"));
+                normaliseAttackRelease (s.attFrac, s.relFrac);
                 s.attGamma   = attackGammaFor (ovOr (OvKey::AttCurve, param ("grain_attcurve")));
                 s.relGamma   = releaseGammaFor (ovOr (OvKey::RelCurve, param ("grain_relcurve")));
                 blockgfx::paintMirroredEnv (g, r, blockBeats, s, curveColour);

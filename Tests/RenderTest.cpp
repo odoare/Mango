@@ -353,6 +353,29 @@ static void testGateCurves()
 }
 
 //==============================================================================
+/** att=1, rel=0.5 must share the open phase 2/3 : 1/3 — with linear curves
+    and the default 0.5 s gate the envelope peaks at t = 1/3 s. */
+static void testAttRelSharing()
+{
+    float a = 1.0f, r = 0.5f;
+    mng::normaliseAttackRelease (a, r);
+    CHECK (std::abs (a - 2.0f / 3.0f) < 1e-6f);
+    CHECK (std::abs (r - 1.0f / 3.0f) < 1e-6f);
+
+    MangoAudioProcessor p;
+    addFullBlock (p, 0);
+    setParam (p, "l0_gate_att", 1.0f);
+    setParam (p, "l0_gate_rel", 0.5f);
+
+    const auto out = render (p, 1.0);
+    CHECK (rmsOf (out, 0.00, 0.05) < 0.15f);   // early attack: still quiet
+    CHECK (rmsOf (out, 0.30, 0.36) > 0.6f);    // around the 1/3 s peak
+    CHECK (rmsOf (out, 0.46, 0.495) < 0.2f);   // release tail
+    CHECK (rmsOf (out, 0.55, 0.95) < 0.01f);   // closed phase
+    std::printf ("att/rel sharing: peak at 2/3 of the open phase.\n");
+}
+
+//==============================================================================
 static void testMuteSolo()
 {
     MangoAudioProcessor p;
@@ -439,7 +462,7 @@ static void dumpEditorSnapshot (const juce::String& path)
     setParam (p, "l0_gate_att", 0.2f);
     setParam (p, "l0_gate_rel", 0.25f);
     setParam (p, "l0_gate_relcurve", 1.0f);
-    setParam (p, "l1_grain_att", 0.35f);
+    setParam (p, "l1_grain_att", 1.0f);    // att+rel > 1: proportional sharing
     setParam (p, "l1_grain_rel", 0.5f);
     setParam (p, "l1_grain_relcurve", 0.8f);
     setParam (p, "l5_qnt_bits", 2.0f);
@@ -492,6 +515,7 @@ int main (int argc, char* argv[])
     testHostSync();
     testLiveWeightChange();
     testGateCurves();
+    testAttRelSharing();
     testMuteSolo();
     testLoopJumpReenter();
 

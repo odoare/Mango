@@ -5,8 +5,10 @@
     Rhythmic gate: while the block is active the sound alternates
     open(dur) / closed(dur) / open(dur) ... starting open. The duration is
     drawn at block entry from the lane's probability weights (1/4..1/32 x
-    straight/triplet/dotted); attack and release smooth the gate edges, each
-    limited to 25% of the gate duration.
+    straight/triplet/dotted). Attack and release lengths are fractions
+    (0..1) of the open phase; if their sum exceeds 1 they share it
+    proportionally to their values (att=1, rel=0.5 -> 2/3 and 1/3), so the
+    envelope can become a full attack/release triangle with no sustain.
 
     The attack/release *curve* parameters (0..1) shape those edges: 0.5 is
     the linear ramp, 0 is slow (the ramp lingers near silence / near full
@@ -38,10 +40,10 @@ public:
         DurationWeights::addParameters (params, lanePrefix + "gate_", nameP + "Gate");
         params.push_back (std::make_unique<juce::AudioParameterFloat> (
             lanePrefix + "gate_att", nameP + "Gate Attack",
-            juce::NormalisableRange<float> (0.0f, 0.25f, 0.001f), 0.02f));
+            juce::NormalisableRange<float> (0.0f, 1.0f, 0.001f), 0.02f));
         params.push_back (std::make_unique<juce::AudioParameterFloat> (
             lanePrefix + "gate_rel", nameP + "Gate Release",
-            juce::NormalisableRange<float> (0.0f, 0.25f, 0.001f), 0.02f));
+            juce::NormalisableRange<float> (0.0f, 1.0f, 0.001f), 0.02f));
         params.push_back (std::make_unique<juce::AudioParameterFloat> (
             lanePrefix + "gate_attcurve", nameP + "Gate Attack Curve",
             juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.5f));
@@ -72,8 +74,9 @@ public:
 
         gateSamples = juce::jmax (1, (int) std::lround (durSec * ctx.sampleRate));
 
-        const float attFrac = juce::jlimit (0.0f, 0.25f, overrideOr (ctx, OvKey::Att, attParam->load()));
-        const float relFrac = juce::jlimit (0.0f, 0.25f, overrideOr (ctx, OvKey::Rel, relParam->load()));
+        float attFrac = overrideOr (ctx, OvKey::Att, attParam->load());
+        float relFrac = overrideOr (ctx, OvKey::Rel, relParam->load());
+        normaliseAttackRelease (attFrac, relFrac);
         attackSamples  = (int) std::lround (attFrac * (float) gateSamples);
         releaseSamples = (int) std::lround (relFrac * (float) gateSamples);
 

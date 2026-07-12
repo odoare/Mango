@@ -54,6 +54,22 @@ inline constexpr float kCurveRange = 6.0f;
 inline float attackGammaFor (float curve)  { return std::pow (kCurveRange, 1.0f - 2.0f * curve); }
 inline float releaseGammaFor (float curve) { return std::pow (kCurveRange, 2.0f * curve - 1.0f); }
 
+/** Attack/release lengths as fractions (0..1) of the shaped duration. When
+    their sum exceeds 1 they share the duration proportionally to their
+    values: att=1, rel=0.5 -> att acts on 2/3 and rel on 1/3. Shared by the
+    gater, the grain repetitions and the block visuals. */
+inline void normaliseAttackRelease (float& att, float& rel)
+{
+    att = att < 0.0f ? 0.0f : (att > 1.0f ? 1.0f : att);
+    rel = rel < 0.0f ? 0.0f : (rel > 1.0f ? 1.0f : rel);
+    const float sum = att + rel;
+    if (sum > 1.0f)
+    {
+        att /= sum;
+        rel /= sum;
+    }
+}
+
 /** The override for `key`, or `fallback` when the block doesn't set it. */
 inline float overrideOr (const BlockContext& ctx, OvKey key, float fallback)
 {
