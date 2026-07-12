@@ -517,6 +517,10 @@ static void dumpEditorSnapshot (const juce::String& path)
         juce::PNGImageFormat().writeImageToStream (img, stream);
     };
 
+    // Let the async grid update (and any pending UI messages) run — a real
+    // host pumps the message loop; this harness must do it explicitly.
+    juce::MessageManager::getInstance()->runDispatchLoopUntil (100);
+
     std::unique_ptr<juce::AudioProcessorEditor> editor (p.createEditor());
     editor->setSize (1000, 650);
     const juce::File base (path);
