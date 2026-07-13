@@ -13,6 +13,7 @@
 #include "Effects/DistortionEffect.h"
 #include "Effects/FilterEnvEffect.h"
 #include "Effects/QuantizerEffect.h"
+#include "Effects/RingModEffect.h"
 
 namespace mng
 {
@@ -29,6 +30,7 @@ namespace
             case EffectType::Distortion: return std::make_unique<DistortionEffect>();
             case EffectType::FilterEnv:  return std::make_unique<FilterEnvEffect>();
             case EffectType::Quantizer:  return std::make_unique<QuantizerEffect>();
+            case EffectType::RingMod:    return std::make_unique<RingModEffect>();
         }
         return nullptr;
     }
@@ -44,6 +46,7 @@ namespace
             case EffectType::Distortion: static_cast<DistortionEffect&> (fx).bindParameters (apvts, prefix); break;
             case EffectType::FilterEnv:  static_cast<FilterEnvEffect&>  (fx).bindParameters (apvts, prefix); break;
             case EffectType::Quantizer:  static_cast<QuantizerEffect&>  (fx).bindParameters (apvts, prefix); break;
+            case EffectType::RingMod:    static_cast<RingModEffect&>    (fx).bindParameters (apvts, prefix); break;
         }
     }
 }
@@ -94,12 +97,14 @@ void MangoEngine::addLaneParameters (std::vector<std::unique_ptr<juce::RangedAud
         DistortionEffect::addParameters (params, prefix, nameP);
         FilterEnvEffect::addParameters  (params, prefix, nameP);
         QuantizerEffect::addParameters  (params, prefix, nameP);
+        RingModEffect::addParameters    (params, prefix, nameP);
     }
 }
 
 void MangoEngine::bindParameters (juce::AudioProcessorValueTreeState& apvts)
 {
-    seedParam = apvts.getRawParameterValue (pid::seed);
+    seedParam     = apvts.getRawParameterValue (pid::seed);
+    numLanesParam = apvts.getRawParameterValue (pid::numlanes);
 
     for (auto& lane : lanes)
     {
@@ -151,6 +156,15 @@ int MangoEngine::laneAtRow (int row) const
 {
     const juce::ScopedLock sl (seqLock);
     return order[(size_t) juce::jlimit (0, numLanes - 1, row)];
+}
+
+int MangoEngine::rowOfLane (int laneIndex) const
+{
+    const juce::ScopedLock sl (seqLock);
+    for (int row = 0; row < numLanes; ++row)
+        if (order[(size_t) row] == laneIndex)
+            return row;
+    return -1;
 }
 
 void MangoEngine::moveRow (int row, int delta)
@@ -322,11 +336,15 @@ void MangoEngine::process (juce::AudioBuffer<float>& buffer,
         }
     }
 
-    // Mute / solo: bypassed lanes still advance and fire enter/exit (draws
-    // stay deterministic), they just don't process audio.
+    // Lane count + mute/solo: hidden rows and bypassed lanes still advance
+    // and fire enter/exit (sequencing stays deterministic and re-showing a
+    // lane is seamless), they just don't process audio. Solo only counts
+    // among the visible rows — a hidden soloed lane must not silence the
+    // rest.
+    const int visibleRows = visibleLaneCount();
     bool anySolo = false;
-    for (const auto& lane : lanes)
-        anySolo = anySolo || lane.soloParam->load() > 0.5f;
+    for (int row = 0; row < visibleRows; ++row)
+        anySolo = anySolo || lanes[(size_t) order[(size_t) row]].soloParam->load() > 0.5f;
 
     for (int offset = 0; offset < numSamples; offset += kChunk)
     {
@@ -338,7 +356,8 @@ void MangoEngine::process (juce::AudioBuffer<float>& buffer,
             auto& lane = lanes[(size_t) order[(size_t) row]];
             lane.engine->advance (delta, lane.seq);
 
-            const bool audible = lane.muteParam->load() < 0.5f
+            const bool audible = row < visibleRows
+                              && lane.muteParam->load() < 0.5f
                               && (! anySolo || lane.soloParam->load() > 0.5f);
             if (lane.active && audible)
                 currentEffect (lane).process (buffer, offset, n);

@@ -2,7 +2,7 @@
   ------------------------------------------------------------------------------
     PluginEditor.h
 
-    Mango editor: FX-Mechanics top bar; six sequencer lanes (header + rubber
+    Mango editor: FX-Mechanics top bar; the sequencer lanes (header + rubber
     strip) in the centre, in the engine's display order; right column with
     the global controls, the selected lane's effect panel (one pre-built
     panel per lane x type, visibility-switched) and the selected block's
@@ -60,6 +60,11 @@ private:
     juce::Label stepSizeLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> drywetAtt, seedAtt, stepsAtt;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> stepSizeAtt;
+
+    // Lane count: - / + buttons driving the numlanes parameter.
+    juce::TextButton lanesMinusButton { "-" }, lanesPlusButton { "+" };
+    juce::Label lanesCaption, lanesCountLabel;
+    void adjustLaneCount (int delta);
 
     // Right column: one panel per (lane, effect type).
     std::array<std::array<std::unique_ptr<mng::EffectPanel>, mng::kNumEffectTypes>,

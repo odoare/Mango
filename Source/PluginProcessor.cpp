@@ -109,6 +109,9 @@ juce::AudioProcessorValueTreeState::ParameterLayout MangoAudioProcessor::createP
     params.push_back (std::make_unique<juce::AudioParameterInt> (
         pid::numsteps, "Steps", 1, 64, 16));
 
+    params.push_back (std::make_unique<juce::AudioParameterInt> (
+        pid::numlanes, "Lanes", 1, numLanes, defaultNumLanes));
+
     MangoEngine::addLaneParameters (params);
 
     return { params.begin(), params.end() };
@@ -205,7 +208,12 @@ void MangoAudioProcessor::sequencersFromTree (const juce::ValueTree& tree)
     {
         const juce::ScopedLock sl (engine.lock());
 
-        std::array<int, numLanes> order { 0, 1, 2, 3, 4, 5 };
+        // Identity default; a saved order with fewer entries (a session from
+        // a lower-lane-count build) fills the leading rows and leaves the
+        // rest in place, which stays a valid permutation.
+        std::array<int, numLanes> order {};
+        for (int i = 0; i < numLanes; ++i)
+            order[(size_t) i] = i;
         const auto orderStrings = juce::StringArray::fromTokens (
             tree.getProperty ("laneOrder").toString(), " ", "");
         for (int i = 0; i < juce::jmin ((int) orderStrings.size(), (int) numLanes); ++i)

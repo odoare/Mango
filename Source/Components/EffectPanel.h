@@ -5,8 +5,8 @@
     The right-column control panel for one (lane, effect type) pair: knobs,
     choice boxes and — for the duration-randomised effects — the 4+3
     probability-weight mini knobs. All controls attach to the lane's
-    prefixed parameters, so the 36 panels are pre-built and simply
-    visibility-switched when the selection or a lane's type changes.
+    prefixed parameters, so the lanes × types panels are pre-built and
+    simply visibility-switched when the selection or a lane's type changes.
 
     Author: Olivier Doaré, github.com/odoare
     (c) 2026 Olivier Doaré
@@ -35,6 +35,7 @@ public:
     {
         title = "Lane " + juce::String (laneIndex + 1) + "  -  "
               + effectTypeNames()[(int) type];
+        keywords = overrideKeysFor (type);
 
         const auto prefix = pid::lanePrefix (laneIndex);
         switch (type)
@@ -59,6 +60,8 @@ public:
             case EffectType::Delay:
                 addKnob (prefix + "dly_dur", "Time");
                 addKnob (prefix + "dly_fb", "Feedback");
+                addKnob (prefix + "dly_damp", "Damping");
+                addKnob (prefix + "dly_porta", "Porta ms");
                 break;
 
             case EffectType::Distortion:
@@ -81,6 +84,15 @@ public:
 
             case EffectType::Quantizer:
                 addKnob (prefix + "qnt_bits", "Bits");
+                addKnob (prefix + "qnt_down", "Downsmp");
+                addKnob (prefix + "qnt_mix", "Mix");
+                break;
+
+            case EffectType::RingMod:
+                addKnob (prefix + "ring_f0", "Start Hz");
+                addKnob (prefix + "ring_f1", "End Hz");
+                addKnob (prefix + "ring_amp", "Amount");
+                addWeights (prefix + "ring_");
                 break;
         }
     }
@@ -105,6 +117,20 @@ public:
             g.drawText ("duration probabilities", weightsLabelArea,
                         juce::Justification::centredLeft);
         }
+
+        // The override-language keywords this effect understands, as a
+        // reference for the block text entry below.
+        if (! keywordsArea.isEmpty())
+        {
+            auto area = keywordsArea;
+            g.setColour (theme::dimText);
+            g.setFont (juce::Font (juce::FontOptions (10.0f)));
+            g.drawText ("block keys", area.removeFromTop (13),
+                        juce::Justification::centredLeft);
+            g.setColour (theme::text.withAlpha (0.8f));
+            g.setFont (juce::Font (juce::FontOptions (11.5f)));
+            g.drawFittedText (keywords, area, juce::Justification::topLeft, 3);
+        }
     }
 
     void resized() override
@@ -114,19 +140,21 @@ public:
 
         for (auto& c : combos)
         {
-            auto row = r.removeFromTop (24);
+            auto row = r.removeFromTop (22);
             c.label.setBounds (row.removeFromLeft (52));
             c.box.setBounds (row);
-            r.removeFromTop (4);
+            r.removeFromTop (3);
         }
 
-        layoutKnobRow (knobs, r, 3, 74);
+        layoutKnobRow (knobs, r, 3, 70);
 
         if (! weightKnobs.empty())
         {
             weightsLabelArea = r.removeFromTop (16);
-            layoutKnobRow (weightKnobs, r, 4, 58);
+            layoutKnobRow (weightKnobs, r, 4, 52);
         }
+
+        keywordsArea = r.removeFromBottom (juce::jmin (46, r.getHeight())).reduced (2, 0);
     }
 
     int laneOf() const  { return laneIndex; }
@@ -135,6 +163,24 @@ public:
 private:
     using SliderAttachment   = juce::AudioProcessorValueTreeState::SliderAttachment;
     using ComboBoxAttachment = juce::AudioProcessorValueTreeState::ComboBoxAttachment;
+
+    /** The override-language keys the effect reads (see the effect headers
+        and OverrideParser.h — keep in sync when adding keys). */
+    static juce::String overrideKeysFor (EffectType t)
+    {
+        static const juce::String weights ("w4 w8 w16 w32 wstr wtrip wdot");
+        switch (t)
+        {
+            case EffectType::Gater:      return "dur att rel attcurve relcurve\n" + weights;
+            case EffectType::Grain:      return "dur fade att rel attcurve relcurve\n" + weights;
+            case EffectType::Delay:      return "dur fb damp porta";
+            case EffectType::Distortion: return "model drive bias sag mix";
+            case EffectType::FilterEnv:  return "dur mode q f0 f1 v0 v1\n" + weights;
+            case EffectType::Quantizer:  return "bits down mix";
+            case EffectType::RingMod:    return "dur f0 f1 amp\n" + weights;
+        }
+        return {};
+    }
 
     struct Knob
     {
@@ -206,7 +252,8 @@ private:
 
     std::vector<Knob>  knobs, weightKnobs;
     std::deque<Combo>  combos;
-    juce::Rectangle<int> weightsLabelArea;
+    juce::Rectangle<int> weightsLabelArea, keywordsArea;
+    juce::String keywords;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (EffectPanel)
 };

@@ -24,6 +24,7 @@
 #include <FxmeTools/midi/NoteDuration.h>
 #include <FxmeTools/dsp/ArEnvelope.h>
 #include <FxmeTools/dsp/BitCrusher.h>
+#include <FxmeTools/dsp/Downsampler.h>
 #include <FxmeTools/dsp/DelayLine.h>
 #include <FxmeTools/dsp/Saturator.h>
 #include <FxmeTools/dsp/GrainLooper.h>
@@ -152,6 +153,30 @@ static int testBitCrusher()
 }
 
 //==============================================================================
+static int testDownsampler()
+{
+    // Factor 1 is bit-transparent.
+    fxme::Downsampler ds;
+    ds.setFactor (1.0f);
+    ds.reset();
+    for (int i = 0; i < 50; ++i)
+    {
+        const float x = std::sin (0.37f * (float) i);
+        CHECK (ds.processSample (x) == x);
+    }
+
+    // Factor 4 holds each value for 4 samples, starting at the first input.
+    ds.setFactor (4.0f);
+    ds.reset();
+    for (int i = 0; i < 32; ++i)
+    {
+        const float y = ds.processSample ((float) i);
+        CHECK (near (y, (float) (i - i % 4), 1e-6));
+    }
+    return 0;
+}
+
+//==============================================================================
 static int testDelayLine()
 {
     fxme::DelayLine dl;
@@ -174,6 +199,66 @@ static int testDelayLine()
     for (int i = peak + 2; i < 30; ++i)
         tail += std::fabs (out[(size_t) i]);
     CHECK (tail < 1e-3f);
+
+    // Feedback path damping: with damp=0 an impulse echoes back nearly
+    // intact for many round trips; with damp=1 the lowpass smears it, so
+    // the sample right at the echo position decays much faster.
+    auto echoPeak = [] (float damp, int echoIndex)
+    {
+        fxme::DelayLine d;
+        d.prepare (48000.0, 0.1f);
+        d.setDelaySeconds (0.005f);   // 240 samples
+        d.setFeedback (0.9f);
+        d.setDamping (damp);
+        d.reset();
+        float peakAbs = 0.0f;
+        const int from = echoIndex * 240 - 5, to = echoIndex * 240 + 5;
+        for (int i = 0; i <= to; ++i)
+        {
+            const float y = d.processSample (i == 0 ? 1.0f : 0.0f);
+            if (i >= from)
+                peakAbs = std::max (peakAbs, std::fabs (y));
+        }
+        return peakAbs;
+    };
+    const float clean = echoPeak (0.0f, 4);
+    const float dark  = echoPeak (1.0f, 4);
+    CHECK (clean > 0.6f);             // 0.9^3 = 0.729, undamped path is transparent
+    CHECK (dark < 0.5f * clean);      // damping audibly eats the repeats
+
+    // Feedback now reaches resonator territory (was capped at 0.98).
+    {
+        fxme::DelayLine d;
+        d.prepare (48000.0, 0.1f);
+        d.setDelaySeconds (0.005f);
+        d.setFeedback (0.999f);
+        d.reset();
+        float first = 0.0f, tenth = 0.0f;
+        for (int i = 0; i <= 10 * 240 + 5; ++i)
+        {
+            const float y = std::fabs (d.processSample (i == 0 ? 1.0f : 0.0f));
+            if (i >= 240 - 5 && i <= 240 + 5)           first = std::max (first, y);
+            if (i >= 10 * 240 - 5 && i <= 10 * 240 + 5) tenth = std::max (tenth, y);
+        }
+        CHECK (first > 0.9f);
+        CHECK (tenth > 0.98f * first);   // ~0.999^9 of the first echo
+    }
+
+    // Portamento: a long smoothing time must still converge, a short one
+    // must land the echo at the new position almost immediately.
+    {
+        fxme::DelayLine d;
+        d.prepare (48000.0, 0.1f);
+        d.setDelaySeconds (0.01f);
+        d.setFeedback (0.0f);
+        d.setSmoothingSeconds (0.001f);   // 1 ms porta
+        d.reset();
+        d.setDelaySeconds (0.005f);       // retarget AFTER reset: must glide there fast
+        int peak2 = -1;
+        for (int i = 0; i < 480; ++i)
+            if (std::fabs (d.processSample (i == 0 ? 1.0f : 0.0f)) > 0.5f) { peak2 = i; break; }
+        CHECK (peak2 >= 235 && peak2 <= 250);   // ~240 samples, not the old 480
+    }
     return 0;
 }
 
@@ -287,6 +372,66 @@ static int testStringSequencerAddWithId()
 }
 
 //==============================================================================
+static int testStringSequencerMoveBlock()
+{
+    fxme::StringSequencer seq;
+    seq.setNumSteps (16);
+    const int a = seq.addBlock (0, 3);    // [0,3)
+    const int b = seq.addBlock (6, 4);    // [6,10)
+    const int c = seq.addBlock (12, 2);   // [12,14)
+
+    // Free move, duration preserved.
+    CHECK (seq.moveBlock (b, 4));
+    CHECK (seq.blockById (b)->startStep == 4 && seq.blockById (b)->endStep == 8);
+
+    // Clamped against the left neighbour...
+    CHECK (seq.moveBlock (b, 0));
+    CHECK (seq.blockById (b)->startStep == 3 && seq.blockById (b)->endStep == 7);
+
+    // ...against the right neighbour...
+    CHECK (seq.moveBlock (b, 11));
+    CHECK (seq.blockById (b)->startStep == 8 && seq.blockById (b)->endStep == 12);
+
+    // ...and against the pattern bounds.
+    CHECK (seq.moveBlock (c, 40));
+    CHECK (seq.blockById (c)->startStep == 14 && seq.blockById (c)->endStep == 16);
+    CHECK (seq.moveBlock (a, -5));
+    CHECK (seq.blockById (a)->startStep == 0);
+
+    CHECK (! seq.moveBlock (99, 0));      // unknown id
+    return 0;
+}
+
+//==============================================================================
+static int testSequencerEngineMovedBlockExit()
+{
+    fxme::StringSequencer seq;
+    seq.setStepSize (fxme::SeqStepSize::Quarter);
+    seq.setNumSteps (8);
+    const int id = seq.addBlock (2, 4);   // [2,6)
+
+    int enters = 0, exits = 0;
+    fxme::EngineCallbacks cbs;
+    cbs.onBlockEnter = [&] (int, const std::string&) { ++enters; };
+    cbs.onBlockExit  = [&] (int)                     { ++exits; };
+
+    fxme::SequencerEngine engine (cbs);
+    engine.setEnterEmptyBlocks (true);
+    engine.start (seq);
+    for (int i = 0; i < 45; ++i)          // playhead to ~4.5 beats: inside the block
+        engine.advance (0.1, seq);
+    CHECK (enters == 1 && exits == 0);
+
+    // Move the block from under the playhead (as a GUI drag would): the
+    // engine must exit it at the next step transition, not hang on to it.
+    CHECK (seq.moveBlock (id, 0));        // now [0,4), playhead at 4.5
+    for (int i = 0; i < 10; ++i)          // cross into step 5
+        engine.advance (0.1, seq);
+    CHECK (exits == 1);
+    return 0;
+}
+
+//==============================================================================
 static int testSequencerEngineEmptyBlocks()
 {
     fxme::StringSequencer seq;
@@ -341,6 +486,20 @@ static int testOverrideParser()
     CHECK (near (delay->find (OvKey::Fb)->value, 0.6f, 1e-6));
     CHECK (delay->find (OvKey::Q) == nullptr);
 
+    auto ks = parseOverrides ("dur=mididur fb=0.99 damp=0.3 porta=5");
+    CHECK (ks.has_value());
+    CHECK (near (ks->find (OvKey::Damp)->value, 0.3f, 1e-6));
+    CHECK (near (ks->find (OvKey::Porta)->value, 5.0f, 1e-6));
+
+    auto lofi = parseOverrides ("bits=4 down=8 mix=0.5");
+    CHECK (lofi.has_value());
+    CHECK (near (lofi->find (OvKey::Down)->value, 8.0f, 1e-6));
+    CHECK (near (lofi->find (OvKey::Mix)->value, 0.5f, 1e-6));
+
+    auto ring = parseOverrides ("f0=50 f1=2000 amp=0.7");
+    CHECK (ring.has_value());
+    CHECK (near (ring->find (OvKey::Amp)->value, 0.7f, 1e-6));
+
     // mididur forms.
     auto md = parseOverrides ("dur=mididur");
     CHECK (md.has_value() && md->find (OvKey::Dur)->kind == Expr::MididurScaled);
@@ -389,10 +548,13 @@ int main()
     if (testNoteDuration())             return 1;
     if (testArEnvelope())               return 1;
     if (testBitCrusher())               return 1;
+    if (testDownsampler())              return 1;
     if (testDelayLine())                return 1;
     if (testSaturator())                return 1;
     if (testGrainLooperAttack())        return 1;
     if (testStringSequencerAddWithId()) return 1;
+    if (testStringSequencerMoveBlock()) return 1;
+    if (testSequencerEngineMovedBlockExit()) return 1;
     if (testSequencerEngineEmptyBlocks()) return 1;
     if (testOverrideParser())           return 1;
 

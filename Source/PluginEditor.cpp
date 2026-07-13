@@ -48,6 +48,27 @@ MangoAudioProcessorEditor::MangoAudioProcessorEditor (MangoAudioProcessor& p)
     stepSizeLabel.setFont (juce::Font (juce::FontOptions (12.0f)));
     addAndMakeVisible (stepSizeLabel);
 
+    // Lane count - / + (drives the numlanes parameter; the rack follows it).
+    lanesCaption.setText ("lanes", juce::dontSendNotification);
+    lanesCaption.setColour (juce::Label::textColourId, theme::dimText);
+    lanesCaption.setFont (juce::Font (juce::FontOptions (12.0f)));
+    addAndMakeVisible (lanesCaption);
+
+    lanesCountLabel.setJustificationType (juce::Justification::centred);
+    lanesCountLabel.setColour (juce::Label::textColourId, theme::text);
+    lanesCountLabel.setFont (juce::Font (juce::FontOptions (14.0f, juce::Font::bold)));
+    addAndMakeVisible (lanesCountLabel);
+
+    for (auto* b : { &lanesMinusButton, &lanesPlusButton })
+    {
+        b->setMouseClickGrabsKeyboardFocus (false);
+        b->setColour (juce::TextButton::buttonColourId, juce::Colour (0xff2b2b2b));
+        b->setColour (juce::TextButton::textColourOffId, theme::text);
+        addAndMakeVisible (*b);
+    }
+    lanesMinusButton.onClick = [this] { adjustLaneCount (-1); };
+    lanesPlusButton.onClick  = [this] { adjustLaneCount (+1); };
+
     // ---- effect panels (one per lane x type, hidden until selected) ----------
     for (int lane = 0; lane < numLanes; ++lane)
         for (int t = 0; t < kNumEffectTypes; ++t)
@@ -112,10 +133,17 @@ void MangoAudioProcessorEditor::resized()
     auto sizeRow = right.removeFromTop (26);
     stepSizeLabel.setBounds (sizeRow.removeFromLeft (40));
     stepSizeBox.setBounds (sizeRow);
+    right.removeFromTop (4);
+
+    auto lanesRow = right.removeFromTop (24);
+    lanesCaption.setBounds (lanesRow.removeFromLeft (40));
+    lanesMinusButton.setBounds (lanesRow.removeFromLeft (24));
+    lanesCountLabel.setBounds (lanesRow.removeFromLeft (30));
+    lanesPlusButton.setBounds (lanesRow.removeFromLeft (24));
     right.removeFromTop (8);
 
     // Block string at the bottom, panel area in between.
-    blockText.setBounds (right.removeFromBottom (48));
+    blockText.setBounds (right.removeFromBottom (mng::BlockTextPanel::kHeight));
     right.removeFromBottom (6);
     panelArea = right;
 
@@ -164,10 +192,32 @@ void MangoAudioProcessorEditor::refreshBlockText()
         blockText.setBlock (-1, -1, {}, false);
 }
 
+void MangoAudioProcessorEditor::adjustLaneCount (int delta)
+{
+    if (auto* param = processor.apvts.getParameter (pid::numlanes))
+    {
+        const int current = (int) processor.apvts.getRawParameterValue (pid::numlanes)->load();
+        const int wanted  = juce::jlimit (1, numLanes, current + delta);
+        param->setValueNotifyingHost (param->convertTo0to1 ((float) wanted));
+    }
+}
+
 void MangoAudioProcessorEditor::timerCallback()
 {
     // Follow lane-type changes (combo/automation) for the visible panel.
     refreshVisiblePanel();
+
+    // Lane-count readout, and drop a selection that became hidden.
+    const int count = processor.engine.visibleLaneCount();
+    lanesCountLabel.setText (juce::String (count), juce::dontSendNotification);
+    lanesMinusButton.setEnabled (count > 1);
+    lanesPlusButton.setEnabled (count < numLanes);
+
+    if (selectedLane >= 0 && processor.engine.rowOfLane (selectedLane) >= count)
+    {
+        rack.deselectAllExcept (-1);
+        selectBlock (-1, -1);
+    }
 }
 
 void MangoAudioProcessorEditor::changeListenerCallback (juce::ChangeBroadcaster*)

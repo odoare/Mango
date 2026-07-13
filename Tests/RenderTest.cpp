@@ -178,6 +178,42 @@ static void testQuantizer()
         onlyLevels = onlyLevels && (v < 1e-6f || std::abs (v - 1.0f) < 1e-6f);
     }
     CHECK (onlyLevels);
+
+    // Downsampling: with full bit depth and a hold of 8 samples the output
+    // becomes piecewise constant — far fewer sample-to-sample changes than
+    // the continuous input, but not silence/DC either.
+    setParam (p, "l0_qnt_bits", 24.0f);
+    setParam (p, "l0_qnt_down", 8.0f);
+    const auto held = render (p, 0.4);
+    int changes = 0, counted = 0;
+    for (size_t i = (size_t) (0.05 * kSampleRate) + 1; i < held.size(); ++i, ++counted)
+        if (held[i] != held[i - 1])
+            ++changes;
+    CHECK (changes < counted / 6);
+    CHECK (changes > counted / 16);
+}
+
+//==============================================================================
+static void testRingMod()
+{
+    MangoAudioProcessor p;
+    setParam (p, "l0_type", 6.0f);            // Ring mod
+    setParam (p, "l0_ring_f0", 1000.0f);
+    setParam (p, "l0_ring_f1", 1000.0f);      // f0 = f1: static carrier
+    setParam (p, "l0_ring_amp", 1.0f);
+    addFullBlock (p, 0);
+
+    // Full ring modulation of a sine by a sine halves the power:
+    // RMS = 0.707 (input) * 0.707 (carrier) = 0.5.
+    const float rmsFull = rmsOf (render (p, 0.4), 0.05, 0.4);
+    CHECK (std::abs (rmsFull - 0.5f) < 0.03f);
+
+    // Amount 0 is transparent: the input sine's RMS comes through.
+    setParam (p, "l0_ring_amp", 0.0f);
+    const float rmsDry = rmsOf (render (p, 0.4), 0.05, 0.4);
+    CHECK (std::abs (rmsDry - 0.7071f) < 0.02f);
+
+    std::printf ("ring mod: full-mod rms = %.3f, amp=0 rms = %.3f\n", rmsFull, rmsDry);
 }
 
 //==============================================================================
@@ -376,6 +412,25 @@ static void testAttRelSharing()
 }
 
 //==============================================================================
+/** Rows beyond the numlanes parameter (default 4) are bypassed: they keep
+    sequencing but do not process audio. */
+static void testLaneCount()
+{
+    MangoAudioProcessor p;
+    setParam (p, "l4_type", 0.0f);        // lane 4 (row 4) -> Gater
+    addFullBlock (p, 4);
+
+    // Default 4 lanes: row 4 hidden -> pass-through everywhere.
+    auto out = render (p, 1.0);
+    CHECK (rmsOf (out, 0.55, 0.95) > 0.5f);
+
+    setParam (p, "numlanes", 5.0f);       // row 4 shown -> it gates
+    out = render (p, 1.0);
+    CHECK (rmsOf (out, 0.55, 0.95) < 0.01f);
+    std::printf ("lane count: hidden row bypassed, shown row processes.\n");
+}
+
+//==============================================================================
 static void testMuteSolo()
 {
     MangoAudioProcessor p;
@@ -500,6 +555,7 @@ static void dumpEditorSnapshot (const juce::String& path)
         p.engine.sequencerFor (5).addBlock (0, 8);    // quant
     }
     p.engine.rebuildOverrides();
+    setParam (p, "numlanes", 8.0f);    // show every lane in the snapshot
     setParam (p, "numsteps", 32.0f);   // > the old 20 px/step limit: must still fit
     setParam (p, "l0_gate_att", 0.2f);
     setParam (p, "l0_gate_rel", 0.25f);
@@ -533,7 +589,7 @@ static void dumpEditorSnapshot (const juce::String& path)
     {
         mng::EffectPanel panel (p.apvts, 0, type, mng::theme::laneColour (0));
         panel.setLookAndFeel (&lnf);
-        panel.setSize (250, 460);
+        panel.setSize (250, 334);   // the editor's real panel-area height
         writePng (panel, base.getSiblingFile (base.getFileNameWithoutExtension()
                                               + "_" + name + ".png"));
         panel.setLookAndFeel (nullptr);
@@ -557,11 +613,13 @@ int main (int argc, char* argv[])
     testGaterOverride();
     testSeedDeterminism();
     testQuantizer();
+    testRingMod();
     testStateRoundTrip();
     testHostSync();
     testLiveWeightChange();
     testGateCurves();
     testAttRelSharing();
+    testLaneCount();
     testMuteSolo();
     testPassRepeatability();
     testLoopJumpReenter();

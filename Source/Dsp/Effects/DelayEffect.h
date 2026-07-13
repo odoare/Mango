@@ -4,9 +4,17 @@
 
     Feedback delay, active while the block sounds (the delay buffer persists
     across blocks, so re-entering picks up the previous tail — a deliberate
-    glitch flavour). Parameters: duration (seconds) and feedback.
+    glitch flavour). Parameters: duration (seconds), feedback, damping (a
+    lowpass in the feedback path, so repeats mellow as they decay) and
+    portamento (the glide time of delay-time changes).
 
-    Overrides: dur (note-value / mididur convention), fb.
+    With a short time the delay is a tuned comb: `dur=mididur fb=0.99`
+    turns it into a Karplus-Strong style resonator following the last MIDI
+    note, damping sets the string's brightness decay, and portamento slurs
+    the pitch between notes.
+
+    Overrides: dur (note-value / mididur convention), fb, damp,
+    porta (milliseconds).
 
     Author: Olivier Doaré, github.com/odoare
     SPDX-License-Identifier: LGPL-3.0-or-later
@@ -24,6 +32,9 @@ class DelayEffect : public EffectBase
 {
 public:
     static constexpr float kMaxDelaySeconds = 2.0f;
+    static constexpr float kMaxFeedback     = 0.999f;
+    static constexpr float kMinPortaMs      = 1.0f;
+    static constexpr float kMaxPortaMs      = 50.0f;
 
     static void addParameters (std::vector<std::unique_ptr<juce::RangedAudioParameter>>& params,
                                const juce::String& lanePrefix, const juce::String& nameP)
@@ -32,15 +43,25 @@ public:
         durRange.setSkewForCentre (0.25f);
         params.push_back (std::make_unique<juce::AudioParameterFloat> (
             lanePrefix + "dly_dur", nameP + "Delay Time", durRange, 0.25f));
+        // Skewed so the resonator-grade range (>0.9) keeps knob travel.
+        auto fbRange = juce::NormalisableRange<float> (0.0f, kMaxFeedback, 0.001f);
+        fbRange.setSkewForCentre (0.6f);
         params.push_back (std::make_unique<juce::AudioParameterFloat> (
-            lanePrefix + "dly_fb", nameP + "Delay Feedback",
-            juce::NormalisableRange<float> (0.0f, 0.98f, 0.01f), 0.5f));
+            lanePrefix + "dly_fb", nameP + "Delay Feedback", fbRange, 0.5f));
+        params.push_back (std::make_unique<juce::AudioParameterFloat> (
+            lanePrefix + "dly_damp", nameP + "Delay Damping",
+            juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.0f));
+        params.push_back (std::make_unique<juce::AudioParameterFloat> (
+            lanePrefix + "dly_porta", nameP + "Delay Portamento",
+            juce::NormalisableRange<float> (kMinPortaMs, kMaxPortaMs, 0.1f), 30.0f));
     }
 
     void bindParameters (juce::AudioProcessorValueTreeState& apvts, const juce::String& lanePrefix)
     {
-        durParam = apvts.getRawParameterValue (lanePrefix + "dly_dur");
-        fbParam  = apvts.getRawParameterValue (lanePrefix + "dly_fb");
+        durParam   = apvts.getRawParameterValue (lanePrefix + "dly_dur");
+        fbParam    = apvts.getRawParameterValue (lanePrefix + "dly_fb");
+        dampParam  = apvts.getRawParameterValue (lanePrefix + "dly_damp");
+        portaParam = apvts.getRawParameterValue (lanePrefix + "dly_porta");
     }
 
     void prepare (double sr, int, int numChannels) override
@@ -58,11 +79,16 @@ public:
 
     void onBlockEnter (const BlockContext& ctx) override
     {
-        durOverride = ctx.overrides != nullptr && ctx.overrides->find (OvKey::Dur) != nullptr;
-        fbOverride  = ctx.overrides != nullptr && ctx.overrides->find (OvKey::Fb)  != nullptr;
-        durValue    = juce::jlimit (0.001f, kMaxDelaySeconds,
-                                    overrideDurSeconds (ctx, OvKey::Dur, durParam->load()));
-        fbValue     = juce::jlimit (0.0f, 0.98f, overrideOr (ctx, OvKey::Fb, fbParam->load()));
+        durOverride   = ctx.overrides != nullptr && ctx.overrides->find (OvKey::Dur)   != nullptr;
+        fbOverride    = ctx.overrides != nullptr && ctx.overrides->find (OvKey::Fb)    != nullptr;
+        dampOverride  = ctx.overrides != nullptr && ctx.overrides->find (OvKey::Damp)  != nullptr;
+        portaOverride = ctx.overrides != nullptr && ctx.overrides->find (OvKey::Porta) != nullptr;
+        durValue   = juce::jlimit (0.001f, kMaxDelaySeconds,
+                                   overrideDurSeconds (ctx, OvKey::Dur, durParam->load()));
+        fbValue    = juce::jlimit (0.0f, kMaxFeedback, overrideOr (ctx, OvKey::Fb, fbParam->load()));
+        dampValue  = juce::jlimit (0.0f, 1.0f, overrideOr (ctx, OvKey::Damp, dampParam->load()));
+        portaValue = juce::jlimit (kMinPortaMs, kMaxPortaMs,
+                                   overrideOr (ctx, OvKey::Porta, portaParam->load()));
     }
 
     void onBlockExit() override {}   // tail persists in the buffer, processing stops
@@ -70,8 +96,10 @@ public:
     void process (juce::AudioBuffer<float>& buffer, int startSample, int numSamples) override
     {
         // Live knob values unless the block pinned them.
-        const float dur = durOverride ? durValue : durParam->load();
-        const float fb  = fbOverride  ? fbValue  : fbParam->load();
+        const float dur   = durOverride   ? durValue   : durParam->load();
+        const float fb    = fbOverride    ? fbValue    : fbParam->load();
+        const float damp  = dampOverride  ? dampValue  : dampParam->load();
+        const float porta = portaOverride ? portaValue : portaParam->load();
 
         const int numCh = juce::jmin (buffer.getNumChannels(), (int) delays.size());
         for (int ch = 0; ch < numCh; ++ch)
@@ -79,6 +107,8 @@ public:
             auto& d = delays[(size_t) ch];
             d.setDelaySeconds (dur);
             d.setFeedback (fb);
+            d.setDamping (damp);
+            d.setSmoothingSeconds (porta * 0.001f);
 
             float* data = buffer.getWritePointer (ch) + startSample;
             for (int i = 0; i < numSamples; ++i)
@@ -87,12 +117,14 @@ public:
     }
 
 private:
-    std::atomic<float>* durParam = nullptr;
-    std::atomic<float>* fbParam  = nullptr;
+    std::atomic<float>* durParam   = nullptr;
+    std::atomic<float>* fbParam    = nullptr;
+    std::atomic<float>* dampParam  = nullptr;
+    std::atomic<float>* portaParam = nullptr;
 
     std::vector<fxme::DelayLine> delays;
-    bool  durOverride = false, fbOverride = false;
-    float durValue = 0.25f, fbValue = 0.5f;
+    bool  durOverride = false, fbOverride = false, dampOverride = false, portaOverride = false;
+    float durValue = 0.25f, fbValue = 0.5f, dampValue = 0.0f, portaValue = 30.0f;
 };
 
 } // namespace mng

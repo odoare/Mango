@@ -2,7 +2,8 @@
   ------------------------------------------------------------------------------
     PluginProcessor.h
 
-    Mango — modular sound glitcher / mangler. Six sequencer lanes, each with a
+    Mango — modular sound glitcher / mangler. Up to eight sequencer lanes
+    (numlanes parameter, default 4), each with a
     selectable effect (gater, grain duplicator, delay, distortion, filter with
     envelope, quantizer); a lane's effect is active while the playhead is
     inside one of its blocks. Lane order (top to bottom) is the processing

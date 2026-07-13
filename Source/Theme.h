@@ -44,7 +44,7 @@ namespace mng::theme
     inline const juce::Colour seedAccent   { 0xff9ac93c };   // lime
     inline const juce::Colour gridAccent   { 0xff4cc9f0 };   // cyan
 
-    // One accent per lane identity (0..5); a lane keeps its colour when the
+    // One accent per lane identity (0..7); a lane keeps its colour when the
     // display order changes.
     inline juce::Colour laneColour (int laneIndex) noexcept
     {
@@ -55,6 +55,8 @@ namespace mng::theme
             juce::Colour (0xffd96cd0),   // orchid
             juce::Colour (0xffd9b13a),   // gold
             juce::Colour (0xff35c0a0),   // teal-green
+            juce::Colour (0xff7a8cf0),   // periwinkle
+            juce::Colour (0xffe0533c),   // vermilion
         };
         return colours[juce::jlimit (0, numLanes - 1, laneIndex)];
     }

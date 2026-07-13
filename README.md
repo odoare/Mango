@@ -3,7 +3,8 @@
 **FX-Mechanics modular sound glitcher / mangler** — a JUCE audio effect (VST3 / AU /
 Standalone) with MIDI input.
 
-Mango is a six-lane rubber step sequencer where every lane drives one effect. While
+Mango is a rubber step sequencer of up to eight lanes (default 4) where every
+lane drives one effect. While
 the playhead is inside a block on a lane, that lane's effect processes the audio;
 lane order (top to bottom) is the processing order and can be changed with the
 arrows on the left. All randomness is seeded and reproducible: the same session
@@ -22,13 +23,14 @@ open phase, or one grain repetition — never the whole block). If their sum
 exceeds 1 they share the duration proportionally to their values: att=1,
 rel=0.5 acts as att=2/3, rel=1/3. The curves set the edge shapes: 0 slow,
 0.5 linear, 1 very fast (a fast release ≈ exponential decay).
-| Delay   | Feedback delay (buffer persists across blocks) | time, feedback |
+| Delay   | Feedback delay (buffer persists across blocks); damping mellows the repeats, portamento sets the time-glide (1–50 ms). With `dur=mididur fb=0.99` it is a Karplus-Strong style resonator tuned by MIDI | time, feedback, damping, portamento |
 | Dist    | Tube-style saturation (Standard / Dynamic / Triode / Class AB) | model, drive, bias, sag, mix |
 | Filter  | LP / HP sweep from start to end frequency, or a formant vowel glide, repeating at a drawn rhythmic rate | mode, Q, start/end freq, start/end vowel, ramp probabilities |
-| Quant   | Bit-depth reduction | bits (1–24) |
+| Quant   | Lo-fi: bit-depth reduction + sample-rate reduction (raw sample & hold — the aliasing is the point) | bits (1–24), downsample (÷1–64), mix |
+| Ring    | Ring modulator: a sine carrier glides from a start to an end frequency over a drawn tempo-synced ramp, repeating for the block. Amount 0 = clean, 1 = full ring modulation (low frequencies give tremolo) | start/end freq (0.5 Hz–10 kHz), amount, glide probabilities |
 
 **Duration probabilities**: effects that need a rhythmic duration (gate rate, grain
-length, filter ramp) don't use a fixed value. You weight the probability of
+length, filter ramp, ring glide) don't use a fixed value. You weight the probability of
 1/4, 1/8, 1/16, 1/32 and of straight/triplet/dotted; the actual duration is
 drawn from those weights — e.g. with P(1/4)=1, P(1/8)=0.5, P(1/16)=0.1 the
 chance of an uncut quarter is 1/1.6. The draw is a pure function of
@@ -44,6 +46,7 @@ string turns the field red and is kept for fixing):
 ```
 dur=0.125 fb=0.6        eighth-note delay with more feedback
 dur=mididur/2           half the period of the last MIDI note received
+dur=mididur fb=0.99 damp=0.4    plucked-string resonance on the last note
 v0=a v1=u               formant glide from A to U
 ```
 
@@ -51,7 +54,7 @@ v0=a v1=u               formant glide from A to U
   eighth) resolved against the host tempo; any expression with `mididur` is a
   time in seconds (`mididur`, `mididur*2`, `mididur/4`, `3*mididur`).
 - Other keys are in the parameter's native unit:
-  `fb att rel attcurve relcurve q f0 f1 v0 v1 bits drive bias sag mix model mode fade`
+  `fb damp porta att rel attcurve relcurve q f0 f1 v0 v1 bits down drive bias sag mix model mode fade amp`
   and the duration probability weights `w4 w8 w16 w32 wstr wtrip wdot`
   (each effect reads the keys it understands).
 - **`mididur`** is 1/f of the last MIDI note-on the plugin received, sampled when
@@ -59,7 +62,9 @@ v0=a v1=u               formant glide from A to U
 
 ## Global controls
 
-Dry/Wet, Seed (0–99999), the shared grid (step size 1/16…1/1, 1–64 steps).
+Dry/Wet, Seed (0–99999), the shared grid (step size 1/16…1/1, 1–64 steps),
+and the lane count (1–8, default 4, via the − / + buttons — hidden lanes
+keep their blocks and settings and simply stop processing).
 Each lane header also has **M**ute and **S**olo toggles (muted / non-soloed
 lanes keep sequencing — draws stay deterministic — but stop processing audio).
 
@@ -95,7 +100,10 @@ real processor and checks gate timing, host-tempo sync, seed determinism
 
 ## Architecture notes
 
-- Lanes are fixed identities 0–5; reordering only permutes a display/processing
+Full architecture reference (engine, threading, determinism, language, GUI,
+FxmeTools additions, testing, invariants): [doc/architecture.md](doc/architecture.md).
+
+- Lanes are fixed identities 0–7; reordering only permutes a display/processing
   order, so parameters, sequences and random draws stay with their lane.
 - Sequencer model/engine/GUI come from [FxmeTools](https://github.com/odoare/FxmeTools)
   (`StringSequencer`, `SequencerEngine`, `SequencerRubber`), as do the DSP

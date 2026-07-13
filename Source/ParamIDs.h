@@ -17,7 +17,11 @@
 
 namespace mng
 {
-    inline constexpr int numLanes = 6;
+    /** The fixed maximum: parameters, engines and state always cover all
+        eight lanes; the `numlanes` parameter (1..8) sets how many are shown
+        and processed. */
+    inline constexpr int numLanes = 8;
+    inline constexpr int defaultNumLanes = 4;
 
     namespace pid
     {
@@ -26,6 +30,7 @@ namespace mng
         inline constexpr const char* seed     = "seed";
         inline constexpr const char* stepsize = "stepsize";
         inline constexpr const char* numsteps = "numsteps";
+        inline constexpr const char* numlanes = "numlanes";
 
         /** Prefix for one lane's parameters, e.g. lane 3 -> "l3_". */
         inline juce::String lanePrefix (int laneIndex)

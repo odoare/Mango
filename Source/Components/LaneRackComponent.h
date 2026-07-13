@@ -2,7 +2,7 @@
   ------------------------------------------------------------------------------
     LaneRackComponent.h
 
-    The centre of the Mango editor: a step ruler on top and six rows below,
+    The centre of the Mango editor: a step ruler on top and the lane rows below,
     one per sequencer lane, laid out in the engine's display order. Each row
     is a lane header (up/down reorder arrows, accent swatch, effect-type
     box) plus a rubber sequencer strip.
@@ -46,7 +46,7 @@ public:
             row.rubber = std::make_unique<LockedRubber> (
                 processor.engine.sequencerFor (i), processor.engine.lock(),
                 makeBlockPainter (i));
-            // Always fit the whole pattern: the six lanes, the ruler and the
+            // Always fit the whole pattern: the lanes, the ruler and the
             // playhead must stay aligned whatever the step count.
             row.rubber->setMinPixelsPerStep (1);
             addAndMakeVisible (*row.rubber);
@@ -116,13 +116,20 @@ public:
         r.removeFromTop (kRulerHeight);
 
         const auto laneOrder = processor.engine.laneOrder();
-        const int rowH = r.getHeight() / numLanes;
+        visibleRows = processor.engine.visibleLaneCount();
+        const int rowH = r.getHeight() / visibleRows;
 
         for (int rowIdx = 0; rowIdx < numLanes; ++rowIdx)
         {
-            auto rowArea = r.removeFromTop (rowH).reduced (0, 2);
             auto& row = rows[(size_t) laneOrder[(size_t) rowIdx]];
-            row.header->setRow (rowIdx);
+            const bool shown = rowIdx < visibleRows;
+            row.header->setVisible (shown);
+            row.rubber->setVisible (shown);
+            if (! shown)
+                continue;
+
+            auto rowArea = r.removeFromTop (rowH).reduced (0, 2);
+            row.header->setRow (rowIdx, visibleRows);
             row.header->setBounds (rowArea.removeFromLeft (kHeaderWidth));
             rowArea.removeFromLeft (4);
             row.rubber->setBounds (rowArea);
@@ -183,11 +190,11 @@ private:
                 rack.processor.apvts, prefix + "solo", soloButton);
         }
 
-        void setRow (int newRow)
+        void setRow (int newRow, int visibleRowCount)
         {
             row = newRow;
             upButton.setEnabled (row > 0);
-            downButton.setEnabled (row < numLanes - 1);
+            downButton.setEnabled (row < visibleRowCount - 1);
         }
 
         void paint (juce::Graphics& g) override
@@ -271,16 +278,15 @@ private:
                 g.setColour (juce::Colours::white.withAlpha (0.9f));
                 g.drawRoundedRectangle (r.toFloat().reduced (1.0f), 3.0f, 1.0f);
 
-                // The block's override string, with a soft dark backing so it
-                // stays readable on top of the visuals.
+                // The block's override string (newlines flattened), with a
+                // soft dark backing so it stays readable on the visuals.
+                const auto text = juce::String (b.content).replace ("\n", "  ");
                 g.setFont (juce::Font (juce::FontOptions (12.5f)));
                 const auto textArea = r.reduced (5, 2);
                 g.setColour (juce::Colours::black.withAlpha (0.55f));
-                g.drawText (juce::String (b.content), textArea.translated (1, 1),
-                            juce::Justification::topLeft);
+                g.drawText (text, textArea.translated (1, 1), juce::Justification::topLeft);
                 g.setColour (juce::Colours::white);
-                g.drawText (juce::String (b.content), textArea,
-                            juce::Justification::topLeft);
+                g.drawText (text, textArea, juce::Justification::topLeft);
             }
         };
     }
@@ -410,8 +416,20 @@ private:
 
             case EffectType::Quantizer:
                 blockgfx::paintStairsWave (g, r, ovOr (OvKey::Bits, param ("qnt_bits")),
+                                           ovOr (OvKey::Down, param ("qnt_down")),
                                            curveColour);
                 break;
+
+            case EffectType::RingMod:
+            {
+                const double ramp = juce::jmax (1.0e-3, ovDurBeats (drawnBeats ("ring_")));
+                const bool rising = ovOr (OvKey::F1, param ("ring_f1"))
+                                 >= ovOr (OvKey::F0, param ("ring_f0"));
+                blockgfx::paintChirpWave (g, r, blockBeats, ramp, rising,
+                                          ovOr (OvKey::Amp, param ("ring_amp")),
+                                          curveColour);
+                break;
+            }
         }
     }
 
@@ -423,6 +441,10 @@ private:
 
     void timerCallback() override
     {
+        // Follow the lane-count parameter (buttons, automation, state load).
+        if (processor.engine.visibleLaneCount() != visibleRows)
+            refreshOrder();
+
         for (int i = 0; i < numLanes; ++i)
         {
             rows[(size_t) i].rubber->setPlayheadStep (processor.engine.guiPlayheadStep (i));
@@ -447,7 +469,8 @@ private:
 
     MangoAudioProcessor& processor;
     std::array<Row, numLanes> rows;   // indexed by lane identity
-    int visualTick = 0;
+    int visualTick  = 0;
+    int visibleRows = numLanes;       // cached view of the numlanes parameter
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LaneRackComponent)
 };

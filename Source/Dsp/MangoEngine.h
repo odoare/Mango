@@ -2,15 +2,16 @@
   ------------------------------------------------------------------------------
     MangoEngine.h
 
-    The Mango core: six lanes, each a StringSequencer + SequencerEngine +
+    The Mango core: eight lanes (numlanes shows 1..8 of them), each a
+    StringSequencer + SequencerEngine +
     one effect instance per type (pre-built, so switching a lane's type is
     allocation-free and every type keeps its settings). The lane display
     order IS the processing order (top to bottom); `laneOrder` is a
-    permutation over the fixed lane identities 0..5 — parameters, sequences
+    permutation over the fixed lane identities 0..7 — parameters, sequences
     and random draws stay attached to the identity when lanes are moved.
 
-    Locking contract: one CriticalSection (`lock()`) guards the six
-    sequencers, the lane order and the parsed-override map. The audio thread
+    Locking contract: one CriticalSection (`lock()`) guards the lane
+    sequencers, the display order and the parsed-override map. The audio thread
     holds it for the whole DSP section of process(); every message-thread
     critical section must therefore be tiny and allocation-free — parsing
     and map building happen OUTSIDE the lock (rebuildOverrides), only the
@@ -47,7 +48,7 @@ public:
 
     // ---- message thread ------------------------------------------------------
 
-    /** Declares every per-lane parameter (type choice + all six effects). */
+    /** Declares every per-lane parameter (type choice + all effect types). */
     static void addLaneParameters (std::vector<std::unique_ptr<juce::RangedAudioParameter>>& params);
 
     void bindParameters (juce::AudioProcessorValueTreeState& apvts);
@@ -61,10 +62,21 @@ public:
     /** Display/processing order: row -> lane identity. */
     std::array<int, numLanes> laneOrder() const;
     int laneAtRow (int row) const;
+    int rowOfLane (int laneIndex) const;
     void moveRow (int row, int delta);                       // swap two rows
     void setLaneOrder (const std::array<int, numLanes>&);    // state restore
 
-    /** Applies the shared grid to all six sequencers (locks internally). */
+    /** How many rows are currently shown/processed (the `numlanes`
+        parameter). Hidden rows keep sequencing silently, like muted lanes,
+        so re-showing them is seamless. */
+    int visibleLaneCount() const
+    {
+        return numLanesParam != nullptr
+             ? juce::jlimit (1, numLanes, (int) numLanesParam->load())
+             : numLanes;
+    }
+
+    /** Applies the shared grid to every lane sequencer (locks internally). */
     void setGrid (fxme::SeqStepSize stepSize, int numSteps);
 
     /** Re-parses every block string into the override cache. Parsing happens
@@ -142,7 +154,8 @@ private:
     std::unordered_map<uint64_t, ParsedOverrides> overrides;
     std::unordered_map<uint64_t, ParsedOverrides> overridesScratch;   // build target, message thread
 
-    std::atomic<float>* seedParam = nullptr;
+    std::atomic<float>* seedParam     = nullptr;
+    std::atomic<float>* numLanesParam = nullptr;
 
     juce::AudioBuffer<float> dryBuffer;
 

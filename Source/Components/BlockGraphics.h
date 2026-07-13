@@ -15,6 +15,8 @@
       Quantizer  a stylized staircase waveform
       Filter     the repeating ramp, same family as the gate curves but in
                  its own colour
+      RingMod    a repeating chirp at the pass-0 drawn glide rate, flattened
+                 by the modulation amount
 
     Everything is drawn in *beats*: durations drawn from the probability
     weights are in beats, and the block's width maps linearly onto its
@@ -156,23 +158,60 @@ inline void paintDistWave (juce::Graphics& g, juce::Rectangle<float> r,
 }
 
 /** Quantizer: a staircase sine, two cycles across the block. The displayed
-    level count follows the bits parameter, capped so it always reads as
+    level count follows the bits parameter, the horizontal sample-and-hold
+    follows the downsample factor; both capped so it always reads as
     stairs. */
 inline void paintStairsWave (juce::Graphics& g, juce::Rectangle<float> r,
-                             float bits, juce::Colour colour)
+                             float bits, float down, juce::Colour colour)
 {
     if (r.getWidth() < 4.0f)
         return;
 
     const float levels = juce::jlimit (1.0f, 6.0f, std::pow (2.0f, bits - 1.0f));
+    const float hold   = juce::jlimit (1.0f, 12.0f, down * 0.5f);
     const float mid    = r.getCentreY();
     const float half   = r.getHeight() * 0.5f - 2.0f;
 
     juce::Path p;
     for (int x = 0; x <= (int) r.getWidth(); ++x)
     {
-        const float phase = juce::MathConstants<float>::twoPi * 2.0f * x / r.getWidth();
+        const float xs    = std::floor ((float) x / hold) * hold;
+        const float phase = juce::MathConstants<float>::twoPi * 2.0f * xs / r.getWidth();
         const float y = mid - std::round (std::sin (phase) * levels) / levels * half;
+        if (x == 0) p.startNewSubPath (r.getX(), y);
+        else        p.lineTo (r.getX() + (float) x, y);
+    }
+    g.setColour (colour);
+    g.strokePath (p, juce::PathStrokeType (1.4f));
+}
+
+/** Ring mod: a repeating chirp — a sine whose visual density glides across
+    each ramp segment (denser towards the end when the end frequency is
+    above the start), with its amplitude scaled by the modulation amount
+    (amp 0 = flat centre line). */
+inline void paintChirpWave (juce::Graphics& g, juce::Rectangle<float> r,
+                            double blockBeats, double rampBeats, bool rising,
+                            float depth, juce::Colour colour)
+{
+    if (r.getWidth() < 4.0f || blockBeats <= 0.0 || rampBeats <= 1.0e-3)
+        return;
+
+    const float mid  = r.getCentreY();
+    const float half = (r.getHeight() * 0.5f - 2.0f) * juce::jlimit (0.0f, 1.0f, depth);
+    const double beatsPerPx = blockBeats / (double) r.getWidth();
+
+    juce::Path p;
+    double phase = 0.0;
+    for (int x = 0; x <= (int) r.getWidth(); ++x)
+    {
+        double t = std::fmod ((double) x * beatsPerPx, rampBeats) / rampBeats;
+        if (! rising)
+            t = 1.0 - t;
+        // 2 -> 9 visual cycles per ramp segment across the glide.
+        const double cyclesPerBeat = 2.0 * std::pow (4.5, t) / rampBeats;
+        phase += juce::MathConstants<double>::twoPi * cyclesPerBeat * beatsPerPx;
+
+        const float y = mid - (float) std::sin (phase) * half;
         if (x == 0) p.startNewSubPath (r.getX(), y);
         else        p.lineTo (r.getX() + (float) x, y);
     }

@@ -19,13 +19,13 @@
 namespace mng
 {
 
-enum class EffectType { Gater = 0, Grain, Delay, Distortion, FilterEnv, Quantizer };
+enum class EffectType { Gater = 0, Grain, Delay, Distortion, FilterEnv, Quantizer, RingMod };
 
-inline constexpr int kNumEffectTypes = 6;
+inline constexpr int kNumEffectTypes = 7;
 
 inline const juce::StringArray& effectTypeNames()
 {
-    static const juce::StringArray names { "Gater", "Grain", "Delay", "Dist", "Filter", "Quant" };
+    static const juce::StringArray names { "Gater", "Grain", "Delay", "Dist", "Filter", "Quant", "Ring" };
     return names;
 }
 
