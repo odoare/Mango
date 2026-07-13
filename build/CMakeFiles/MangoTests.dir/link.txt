@@ -1,1 +1,0 @@
-/usr/bin/c++ -O3 -DNDEBUG CMakeFiles/MangoTests.dir/Tests/UnitTests.cpp.o -o MangoTests 
