@@ -26,6 +26,7 @@
 #include <FxmeTools/dsp/BitCrusher.h>
 #include <FxmeTools/dsp/Downsampler.h>
 #include <FxmeTools/dsp/DelayLine.h>
+#include <FxmeTools/dsp/SpectralFreeze.h>
 #include <FxmeTools/dsp/Saturator.h>
 #include <FxmeTools/dsp/GrainLooper.h>
 #include <FxmeTools/midi/StringSequencer.h>
@@ -173,6 +174,56 @@ static int testDownsampler()
         const float y = ds.processSample ((float) i);
         CHECK (near (y, (float) (i - i % 4), 1e-6));
     }
+    return 0;
+}
+
+//==============================================================================
+static int testSpectralFreeze()
+{
+    using SF = fxme::SpectralFreeze;
+    const int N = SF::kSize;
+
+    SF a, b;
+    a.prepare();
+    b.prepare();
+    a.setIdentity (42, 7);
+    b.setIdentity (42, 7);
+    a.startCapture();
+    b.startCapture();
+
+    // One window of a full-scale sine is captured and passed through...
+    const double w = 2.0 * 3.14159265358979 * 440.0 / 48000.0;
+    double passDiff = 0.0;
+    for (int i = 0; i < N; ++i)
+    {
+        const float x  = (float) std::sin (w * i);
+        const float ya = a.processSample (x);
+        b.processSample (x);
+        passDiff += std::fabs (ya - x);
+    }
+    CHECK (passDiff < 1e-6);
+    CHECK (a.isFrozen());
+
+    // ...then the input goes SILENT and the wash must keep sounding, at
+    // roughly the captured level (also pins the self-calibrated FFT gain),
+    // bit-identically for two instances with the same identity.
+    double acc = 0.0;
+    int    cnt = 0;
+    float  maxDiff = 0.0f;
+    for (int i = 0; i < 6 * N; ++i)
+    {
+        const float ya = a.processSample (0.0f);
+        const float yb = b.processSample (0.0f);
+        maxDiff = std::max (maxDiff, std::fabs (ya - yb));
+        if (i > N)   // past the capture->wash crossfade
+        {
+            acc += (double) ya * ya;
+            ++cnt;
+        }
+    }
+    const double rms = std::sqrt (acc / (double) cnt);
+    CHECK (rms > 0.3 && rms < 0.85);   // random-phase OLA of a 0.707-RMS sine
+    CHECK (maxDiff == 0.0f);
     return 0;
 }
 
@@ -549,6 +600,7 @@ int main()
     if (testArEnvelope())               return 1;
     if (testBitCrusher())               return 1;
     if (testDownsampler())              return 1;
+    if (testSpectralFreeze())           return 1;
     if (testDelayLine())                return 1;
     if (testSaturator())                return 1;
     if (testGrainLooperAttack())        return 1;

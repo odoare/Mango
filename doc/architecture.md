@@ -29,10 +29,11 @@ patterns), FxmeFX (Tube saturation origin), Gloubiboulga (formant origin).
   how many **rows** are shown and processed. Hidden rows keep sequencing
   silently (like mute) so re-showing them is seamless; solo only counts
   among visible rows. Each lane has: a selectable effect type, mute (M) /
-  solo (S), up/down reorder arrows, and a rubber sequencer strip on a
-  **shared grid** (one step size 1/16…1/1 + step count 1–64 for the whole
-  plugin, max 64 steps).
-- **Effects** (one active instance per lane; all seven types pre-built per
+  solo (S), a bus-start switch (B — see the buses paragraph in §3),
+  up/down reorder arrows, and a rubber sequencer strip on a **shared grid**
+  (one step size 1/16…1/1 + step count 1–64 for the whole plugin, max 64
+  steps). Lanes are coloured by the bus they belong to.
+- **Effects** (one active instance per lane; every type pre-built per
   lane so switching is allocation-free and every type keeps its settings):
 
   | Type | DSP | Lane parameters (`l<i>_` prefix) |
@@ -44,9 +45,11 @@ patterns), FxmeFX (Tube saturation origin), Gloubiboulga (formant origin).
   | Filter | LP/HP sweep f0→f1 or formant vowel glide, ramp repeats at a drawn rate | `flt_`: 7 weights, `mode`, `q`, `f0`, `f1`, `v0`, `v1` |
   | Quant | lo-fi: bit crusher (`fxme::BitCrusher`) + sample & hold decimator (`fxme::Downsampler`/channel, hold phase restarts at block entry — but not on live-tweak re-enters — so passes reproduce) + wet/dry mix | `qnt_bits` (1–24), `qnt_down` (÷1–64), `qnt_mix` |
   | Ring | ring modulator: sine carrier glides exponentially f0→f1 over a drawn tempo-synced ramp, repeating for the block; amount 0–1 blends clean → full ±1 modulation (`x·(1−amp+amp·sin)`); carrier phase restarts at block entry (not on re-enters) so passes reproduce; one carrier feeds all channels | `ring_`: 7 weights, `f0`, `f1` (0.5 Hz–10 kHz), `amp` |
+  | Rev | reverser: records drawn-duration slices and plays each backwards (while slice k records, slice k−1 plays reversed; the first slice of a block passes through); `fade` = 0–0.5 slice fraction faded at the seams; slice grid restarts at block entry (not on re-enters) so passes reproduce; pure sample copy, no interpolation | `rev_`: 7 weights, `fade` |
+  | Freeze | spectral freeze (`fxme::SpectralFreeze`/channel, WDL FFT): captures one 2048-sample window at block entry (passed through while recording, so blocks shorter than ~43 ms stay dry), then random-phase resynthesis of its magnitude spectrum — Hann/75% OLA, one iFFT per 512-sample hop (4 at the capture→wash switch) — sustains a static wash; phases keyed on (seed, lane, block, channel) with the frame counter restarting at entry, so passes reproduce and the two channels decorrelate into a wide image | `frz_mix` |
 
 - **Weighted random durations** (gate rate, grain length, filter ramp,
-  ring glide): the
+  ring glide, reverse slice): the
   user weights P(1/4..1/32) × P(straight/triplet/dotted); the actual duration
   is drawn at block entry. **Draws are a pure function of (seed, lane
   identity, blockId, drawIndex)** — never of time or loop pass — so every
@@ -89,7 +92,7 @@ Source/
     EffectTypes.h             EffectType enum + display names (extension point)
     DurationWeights.h         the 7 weight params + resolveTable(ctx, weights)
     OverrideParser.h          the mini-language (JUCE-free; see §5)
-    Effects/*.h               the seven EffectBase implementations (header-only)
+    Effects/*.h               the EffectBase implementations (header-only)
   Components/
     LaneRackComponent.h       ruler + lane rows (LaneHeader + LockedRubber) + block painter
     BlockGraphics.h           per-effect visuals drawn inside blocks (see §7)
@@ -109,11 +112,25 @@ The core. Owns:
 - `std::array<Lane, numLanes(8)> lanes` — **indexed by lane identity**. Each `Lane`:
   `fxme::StringSequencer seq` + `fxme::SequencerEngine engine`
   (`setEnterEmptyBlocks(true)` — Mango blocks fire even with empty strings) +
-  all seven pre-built `EffectBase` instances + raw param pointers
+  all pre-built `EffectBase` instances (one per type) + raw param pointers
   (type/mute/solo) + `active`/`activeBlockId`.
 - `order` — the display/processing permutation (row → identity). Reordering
   only permutes this; parameters, sequences, draws stay with the identity.
-- the parsed-override map, one `juce::CriticalSection seqLock`, a dry buffer.
+- the parsed-override map, one `juce::CriticalSection seqLock`, a dry buffer
+  and a bus working buffer.
+
+**Buses** (up to `numBuses` = 4, parallel): the visible rows group into
+contiguous buses in display order — row 0 always starts bus 0, and every
+row whose `l<i>_busstart` switch is on opens the next bus (switches beyond
+the fourth bus, and switches on hidden rows, are ignored). Each bus
+processes its own copy of the dry input through its rows serially, and the
+bus outputs are **summed** (not averaged) before the global dry/wet: one
+bus is bit-identical to the old serial chain, and an idle bus passes a
+copy of the dry input (so two all-idle buses output 2× the input — the
+parallel-rack convention). `busMapByLane()` (message thread, locks
+briefly) gives lane→bus for the GUI, which colours every lane by its bus
+(`theme::busColour`, 4 colours) — headers, blocks and panels re-accent
+live when the map changes (rack timer → `onBusMapChanged`).
 
 **processBlock flow** (`process()`): read transport → publish bpm → on first
 call after `prepare()` start the engines (deferred so the first draws use the
@@ -121,11 +138,13 @@ real host bpm, not a stale default) → on ppq jump (|ppq − accumulated| >
 1e-3) call `engine->relocate(ppq)` on every lane — relocate (FxmeTools)
 always exits + re-enters even into the same block, so loop wraps restart
 phases cleanly → sync effect types → per-lane param-version check (see
-below) → advance in **≤32-sample sub-blocks**: per sub-block, for each lane
-in `order`: `engine->advance(deltaBeats, seq)` (enter/exit callbacks fire
-here), then if active & audible `effect->process(buffer, offset, n)` →
-free-run at host bpm (120 fallback) when the transport is stopped → global
-dry/wet mix → publish GUI atomics (playhead step, active block, bpm).
+below) → compute the row→bus map → advance in **≤32-sample sub-blocks**:
+per sub-block, first every lane's `engine->advance(deltaBeats, seq)`
+(enter/exit callbacks fire here), then per bus: copy the dry chunk into
+the bus buffer, run its active & audible rows serially on it, add it into
+the (cleared) output chunk → free-run at host bpm (120 fallback) when the
+transport is stopped → global dry/wet mix → publish GUI atomics (playhead
+step, active block, bpm).
 
 **Lane count + mute/solo**: audible = row < `visibleLaneCount()` && !mute &&
 (no solo among visible rows || solo). Bypassed/hidden lanes still advance
@@ -154,8 +173,9 @@ sampleRate, bpm, mididurSeconds (sampled at entry), `overrides` pointer
 
 ## 4. Parameters & state
 
-- ~490 APVTS parameters, all pre-declared (IDs frozen): 5 globals + per lane
-  `type`, `mute`, `solo` + the seven effects' sets, ids `l<i>_<fx>_<name>`
+- ~570 APVTS parameters, all pre-declared (IDs frozen): 5 globals + per lane
+  `type`, `mute`, `solo`, `busstart` + every effect type's set, ids
+  `l<i>_<fx>_<name>`
   (FxmeFX `addParameters(prefix)` pattern — each effect class has static
   `addParameters` + member `bindParameters`).
 - **Not** parameters: block data. `getStateInformation` appends a `MangoSeq`
@@ -251,6 +271,13 @@ umbrella `FxmeTools/FxmeTools.h` (module v0.0.3):
   decimator, fractional factors, ÷1 bit-transparent), `dsp/DelayLine.h`
   (interp., settable time smoothing 0.5–500 ms, fb ≤ 0.999, damping
   lowpass in the feedback path),
+- `dsp/SpectralFreeze.h` — FFT freeze on the WDL real FFT (WDL is
+  FxmeTools' existing submodule; like FirFilter it is NOT in the module
+  umbrella — include it explicitly and compile `WDL/fft.c` into the
+  target, which Mango's CMake does for the plugin and both test apps).
+  Capture window + random-phase OLA resynthesis; deterministic phases via
+  `setIdentity`; `prepare()` self-calibrates the FFT round-trip gain, so
+  it is immune to the library's scaling convention.
   `dsp/ArEnvelope.h` (unused by Mango currently), `dsp/DeterministicRandom.h`,
   `midi/NoteDuration.h`.
 - `dsp/GrainLooper.h` (pre-existing) gained: `setAttack(frac, gamma)` /

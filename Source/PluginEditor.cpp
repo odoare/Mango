@@ -75,10 +75,18 @@ MangoAudioProcessorEditor::MangoAudioProcessorEditor (MangoAudioProcessor& p)
         {
             auto& panel = panels[(size_t) lane][(size_t) t];
             panel = std::make_unique<EffectPanel> (processor.apvts, lane, (EffectType) t,
-                                                   theme::laneColour (lane));
+                                                   rack.colourOfLane (lane));
             panel->setVisible (false);
             addChildComponent (*panel);
         }
+
+    // Panel accents follow the lane's bus colour.
+    rack.onBusMapChanged = [this]
+    {
+        for (int lane = 0; lane < numLanes; ++lane)
+            for (auto& panel : panels[(size_t) lane])
+                panel->setAccent (rack.colourOfLane (lane));
+    };
 
     // ---- block string --------------------------------------------------------
     addAndMakeVisible (blockText);

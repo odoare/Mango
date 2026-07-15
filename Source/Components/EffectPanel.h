@@ -94,6 +94,15 @@ public:
                 addKnob (prefix + "ring_amp", "Amount");
                 addWeights (prefix + "ring_");
                 break;
+
+            case EffectType::Reverser:
+                addKnob (prefix + "rev_fade", "Fade");
+                addWeights (prefix + "rev_");
+                break;
+
+            case EffectType::Freeze:
+                addKnob (prefix + "frz_mix", "Mix");
+                break;
         }
     }
 
@@ -160,6 +169,20 @@ public:
     int laneOf() const  { return laneIndex; }
     EffectType typeOf() const { return type; }
 
+    /** Re-accents every control — the lane's colour follows its bus. */
+    void setAccent (juce::Colour newAccent)
+    {
+        if (accent == newAccent)
+            return;
+        accent = newAccent;
+        for (auto* list : { &knobs, &weightKnobs })
+            for (auto& k : *list)
+                theme::styleKnob (*k.slider, k.slider->getName(), accent);
+        for (auto& c : combos)
+            theme::styleCombo (c.box, accent);
+        repaint();
+    }
+
 private:
     using SliderAttachment   = juce::AudioProcessorValueTreeState::SliderAttachment;
     using ComboBoxAttachment = juce::AudioProcessorValueTreeState::ComboBoxAttachment;
@@ -178,6 +201,8 @@ private:
             case EffectType::FilterEnv:  return "dur mode q f0 f1 v0 v1\n" + weights;
             case EffectType::Quantizer:  return "bits down mix";
             case EffectType::RingMod:    return "dur f0 f1 amp\n" + weights;
+            case EffectType::Reverser:   return "dur fade\n" + weights;
+            case EffectType::Freeze:     return "mix";
         }
         return {};
     }
@@ -247,7 +272,7 @@ private:
     juce::AudioProcessorValueTreeState& apvts;
     const int        laneIndex;
     const EffectType type;
-    const juce::Colour accent;
+    juce::Colour     accent;   // follows the lane's bus (setAccent)
     juce::String     title;
 
     std::vector<Knob>  knobs, weightKnobs;

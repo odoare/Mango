@@ -7,9 +7,13 @@ Mango is a rubber step sequencer of up to eight lanes (default 4) where every
 lane drives one effect. While
 the playhead is inside a block on a lane, that lane's effect processes the audio;
 lane order (top to bottom) is the processing order and can be changed with the
-arrows on the left. All randomness is seeded and reproducible: the same session
-with the same seed always glitches the same way, in real time and offline bounces
-alike.
+arrows on the left. Lanes group into up to **four parallel buses**: the **B**
+switch on a lane header starts a new bus at that row (row 1 always starts bus
+1), each bus processes its own copy of the input through its lanes in series,
+and the bus outputs are summed before the dry/wet control. Lane colours show
+the bus a lane belongs to. All randomness is seeded and reproducible: the same
+session with the same seed always glitches the same way, in real time and
+offline bounces alike.
 
 ## Effects (selectable per lane)
 
@@ -28,9 +32,11 @@ rel=0.5 acts as att=2/3, rel=1/3. The curves set the edge shapes: 0 slow,
 | Filter  | LP / HP sweep from start to end frequency, or a formant vowel glide, repeating at a drawn rhythmic rate | mode, Q, start/end freq, start/end vowel, ramp probabilities |
 | Quant   | Lo-fi: bit-depth reduction + sample-rate reduction (raw sample & hold — the aliasing is the point) | bits (1–24), downsample (÷1–64), mix |
 | Ring    | Ring modulator: a sine carrier glides from a start to an end frequency over a drawn tempo-synced ramp, repeating for the block. Amount 0 = clean, 1 = full ring modulation (low frequencies give tremolo) | start/end freq (0.5 Hz–10 kHz), amount, glide probabilities |
+| Rev     | Reverser: chops the audio into drawn-duration slices and plays each backwards (the first slice of a block passes through — there is nothing to reverse yet) | slice probabilities, seam fade |
+| Freeze  | Spectral freeze (FFT): captures ~43 ms at block start (passed through while recording), then sustains its spectrum as a static, non-periodic wash for the rest of the block | mix |
 
 **Duration probabilities**: effects that need a rhythmic duration (gate rate, grain
-length, filter ramp, ring glide) don't use a fixed value. You weight the probability of
+length, filter ramp, ring glide, reverse slice) don't use a fixed value. You weight the probability of
 1/4, 1/8, 1/16, 1/32 and of straight/triplet/dotted; the actual duration is
 drawn from those weights — e.g. with P(1/4)=1, P(1/8)=0.5, P(1/16)=0.1 the
 chance of an uncut quarter is 1/1.6. The draw is a pure function of
@@ -66,7 +72,10 @@ Dry/Wet, Seed (0–99999), the shared grid (step size 1/16…1/1, 1–64 steps),
 and the lane count (1–8, default 4, via the − / + buttons — hidden lanes
 keep their blocks and settings and simply stop processing).
 Each lane header also has **M**ute and **S**olo toggles (muted / non-soloed
-lanes keep sequencing — draws stay deterministic — but stop processing audio).
+lanes keep sequencing — draws stay deterministic — but stop processing audio)
+and the **B**us-start switch. Note that an idle bus passes its copy of the dry
+input, so several buses with no sounding blocks sum to more than unity — the
+usual parallel-rack behaviour; use the dry/wet or your lanes' gating to taste.
 
 Parameter changes apply to the sounding blocks immediately: the active block
 is refreshed in place (same random draw, new values), keeping the gate/ramp

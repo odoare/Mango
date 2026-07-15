@@ -44,21 +44,18 @@ namespace mng::theme
     inline const juce::Colour seedAccent   { 0xff9ac93c };   // lime
     inline const juce::Colour gridAccent   { 0xff4cc9f0 };   // cyan
 
-    // One accent per lane identity (0..7); a lane keeps its colour when the
-    // display order changes.
-    inline juce::Colour laneColour (int laneIndex) noexcept
+    // One accent per effect bus (0..3): a lane's strip, header and control
+    // panel are coloured by the bus it currently belongs to (which follows
+    // the display order and the per-lane bus-start switches).
+    inline juce::Colour busColour (int busIndex) noexcept
     {
-        static const juce::Colour colours[numLanes] = {
+        static const juce::Colour colours[numBuses] = {
             juce::Colour (0xff4cc9f0),   // cyan
             juce::Colour (0xffe0784a),   // coral
             juce::Colour (0xff9ac93c),   // lime
             juce::Colour (0xffd96cd0),   // orchid
-            juce::Colour (0xffd9b13a),   // gold
-            juce::Colour (0xff35c0a0),   // teal-green
-            juce::Colour (0xff7a8cf0),   // periwinkle
-            juce::Colour (0xffe0533c),   // vermilion
         };
-        return colours[juce::jlimit (0, numLanes - 1, laneIndex)];
+        return colours[juce::jlimit (0, numBuses - 1, busIndex)];
     }
 
     // FxmeTools rotary knob: dark disc, one accent per control on the value

@@ -10,6 +10,13 @@
     permutation over the fixed lane identities 0..7 — parameters, sequences
     and random draws stay attached to the identity when lanes are moved.
 
+    Routing: the visible rows group into up to four parallel buses (row 0
+    starts bus 0; every row whose `busstart` switch is on opens the next
+    bus). Each bus processes its own copy of the plugin input through its
+    rows serially, and the bus outputs are summed before the global
+    dry/wet — so with a single bus the chain behaves exactly as before,
+    and idle buses each pass a copy of the dry input.
+
     Locking contract: one CriticalSection (`lock()`) guards the lane
     sequencers, the display order and the parsed-override map. The audio thread
     holds it for the whole DSP section of process(); every message-thread
@@ -79,6 +86,12 @@ public:
     /** Applies the shared grid to every lane sequencer (locks internally). */
     void setGrid (fxme::SeqStepSize stepSize, int numSteps);
 
+    /** Bus of each lane identity, from the current order + bus-start
+        switches (hidden rows never open a bus; they inherit the last
+        visible one). Message thread; locks briefly — the GUI colours come
+        from this. */
+    std::array<int, numLanes> busMapByLane() const;
+
     /** Re-parses every block string into the override cache. Parsing happens
         outside the lock; only the map swap is locked. Call after any content
         edit or state load. */
@@ -127,9 +140,10 @@ private:
         fxme::StringSequencer seq;
         std::unique_ptr<fxme::SequencerEngine> engine;
         std::array<std::unique_ptr<EffectBase>, kNumEffectTypes> effects;
-        std::atomic<float>* typeParam = nullptr;
-        std::atomic<float>* muteParam = nullptr;
-        std::atomic<float>* soloParam = nullptr;
+        std::atomic<float>* typeParam     = nullptr;
+        std::atomic<float>* muteParam     = nullptr;
+        std::atomic<float>* soloParam     = nullptr;
+        std::atomic<float>* busStartParam = nullptr;
         int      currentType     = 0;      // audio-thread view of typeParam
         bool     active          = false;  // an entered block is sounding
         int      activeBlockId   = -1;
@@ -158,6 +172,7 @@ private:
     std::atomic<float>* numLanesParam = nullptr;
 
     juce::AudioBuffer<float> dryBuffer;
+    juce::AudioBuffer<float> busBuffer;   // per-bus working copy of the dry input
 
     double sampleRate = 44100.0;
     double currentBpm = 120.0;

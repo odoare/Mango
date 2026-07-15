@@ -17,6 +17,8 @@
                  its own colour
       RingMod    a repeating chirp at the pass-0 drawn glide rate, flattened
                  by the modulation amount
+      Reverser   falling ramps, one per drawn slice (time running backwards)
+      Freeze     horizontal dashed lines (a spectrum holding still)
 
     Everything is drawn in *beats*: durations drawn from the probability
     weights are in beats, and the block's width maps linearly onto its
@@ -217,6 +219,26 @@ inline void paintChirpWave (juce::Graphics& g, juce::Rectangle<float> r,
     }
     g.setColour (colour);
     g.strokePath (p, juce::PathStrokeType (1.4f));
+}
+
+/** Freeze: horizontal dashed lines — a spectrum holding still. Line
+    strength scales with the mix. */
+inline void paintFreezeLines (juce::Graphics& g, juce::Rectangle<float> r,
+                              float mix, juce::Colour colour)
+{
+    if (r.getWidth() < 4.0f)
+        return;
+
+    static constexpr float heights[] = { 0.24f, 0.42f, 0.60f, 0.78f };
+    const float dashes[] = { 5.0f, 4.0f };
+
+    g.setColour (colour.withMultipliedAlpha (0.35f + 0.65f * juce::jlimit (0.0f, 1.0f, mix)));
+    for (const float h : heights)
+    {
+        const float y = r.getY() + h * r.getHeight();
+        g.drawDashedLine (juce::Line<float> (r.getX() + 2.0f, y, r.getRight() - 2.0f, y),
+                          dashes, 2, 1.2f);
+    }
 }
 
 /** Filter: the repeating sweep ramp (rising when the end frequency / vowel

@@ -217,6 +217,144 @@ static void testRingMod()
 }
 
 //==============================================================================
+static void testReverser()
+{
+    MangoAudioProcessor p;
+    setParam (p, "l0_type", 7.0f);            // Reverser
+    const int blockId = addFullBlock (p, 0);
+    CHECK (p.setBlockContent (0, blockId, "dur=0.25 fade=0"));   // 1-beat slices, no seam fade
+
+    const auto out = render (p, 2.0);         // one pattern pass = 4 slices
+
+    // Rebuild the input exactly as render() generated it.
+    std::vector<float> in (out.size());
+    {
+        double phase = 0.0;
+        const double inc = 2.0 * juce::MathConstants<double>::pi * 440.0 / kSampleRate;
+        for (auto& s : in)
+        {
+            s = (float) std::sin (phase);
+            phase += inc;
+        }
+    }
+
+    const int n = (int) (0.5 * kSampleRate);  // 1 beat at the free-run 120 bpm
+    float maxDiff = 0.0f;
+
+    // Slice 0 passes the input through (nothing recorded yet)...
+    for (int i = 0; i < n; ++i)
+        maxDiff = std::max (maxDiff, std::abs (out[(size_t) i] - in[(size_t) i]));
+
+    // ...then every slice is the previous one, sample-exact, backwards.
+    for (int s = 1; s < 4; ++s)
+        for (int j = 0; j < n; ++j)
+            maxDiff = std::max (maxDiff, std::abs (out[(size_t) (s * n + j)]
+                                                   - in[(size_t) (s * n - 1 - j)]));
+    CHECK (maxDiff < 1e-6f);
+    std::printf ("reverser: mirror max diff = %g\n", maxDiff);
+}
+
+//==============================================================================
+static void testFreeze()
+{
+    auto renderFreeze = []
+    {
+        MangoAudioProcessor p;
+        setParam (p, "l0_type", 8.0f);        // Freeze
+        addFullBlock (p, 0);
+        return render (p, 0.4);
+    };
+    const auto out  = renderFreeze();
+    const auto out2 = renderFreeze();
+
+    std::vector<float> in (out.size());
+    {
+        double phase = 0.0;
+        const double inc = 2.0 * juce::MathConstants<double>::pi * 440.0 / kSampleRate;
+        for (auto& s : in)
+        {
+            s = (float) std::sin (phase);
+            phase += inc;
+        }
+    }
+
+    // Pass-through during the ~43 ms capture window...
+    float head = 0.0f;
+    for (int i = 0; i < 2000; ++i)
+        head = std::max (head, std::abs (out[(size_t) i] - in[(size_t) i]));
+    CHECK (head < 1e-6f);
+
+    // ...then a sustained wash at roughly the input level, decorrelated
+    // from the live input (a pass-through would match the sine exactly).
+    const float rms = rmsOf (out, 0.15, 0.4);
+    CHECK (rms > 0.2f && rms < 0.9f);
+    double l1 = 0.0;
+    const size_t i0 = (size_t) (0.15 * kSampleRate);
+    for (size_t i = i0; i < out.size(); ++i)
+        l1 += std::abs ((double) out[i] - (double) in[i]);
+    CHECK (l1 / (double) (out.size() - i0) > 0.05);
+
+    // Deterministic: two renders are bit-identical.
+    float md = 0.0f;
+    for (size_t i = 0; i < out.size(); ++i)
+        md = std::max (md, std::abs (out[i] - out2[i]));
+    CHECK (md == 0.0f);
+    std::printf ("freeze: wash rms = %.3f, decorrelation L1 = %.3f\n",
+                 rms, l1 / (double) (out.size() - i0));
+}
+
+//==============================================================================
+static void testBuses()
+{
+    auto makeInput = [] (size_t count)
+    {
+        std::vector<float> in (count);
+        double phase = 0.0;
+        const double inc = 2.0 * juce::MathConstants<double>::pi * 440.0 / kSampleRate;
+        for (auto& s : in)
+        {
+            s = (float) std::sin (phase);
+            phase += inc;
+        }
+        return in;
+    };
+
+    // Two parallel buses with no blocks anywhere: each bus passes its copy
+    // of the dry input, so the summed output is exactly twice the input.
+    {
+        MangoAudioProcessor p;
+        setParam (p, "l1_busstart", 1.0f);
+        const auto out = render (p, 0.2);
+        const auto in  = makeInput (out.size());
+        float maxDiff = 0.0f;
+        for (size_t i = 0; i < out.size(); ++i)
+            maxDiff = std::max (maxDiff, std::abs (out[i] - 2.0f * in[i]));
+        CHECK (maxDiff < 1e-6f);
+    }
+
+    // A quantized bus in parallel with a clean bus: out = quant(in) + in,
+    // so out - in is only the 1-bit levels -1/0/+1 (a serial chain would
+    // leave just the quantized levels themselves).
+    {
+        MangoAudioProcessor p;
+        setParam (p, "l0_type", 5.0f);            // Quantizer on bus 0
+        setParam (p, "l0_qnt_bits", 1.0f);
+        setParam (p, "l1_busstart", 1.0f);        // lane 2 starts bus 1 (idle = dry)
+        addFullBlock (p, 0);
+        const auto out = render (p, 0.4);
+        const auto in  = makeInput (out.size());
+        bool onlyLevels = true;
+        for (size_t i = (size_t) (0.05 * kSampleRate); i < out.size(); ++i)
+        {
+            const float d = std::abs (out[i] - in[i]);
+            onlyLevels = onlyLevels && (d < 1e-5f || std::abs (d - 1.0f) < 1e-5f);
+        }
+        CHECK (onlyLevels);
+    }
+    std::printf ("buses: parallel sum and idle pass-through verified\n");
+}
+
+//==============================================================================
 static void testStateRoundTrip()
 {
     juce::MemoryBlock state;
@@ -557,6 +695,9 @@ static void dumpEditorSnapshot (const juce::String& path)
     p.engine.rebuildOverrides();
     setParam (p, "numlanes", 8.0f);    // show every lane in the snapshot
     setParam (p, "numsteps", 32.0f);   // > the old 20 px/step limit: must still fit
+    setParam (p, "l2_busstart", 1.0f); // four buses -> four lane colours
+    setParam (p, "l4_busstart", 1.0f);
+    setParam (p, "l6_busstart", 1.0f);
     setParam (p, "l0_gate_att", 0.2f);
     setParam (p, "l0_gate_rel", 0.25f);
     setParam (p, "l0_gate_relcurve", 1.0f);
@@ -587,7 +728,7 @@ static void dumpEditorSnapshot (const juce::String& path)
     for (auto [type, name] : { std::pair { mng::EffectType::Gater, "gater" },
                                std::pair { mng::EffectType::FilterEnv, "filter" } })
     {
-        mng::EffectPanel panel (p.apvts, 0, type, mng::theme::laneColour (0));
+        mng::EffectPanel panel (p.apvts, 0, type, mng::theme::busColour (0));
         panel.setLookAndFeel (&lnf);
         panel.setSize (250, 334);   // the editor's real panel-area height
         writePng (panel, base.getSiblingFile (base.getFileNameWithoutExtension()
@@ -614,6 +755,9 @@ int main (int argc, char* argv[])
     testSeedDeterminism();
     testQuantizer();
     testRingMod();
+    testReverser();
+    testFreeze();
+    testBuses();
     testStateRoundTrip();
     testHostSync();
     testLiveWeightChange();

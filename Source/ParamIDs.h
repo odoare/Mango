@@ -4,7 +4,7 @@
 
     All Mango parameter IDs in one place. Global parameters have plain IDs;
     per-lane parameters are prefixed "l<i>_" where i is the lane *identity*
-    (0..5), which never changes when lanes are visually reordered.
+    (0..7), which never changes when lanes are visually reordered.
 
     Author: Olivier Doaré, github.com/odoare
     SPDX-License-Identifier: LGPL-3.0-or-later
@@ -22,6 +22,13 @@ namespace mng
         and processed. */
     inline constexpr int numLanes = 8;
     inline constexpr int defaultNumLanes = 4;
+
+    /** Maximum parallel effect buses. Rows group into contiguous buses in
+        display order: row 0 always starts bus 0, and every visible row
+        whose "bus start" switch is on opens the next bus (extra switches
+        beyond the fourth bus are ignored). Buses each process the plugin
+        input and are summed at the output. */
+    inline constexpr int numBuses = 4;
 
     namespace pid
     {
@@ -42,6 +49,12 @@ namespace mng
         inline juce::String laneType (int laneIndex)
         {
             return lanePrefix (laneIndex) + "type";
+        }
+
+        /** The lane's "starts a new bus" switch, e.g. "l3_busstart". */
+        inline juce::String laneBusStart (int laneIndex)
+        {
+            return lanePrefix (laneIndex) + "busstart";
         }
     }
 }

@@ -37,6 +37,8 @@ public:
 
     explicit LaneRackComponent (MangoAudioProcessor& p) : processor (p)
     {
+        busOfLane = processor.engine.busMapByLane();
+
         for (int i = 0; i < numLanes; ++i)
         {
             auto& row = rows[(size_t) i];
@@ -78,6 +80,15 @@ public:
     std::function<void (int, int)> onBlockSelected;
     /** A block's string was cleared from the rubber (right-click). */
     std::function<void (int, int)> onBlockContentChanged;
+    /** The lane->bus assignment changed (reorder, bus switch, lane count):
+        the editor re-accents the effect panels from colourOfLane(). */
+    std::function<void()> onBusMapChanged;
+
+    /** The lane's accent = the colour of the bus it currently belongs to. */
+    juce::Colour colourOfLane (int laneIndex) const
+    {
+        return theme::busColour (busOfLane[(size_t) juce::jlimit (0, numLanes - 1, laneIndex)]);
+    }
 
     void refreshOrder() { resized(); repaint(); }
 
@@ -163,12 +174,9 @@ private:
               upButton ("up", 0.75f, theme::text),
               downButton ("down", 0.25f, theme::text)
         {
-            const auto accent = theme::laneColour (laneIndex);
-
             if (auto* choice = dynamic_cast<juce::AudioParameterChoice*> (
                     rack.processor.apvts.getParameter (pid::laneType (laneIndex))))
                 typeBox.addItemList (choice->choices, 1);
-            theme::styleCombo (typeBox, accent);
             addAndMakeVisible (typeBox);
             typeAtt = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment> (
                 rack.processor.apvts, pid::laneType (laneIndex), typeBox);
@@ -184,10 +192,24 @@ private:
             const auto prefix = pid::lanePrefix (laneIndex);
             setupToggle (muteButton, "M", juce::Colour (0xffd9b13a));
             setupToggle (soloButton, "S", juce::Colour (0xff9ac93c));
+            setupToggle (busButton,  "B", theme::text);
             muteAtt = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment> (
                 rack.processor.apvts, prefix + "mute", muteButton);
             soloAtt = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment> (
                 rack.processor.apvts, prefix + "solo", soloButton);
+            busAtt = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment> (
+                rack.processor.apvts, pid::laneBusStart (laneIndex), busButton);
+
+            refreshAccent();
+        }
+
+        /** Re-applies the lane's current bus colour (swatch, combo, B). */
+        void refreshAccent()
+        {
+            const auto accent = rack.colourOfLane (laneIndex);
+            theme::styleCombo (typeBox, accent);
+            busButton.setColour (juce::TextButton::buttonOnColourId, accent);
+            repaint();
         }
 
         void setRow (int newRow, int visibleRowCount)
@@ -199,7 +221,7 @@ private:
 
         void paint (juce::Graphics& g) override
         {
-            g.setColour (theme::laneColour (laneIndex));
+            g.setColour (rack.colourOfLane (laneIndex));
             g.fillRoundedRectangle (getLocalBounds().removeFromLeft (5).toFloat(), 2.0f);
         }
 
@@ -212,9 +234,10 @@ private:
             downButton.setBounds (arrows.removeFromBottom (16));
             r.removeFromLeft (2);
 
-            auto ms = r.removeFromRight (22).withSizeKeepingCentre (20, 42);
-            muteButton.setBounds (ms.removeFromTop (20));
-            soloButton.setBounds (ms.removeFromBottom (20));
+            auto ms = r.removeFromRight (22).withSizeKeepingCentre (20, 58);
+            muteButton.setBounds (ms.removeFromTop (19).reduced (0, 1));
+            busButton.setBounds  (ms.removeFromTop (20).reduced (0, 1));
+            soloButton.setBounds (ms.removeFromTop (19).reduced (0, 1));
             r.removeFromRight (2);
 
             typeBox.setBounds (r.withSizeKeepingCentre (r.getWidth(), 24));
@@ -255,10 +278,10 @@ private:
         int row = 0;
 
         juce::ArrowButton upButton, downButton;
-        MiniToggle muteButton, soloButton;
+        MiniToggle muteButton, soloButton, busButton;
         juce::ComboBox typeBox;
         std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> typeAtt;
-        std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> muteAtt, soloAtt;
+        std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> muteAtt, soloAtt, busAtt;
     };
 
     //==========================================================================
@@ -267,7 +290,7 @@ private:
         return [this, laneIndex] (juce::Graphics& g, juce::Rectangle<int> r,
                                   const fxme::SeqBlock& b, bool selected, bool playing)
         {
-            const auto accent = theme::laneColour (laneIndex);
+            const auto accent = colourOfLane (laneIndex);
             g.setColour (accent.withAlpha (playing ? 0.95f : selected ? 0.8f : 0.55f));
             g.fillRoundedRectangle (r.toFloat(), 3.0f);
 
@@ -430,6 +453,19 @@ private:
                                           curveColour);
                 break;
             }
+
+            case EffectType::Reverser:
+            {
+                // Falling ramps, one per slice: time running backwards.
+                const double slice = juce::jmax (1.0e-3, ovDurBeats (drawnBeats ("rev_")));
+                blockgfx::paintRampCurve (g, r, blockBeats, slice, false, curveColour);
+                break;
+            }
+
+            case EffectType::Freeze:
+                blockgfx::paintFreezeLines (g, r, ovOr (OvKey::Mix, param ("frz_mix")),
+                                            curveColour);
+                break;
         }
     }
 
@@ -444,6 +480,19 @@ private:
         // Follow the lane-count parameter (buttons, automation, state load).
         if (processor.engine.visibleLaneCount() != visibleRows)
             refreshOrder();
+
+        // Follow the bus layout: recolour rows when it changes.
+        if (const auto map = processor.engine.busMapByLane(); map != busOfLane)
+        {
+            busOfLane = map;
+            for (auto& row : rows)
+            {
+                row.header->refreshAccent();
+                row.rubber->repaint();
+            }
+            if (onBusMapChanged)
+                onBusMapChanged();
+        }
 
         for (int i = 0; i < numLanes; ++i)
         {
@@ -469,6 +518,7 @@ private:
 
     MangoAudioProcessor& processor;
     std::array<Row, numLanes> rows;   // indexed by lane identity
+    std::array<int, numLanes> busOfLane {};   // cached lane -> bus map
     int visualTick  = 0;
     int visibleRows = numLanes;       // cached view of the numlanes parameter
 

@@ -15,10 +15,12 @@ if(APPLE)
 endif()
 
 # JUCE is expected as a sibling of this repo; FxmeTools lives in-tree as a git
-# submodule under lib/. Mango does not use the WDL-backed FirFilter, so the
-# module is registered directly (no fxmetools_attach / WDL sources needed).
+# submodule under lib/. The module is registered directly rather than through
+# fxmetools_attach: of the WDL sources (FxmeTools' own submodule) Mango only
+# needs fft.c, for <FxmeTools/dsp/SpectralFreeze.h> (the Freeze effect).
 add_subdirectory(../JUCE JUCE)
 juce_add_module(${CMAKE_CURRENT_SOURCE_DIR}/lib/FxmeTools/FxmeTools)
+set(FXMETOOLS_WDL_FFT ${CMAKE_CURRENT_SOURCE_DIR}/lib/FxmeTools/WDL/WDL/fft.c)
 
 juce_add_plugin(Mango
     COMPANY_NAME                "FX-Mechanics"
@@ -46,7 +48,7 @@ file(GLOB_RECURSE MANGO_SOURCES CONFIGURE_DEPENDS
     ${CMAKE_CURRENT_SOURCE_DIR}/Source/*.h
 )
 
-target_sources(Mango PRIVATE ${MANGO_SOURCES})
+target_sources(Mango PRIVATE ${MANGO_SOURCES} ${FXMETOOLS_WDL_FFT})
 
 # Make every subdirectory under Source/ an include root so headers can be
 # included by name regardless of where a module lives.
@@ -106,7 +108,7 @@ target_link_libraries(Mango
 option(MANGO_BUILD_TESTS "Build Mango unit tests" OFF)
 if(MANGO_BUILD_TESTS)
     enable_testing()
-    add_executable(MangoTests Tests/UnitTests.cpp)
+    add_executable(MangoTests Tests/UnitTests.cpp ${FXMETOOLS_WDL_FFT})
     target_include_directories(MangoTests PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/FxmeTools
         ${CMAKE_CURRENT_SOURCE_DIR}/Source)
@@ -121,7 +123,8 @@ if(MANGO_BUILD_TESTS)
         Tests/RenderTest.cpp
         Source/PluginProcessor.cpp
         Source/PluginEditor.cpp
-        Source/Dsp/MangoEngine.cpp)
+        Source/Dsp/MangoEngine.cpp
+        ${FXMETOOLS_WDL_FFT})
     target_include_directories(MangoRenderTest PRIVATE
         ${CMAKE_BINARY_DIR}/Mango_artefacts/JuceLibraryCode
         ${CMAKE_CURRENT_SOURCE_DIR}/Source)

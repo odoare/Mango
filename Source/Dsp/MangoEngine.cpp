@@ -14,6 +14,8 @@
 #include "Effects/FilterEnvEffect.h"
 #include "Effects/QuantizerEffect.h"
 #include "Effects/RingModEffect.h"
+#include "Effects/ReverserEffect.h"
+#include "Effects/FreezeEffect.h"
 
 namespace mng
 {
@@ -31,6 +33,8 @@ namespace
             case EffectType::FilterEnv:  return std::make_unique<FilterEnvEffect>();
             case EffectType::Quantizer:  return std::make_unique<QuantizerEffect>();
             case EffectType::RingMod:    return std::make_unique<RingModEffect>();
+            case EffectType::Reverser:   return std::make_unique<ReverserEffect>();
+            case EffectType::Freeze:     return std::make_unique<FreezeEffect>();
         }
         return nullptr;
     }
@@ -47,6 +51,8 @@ namespace
             case EffectType::FilterEnv:  static_cast<FilterEnvEffect&>  (fx).bindParameters (apvts, prefix); break;
             case EffectType::Quantizer:  static_cast<QuantizerEffect&>  (fx).bindParameters (apvts, prefix); break;
             case EffectType::RingMod:    static_cast<RingModEffect&>    (fx).bindParameters (apvts, prefix); break;
+            case EffectType::Reverser:   static_cast<ReverserEffect&>   (fx).bindParameters (apvts, prefix); break;
+            case EffectType::Freeze:     static_cast<FreezeEffect&>     (fx).bindParameters (apvts, prefix); break;
         }
     }
 }
@@ -90,6 +96,8 @@ void MangoEngine::addLaneParameters (std::vector<std::unique_ptr<juce::RangedAud
             prefix + "mute", nameP + "Mute", false));
         params.push_back (std::make_unique<juce::AudioParameterBool> (
             prefix + "solo", nameP + "Solo", false));
+        params.push_back (std::make_unique<juce::AudioParameterBool> (
+            pid::laneBusStart (i), nameP + "Bus Start", false));
 
         GaterEffect::addParameters      (params, prefix, nameP);
         GrainDupEffect::addParameters   (params, prefix, nameP);
@@ -98,6 +106,8 @@ void MangoEngine::addLaneParameters (std::vector<std::unique_ptr<juce::RangedAud
         FilterEnvEffect::addParameters  (params, prefix, nameP);
         QuantizerEffect::addParameters  (params, prefix, nameP);
         RingModEffect::addParameters    (params, prefix, nameP);
+        ReverserEffect::addParameters   (params, prefix, nameP);
+        FreezeEffect::addParameters     (params, prefix, nameP);
     }
 }
 
@@ -109,10 +119,11 @@ void MangoEngine::bindParameters (juce::AudioProcessorValueTreeState& apvts)
     for (auto& lane : lanes)
     {
         const auto prefix = pid::lanePrefix (lane.laneIndex);
-        lane.typeParam   = apvts.getRawParameterValue (pid::laneType (lane.laneIndex));
-        lane.muteParam   = apvts.getRawParameterValue (prefix + "mute");
-        lane.soloParam   = apvts.getRawParameterValue (prefix + "solo");
-        lane.currentType = (int) lane.typeParam->load();
+        lane.typeParam     = apvts.getRawParameterValue (pid::laneType (lane.laneIndex));
+        lane.muteParam     = apvts.getRawParameterValue (prefix + "mute");
+        lane.soloParam     = apvts.getRawParameterValue (prefix + "solo");
+        lane.busStartParam = apvts.getRawParameterValue (pid::laneBusStart (lane.laneIndex));
+        lane.currentType   = (int) lane.typeParam->load();
 
         for (int t = 0; t < kNumEffectTypes; ++t)
             bindEffect (*lane.effects[(size_t) t], (EffectType) t, apvts, prefix);
@@ -123,6 +134,7 @@ void MangoEngine::prepare (double sr, int maxBlockSize, int numChannels)
 {
     sampleRate = sr;
     dryBuffer.setSize (juce::jmax (1, numChannels), maxBlockSize);
+    busBuffer.setSize (juce::jmax (1, numChannels), maxBlockSize);
     absoluteBeats = 0.0;
 
     const juce::ScopedLock sl (seqLock);
@@ -188,6 +200,24 @@ void MangoEngine::setLaneOrder (const std::array<int, numLanes>& newOrder)
     }
     const juce::ScopedLock sl (seqLock);
     order = newOrder;
+}
+
+std::array<int, numLanes> MangoEngine::busMapByLane() const
+{
+    const juce::ScopedLock sl (seqLock);
+
+    std::array<int, numLanes> result {};
+    const int visibleRows = visibleLaneCount();
+    int busCount = 1;
+    for (int row = 0; row < numLanes; ++row)
+    {
+        const auto& lane = lanes[(size_t) order[(size_t) row]];
+        if (row > 0 && row < visibleRows && busCount < numBuses
+            && lane.busStartParam != nullptr && lane.busStartParam->load() > 0.5f)
+            ++busCount;
+        result[(size_t) order[(size_t) row]] = busCount - 1;   // hidden rows inherit the last bus
+    }
+    return result;
 }
 
 void MangoEngine::setGrid (fxme::SeqStepSize stepSize, int numSteps)
@@ -346,21 +376,58 @@ void MangoEngine::process (juce::AudioBuffer<float>& buffer,
     for (int row = 0; row < visibleRows; ++row)
         anySolo = anySolo || lanes[(size_t) order[(size_t) row]].soloParam->load() > 0.5f;
 
+    // The visible rows group into parallel buses: row 0 starts bus 0, and
+    // each row whose bus-start switch is on opens the next one (switches
+    // beyond the numBuses'th bus are ignored; hidden rows never open one).
+    int busOfRow[numLanes];
+    int busCount = 1;
+    for (int row = 0; row < visibleRows; ++row)
+    {
+        if (row > 0 && busCount < numBuses
+            && lanes[(size_t) order[(size_t) row]].busStartParam->load() > 0.5f)
+            ++busCount;
+        busOfRow[row] = busCount - 1;
+    }
+
     for (int offset = 0; offset < numSamples; offset += kChunk)
     {
         const int    n     = juce::jmin (kChunk, numSamples - offset);
         const double delta = n * currentBpm / (60.0 * sampleRate);
 
+        // Sequencing first: every lane advances and fires enter/exit,
+        // hidden and bypassed lanes included.
         for (int row = 0; row < numLanes; ++row)
         {
             auto& lane = lanes[(size_t) order[(size_t) row]];
             lane.engine->advance (delta, lane.seq);
+        }
 
-            const bool audible = row < visibleRows
-                              && lane.muteParam->load() < 0.5f
-                              && (! anySolo || lane.soloParam->load() > 0.5f);
-            if (lane.active && audible)
-                currentEffect (lane).process (buffer, offset, n);
+        // Then the buses, in parallel: each starts from its own copy of
+        // the dry input, runs its rows serially, and the bus outputs sum
+        // into the output buffer (a single bus is bit-identical to the old
+        // serial chain).
+        for (int ch = 0; ch < numChannels; ++ch)
+            buffer.clear (ch, offset, n);
+
+        for (int bus = 0; bus < busCount; ++bus)
+        {
+            for (int ch = 0; ch < numChannels; ++ch)
+                busBuffer.copyFrom (ch, offset, dryBuffer, ch, offset, n);
+
+            for (int row = 0; row < visibleRows; ++row)
+            {
+                if (busOfRow[row] != bus)
+                    continue;
+
+                auto& lane = lanes[(size_t) order[(size_t) row]];
+                const bool audible = lane.muteParam->load() < 0.5f
+                                  && (! anySolo || lane.soloParam->load() > 0.5f);
+                if (lane.active && audible)
+                    currentEffect (lane).process (busBuffer, offset, n);
+            }
+
+            for (int ch = 0; ch < numChannels; ++ch)
+                buffer.addFrom (ch, offset, busBuffer, ch, offset, n);
         }
 
         absoluteBeats += delta;
