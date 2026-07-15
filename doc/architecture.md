@@ -48,6 +48,12 @@ patterns), FxmeFX (Tube saturation origin), Gloubiboulga (formant origin).
   | Rev | reverser: records drawn-duration slices and plays each backwards (while slice k records, slice k−1 plays reversed; the first slice of a block passes through); `fade` = 0–0.5 slice fraction faded at the seams; slice grid restarts at block entry (not on re-enters) so passes reproduce; pure sample copy, no interpolation | `rev_`: 7 weights, `fade` |
   | Freeze | spectral freeze (`fxme::SpectralFreeze`/channel, WDL FFT): captures one 2048-sample window at block entry (passed through while recording, so blocks shorter than ~43 ms stay dry), then random-phase resynthesis of its magnitude spectrum — Hann/75% OLA, one iFFT per 512-sample hop (4 at the capture→wash switch) — sustains a static wash; phases keyed on (seed, lane, block, channel) with the frame counter restarting at entry, so passes reproduce and the two channels decorrelate into a wide image | `frz_mix` |
 
+- **Per-effect mix**: every effect has a wet/dry `<fx>_mix` parameter
+  (default 1, override key `mix`) — except the ring modulator, whose
+  `amp` plays that role. Gater applies it as gain = 1−mix+mix·gate; the
+  delay scales its added delayed signal; the others blend dry/wet.
+  Filters/loopers keep running at full level so their state stays
+  continuous — mix only blends the output.
 - **Weighted random durations** (gate rate, grain length, filter ramp,
   ring glide, reverse slice): the
   user weights P(1/4..1/32) × P(straight/triplet/dotted); the actual duration
@@ -173,7 +179,7 @@ sampleRate, bpm, mididurSeconds (sampled at entry), `overrides` pointer
 
 ## 4. Parameters & state
 
-- ~570 APVTS parameters, all pre-declared (IDs frozen): 5 globals + per lane
+- ~610 APVTS parameters, all pre-declared (IDs frozen): 5 globals + per lane
   `type`, `mute`, `solo`, `busstart` + every effect type's set, ids
   `l<i>_<fx>_<name>`
   (FxmeFX `addParameters(prefix)` pattern — each effect class has static

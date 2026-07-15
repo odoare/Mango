@@ -236,8 +236,8 @@ private:
 
             auto ms = r.removeFromRight (22).withSizeKeepingCentre (20, 58);
             muteButton.setBounds (ms.removeFromTop (19).reduced (0, 1));
-            busButton.setBounds  (ms.removeFromTop (20).reduced (0, 1));
-            soloButton.setBounds (ms.removeFromTop (19).reduced (0, 1));
+            soloButton.setBounds (ms.removeFromTop (20).reduced (0, 1));
+            busButton.setBounds  (ms.removeFromTop (19).reduced (0, 1));
             r.removeFromRight (2);
 
             typeBox.setBounds (r.withSizeKeepingCentre (r.getWidth(), 24));

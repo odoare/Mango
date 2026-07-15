@@ -14,7 +14,7 @@
     the pitch between notes.
 
     Overrides: dur (note-value / mididur convention), fb, damp,
-    porta (milliseconds).
+    porta (milliseconds), mix.
 
     Author: Olivier Doaré, github.com/odoare
     SPDX-License-Identifier: LGPL-3.0-or-later
@@ -54,6 +54,9 @@ public:
         params.push_back (std::make_unique<juce::AudioParameterFloat> (
             lanePrefix + "dly_porta", nameP + "Delay Portamento",
             juce::NormalisableRange<float> (kMinPortaMs, kMaxPortaMs, 0.1f), 30.0f));
+        params.push_back (std::make_unique<juce::AudioParameterFloat> (
+            lanePrefix + "dly_mix", nameP + "Delay Mix",
+            juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 1.0f));
     }
 
     void bindParameters (juce::AudioProcessorValueTreeState& apvts, const juce::String& lanePrefix)
@@ -62,6 +65,7 @@ public:
         fbParam    = apvts.getRawParameterValue (lanePrefix + "dly_fb");
         dampParam  = apvts.getRawParameterValue (lanePrefix + "dly_damp");
         portaParam = apvts.getRawParameterValue (lanePrefix + "dly_porta");
+        mixParam   = apvts.getRawParameterValue (lanePrefix + "dly_mix");
     }
 
     void prepare (double sr, int, int numChannels) override
@@ -83,6 +87,8 @@ public:
         fbOverride    = ctx.overrides != nullptr && ctx.overrides->find (OvKey::Fb)    != nullptr;
         dampOverride  = ctx.overrides != nullptr && ctx.overrides->find (OvKey::Damp)  != nullptr;
         portaOverride = ctx.overrides != nullptr && ctx.overrides->find (OvKey::Porta) != nullptr;
+        mixOverride   = ctx.overrides != nullptr && ctx.overrides->find (OvKey::Mix)   != nullptr;
+        mixValue      = juce::jlimit (0.0f, 1.0f, overrideOr (ctx, OvKey::Mix, mixParam->load()));
         durValue   = juce::jlimit (0.001f, kMaxDelaySeconds,
                                    overrideDurSeconds (ctx, OvKey::Dur, durParam->load()));
         fbValue    = juce::jlimit (0.0f, kMaxFeedback, overrideOr (ctx, OvKey::Fb, fbParam->load()));
@@ -100,6 +106,7 @@ public:
         const float fb    = fbOverride    ? fbValue    : fbParam->load();
         const float damp  = dampOverride  ? dampValue  : dampParam->load();
         const float porta = portaOverride ? portaValue : portaParam->load();
+        const float mix   = mixOverride   ? mixValue   : mixParam->load();
 
         const int numCh = juce::jmin (buffer.getNumChannels(), (int) delays.size());
         for (int ch = 0; ch < numCh; ++ch)
@@ -111,8 +118,10 @@ public:
             d.setSmoothingSeconds (porta * 0.001f);
 
             float* data = buffer.getWritePointer (ch) + startSample;
+            // The delay is additive, so mix simply scales the delayed
+            // signal (the line keeps being fed at full level).
             for (int i = 0; i < numSamples; ++i)
-                data[i] += d.processSample (data[i]);
+                data[i] += mix * d.processSample (data[i]);
         }
     }
 
@@ -121,10 +130,13 @@ private:
     std::atomic<float>* fbParam    = nullptr;
     std::atomic<float>* dampParam  = nullptr;
     std::atomic<float>* portaParam = nullptr;
+    std::atomic<float>* mixParam   = nullptr;
 
     std::vector<fxme::DelayLine> delays;
-    bool  durOverride = false, fbOverride = false, dampOverride = false, portaOverride = false;
-    float durValue = 0.25f, fbValue = 0.5f, dampValue = 0.0f, portaValue = 30.0f;
+    bool  durOverride = false, fbOverride = false, dampOverride = false,
+          portaOverride = false, mixOverride = false;
+    float durValue = 0.25f, fbValue = 0.5f, dampValue = 0.0f, portaValue = 30.0f,
+          mixValue = 1.0f;
 };
 
 } // namespace mng

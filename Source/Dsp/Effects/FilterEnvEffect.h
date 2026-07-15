@@ -11,7 +11,8 @@
     weights (gater logic) and the sweep repeats at that rate for the whole
     block. Coefficients update every 32 samples.
 
-    Overrides: dur (ramp), q, f0, f1, v0, v1 (vowels accept a e i o u), mode.
+    Overrides: dur (ramp), q, f0, f1, v0, v1 (vowels accept a e i o u),
+    mode, mix.
 
     Author: Olivier Doaré, github.com/odoare
     SPDX-License-Identifier: LGPL-3.0-or-later
@@ -58,6 +59,9 @@ public:
             lanePrefix + "flt_v0", nameP + "Filter Start Vowel", vowels, 0));
         params.push_back (std::make_unique<juce::AudioParameterChoice> (
             lanePrefix + "flt_v1", nameP + "Filter End Vowel", vowels, 4));
+        params.push_back (std::make_unique<juce::AudioParameterFloat> (
+            lanePrefix + "flt_mix", nameP + "Filter Mix",
+            juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 1.0f));
     }
 
     void bindParameters (juce::AudioProcessorValueTreeState& apvts, const juce::String& lanePrefix)
@@ -69,6 +73,7 @@ public:
         f1Param   = apvts.getRawParameterValue (lanePrefix + "flt_f1");
         v0Param   = apvts.getRawParameterValue (lanePrefix + "flt_v0");
         v1Param   = apvts.getRawParameterValue (lanePrefix + "flt_v1");
+        mixParam  = apvts.getRawParameterValue (lanePrefix + "flt_mix");
     }
 
     void prepare (double sr, int, int numChannels) override
@@ -104,6 +109,8 @@ public:
                              (int) overrideOr (ctx, OvKey::V0, v0Param->load()));
         v1   = juce::jlimit (0, fxme::FormantFilter::kNumVowels - 1,
                              (int) overrideOr (ctx, OvKey::V1, v1Param->load()));
+        mixOverride = ctx.overrides != nullptr && ctx.overrides->find (OvKey::Mix) != nullptr;
+        mixValue    = juce::jlimit (0.0f, 1.0f, overrideOr (ctx, OvKey::Mix, mixParam->load()));
 
         sinceControl = kControlInterval;   // force a coefficient update on entry
         if (! ctx.isReEnter)               // parameter refresh keeps the ramp phase
@@ -117,6 +124,11 @@ public:
 
     void process (juce::AudioBuffer<float>& buffer, int startSample, int numSamples) override
     {
+        // Live knob value unless the block pinned it. The filter always
+        // runs at full level (its state must stay continuous); mix blends
+        // the output.
+        const float mix = mixOverride ? mixValue : mixParam->load();
+
         const int numCh = juce::jmin (buffer.getNumChannels(), (int) biquads.size());
 
         for (int i = 0; i < numSamples; ++i)
@@ -130,8 +142,10 @@ public:
             for (int ch = 0; ch < numCh; ++ch)
             {
                 float* data = buffer.getWritePointer (ch) + startSample;
-                data[i] = mode == Formant ? formants[(size_t) ch].processSample (data[i])
-                                          : biquads[(size_t) ch].processSample (data[i]);
+                const float dry = data[i];
+                const float wet = mode == Formant ? formants[(size_t) ch].processSample (dry)
+                                                  : biquads[(size_t) ch].processSample (dry);
+                data[i] = dry + mix * (wet - dry);
             }
 
             ++pos;
@@ -168,9 +182,12 @@ private:
     std::atomic<float>* f1Param   = nullptr;
     std::atomic<float>* v0Param   = nullptr;
     std::atomic<float>* v1Param   = nullptr;
+    std::atomic<float>* mixParam  = nullptr;
 
     std::vector<fxme::Biquad>        biquads;
     std::vector<fxme::FormantFilter> formants;
+    bool  mixOverride = false;
+    float mixValue    = 1.0f;
 
     double  sampleRate = 44100.0;
     int     mode = Lowpass, v0 = 0, v1 = 4;

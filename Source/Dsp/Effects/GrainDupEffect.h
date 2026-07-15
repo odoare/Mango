@@ -13,7 +13,7 @@
     shapes (0 slow, 0.5 linear, 1 very fast; a fast release looks like an
     exponential decay) — same conventions as the gater.
 
-    Overrides: dur, fade, att, attcurve, rel, relcurve.
+    Overrides: dur, fade, att, attcurve, rel, relcurve, mix.
 
     Author: Olivier Doaré, github.com/odoare
     SPDX-License-Identifier: LGPL-3.0-or-later
@@ -52,6 +52,9 @@ public:
         params.push_back (std::make_unique<juce::AudioParameterFloat> (
             lanePrefix + "grain_relcurve", nameP + "Grain Release Curve",
             juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.5f));
+        params.push_back (std::make_unique<juce::AudioParameterFloat> (
+            lanePrefix + "grain_mix", nameP + "Grain Mix",
+            juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 1.0f));
     }
 
     void bindParameters (juce::AudioProcessorValueTreeState& apvts, const juce::String& lanePrefix)
@@ -62,6 +65,7 @@ public:
         attCurveParam = apvts.getRawParameterValue (lanePrefix + "grain_attcurve");
         relParam      = apvts.getRawParameterValue (lanePrefix + "grain_rel");
         relCurveParam = apvts.getRawParameterValue (lanePrefix + "grain_relcurve");
+        mixParam      = apvts.getRawParameterValue (lanePrefix + "grain_mix");
     }
 
     void prepare (double sr, int, int numChannels) override
@@ -108,6 +112,9 @@ public:
             l.setRelease (relFrac, relGamma);
         }
 
+        mixOverride = ctx.overrides != nullptr && ctx.overrides->find (OvKey::Mix) != nullptr;
+        mixValue    = juce::jlimit (0.0f, 1.0f, overrideOr (ctx, OvKey::Mix, mixParam->load()));
+
         // On a parameter refresh keep the looping grain unless its duration
         // actually changed (re-triggering records a fresh grain).
         if (! ctx.isReEnter || std::abs (durSec - lastDurSec) > 1.0e-4f)
@@ -126,11 +133,19 @@ public:
 
     void process (juce::AudioBuffer<float>& buffer, int startSample, int numSamples) override
     {
+        // Live knob value unless the block pinned it.
+        const float mix = mixOverride ? mixValue : mixParam->load();
+
         const int numCh = juce::jmin (buffer.getNumChannels(), (int) loopers.size());
         for (int ch = 0; ch < numCh; ++ch)
         {
+            auto& l = loopers[(size_t) ch];
             float* data = buffer.getWritePointer (ch) + startSample;
-            loopers[(size_t) ch].process (data, data, numSamples);
+            for (int i = 0; i < numSamples; ++i)
+            {
+                const float dry = data[i];
+                data[i] = dry + mix * (l.processSample (dry) - dry);
+            }
         }
     }
 
@@ -141,8 +156,11 @@ private:
     std::atomic<float>* attCurveParam = nullptr;
     std::atomic<float>* relParam      = nullptr;
     std::atomic<float>* relCurveParam = nullptr;
+    std::atomic<float>* mixParam      = nullptr;
     std::vector<fxme::GrainLooper> loopers;
     float lastDurSec = -1.0f;
+    bool  mixOverride = false;
+    float mixValue    = 1.0f;
 };
 
 } // namespace mng

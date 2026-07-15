@@ -45,6 +45,7 @@ public:
                 addKnob (prefix + "gate_rel", "Release");
                 addKnob (prefix + "gate_attcurve", "Att Curve");
                 addKnob (prefix + "gate_relcurve", "Rel Curve");
+                addKnob (prefix + "gate_mix", "Mix");
                 addWeights (prefix + "gate_");
                 break;
 
@@ -54,6 +55,7 @@ public:
                 addKnob (prefix + "grain_attcurve", "Att Curve");
                 addKnob (prefix + "grain_rel", "Release");
                 addKnob (prefix + "grain_relcurve", "Rel Curve");
+                addKnob (prefix + "grain_mix", "Mix");
                 addWeights (prefix + "grain_");
                 break;
 
@@ -62,6 +64,7 @@ public:
                 addKnob (prefix + "dly_fb", "Feedback");
                 addKnob (prefix + "dly_damp", "Damping");
                 addKnob (prefix + "dly_porta", "Porta ms");
+                addKnob (prefix + "dly_mix", "Mix");
                 break;
 
             case EffectType::Distortion:
@@ -79,6 +82,7 @@ public:
                 addKnob (prefix + "flt_q", "Q");
                 addKnob (prefix + "flt_f0", "Start Hz");
                 addKnob (prefix + "flt_f1", "End Hz");
+                addKnob (prefix + "flt_mix", "Mix");
                 addWeights (prefix + "flt_");
                 break;
 
@@ -97,6 +101,7 @@ public:
 
             case EffectType::Reverser:
                 addKnob (prefix + "rev_fade", "Fade");
+                addKnob (prefix + "rev_mix", "Mix");
                 addWeights (prefix + "rev_");
                 break;
 
@@ -155,7 +160,7 @@ public:
             r.removeFromTop (3);
         }
 
-        layoutKnobRow (knobs, r, 3, 70);
+        layoutKnobRow (knobs, r, 4, 70);   // 4/row: the widest sets (filter) keep one row
 
         if (! weightKnobs.empty())
         {
@@ -194,14 +199,14 @@ private:
         static const juce::String weights ("w4 w8 w16 w32 wstr wtrip wdot");
         switch (t)
         {
-            case EffectType::Gater:      return "dur att rel attcurve relcurve\n" + weights;
-            case EffectType::Grain:      return "dur fade att rel attcurve relcurve\n" + weights;
-            case EffectType::Delay:      return "dur fb damp porta";
+            case EffectType::Gater:      return "dur att rel attcurve relcurve mix\n" + weights;
+            case EffectType::Grain:      return "dur fade att rel attcurve relcurve mix\n" + weights;
+            case EffectType::Delay:      return "dur fb damp porta mix";
             case EffectType::Distortion: return "model drive bias sag mix";
-            case EffectType::FilterEnv:  return "dur mode q f0 f1 v0 v1\n" + weights;
+            case EffectType::FilterEnv:  return "dur mode q f0 f1 v0 v1 mix\n" + weights;
             case EffectType::Quantizer:  return "bits down mix";
             case EffectType::RingMod:    return "dur f0 f1 amp\n" + weights;
-            case EffectType::Reverser:   return "dur fade\n" + weights;
+            case EffectType::Reverser:   return "dur fade mix\n" + weights;
             case EffectType::Freeze:     return "mix";
         }
         return {};

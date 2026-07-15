@@ -13,7 +13,7 @@
     position. Output samples are exact copies of input samples (pure
     time reversal, no interpolation).
 
-    Overrides: dur (slice, note-value / mididur convention), fade.
+    Overrides: dur (slice, note-value / mididur convention), fade, mix.
 
     Author: Olivier Doaré, github.com/odoare
     SPDX-License-Identifier: LGPL-3.0-or-later
@@ -41,12 +41,16 @@ public:
         params.push_back (std::make_unique<juce::AudioParameterFloat> (
             lanePrefix + "rev_fade", nameP + "Reverser Fade",
             juce::NormalisableRange<float> (0.0f, 0.5f, 0.001f), 0.02f));
+        params.push_back (std::make_unique<juce::AudioParameterFloat> (
+            lanePrefix + "rev_mix", nameP + "Reverser Mix",
+            juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 1.0f));
     }
 
     void bindParameters (juce::AudioProcessorValueTreeState& apvts, const juce::String& lanePrefix)
     {
         weights.bind (apvts, lanePrefix + "rev_");
         fadeParam = apvts.getRawParameterValue (lanePrefix + "rev_fade");
+        mixParam  = apvts.getRawParameterValue (lanePrefix + "rev_mix");
     }
 
     void prepare (double sr, int, int numChannels) override
@@ -77,6 +81,8 @@ public:
         sliceSamples = juce::jlimit (32, maxSliceSamples, (int) std::lround (sliceSec * ctx.sampleRate));
 
         fadeFrac = juce::jlimit (0.0f, 0.5f, overrideOr (ctx, OvKey::Fade, fadeParam->load()));
+        mixOverride = ctx.overrides != nullptr && ctx.overrides->find (OvKey::Mix) != nullptr;
+        mixValue    = juce::jlimit (0.0f, 1.0f, overrideOr (ctx, OvKey::Mix, mixParam->load()));
 
         if (! ctx.isReEnter)   // parameter refresh keeps the slice position
             reset();
@@ -86,6 +92,9 @@ public:
 
     void process (juce::AudioBuffer<float>& buffer, int startSample, int numSamples) override
     {
+        // Live knob value unless the block pinned it.
+        const float mix = mixOverride ? mixValue : mixParam->load();
+
         const int   numCh = juce::jmin (buffer.getNumChannels(), (int) channels.size());
         const float fadeN = fadeFrac * (float) sliceSamples;
 
@@ -108,8 +117,10 @@ public:
             {
                 auto& ch = channels[(size_t) c];
                 float* data = buffer.getWritePointer (c) + startSample;
-                ch.rec[(size_t) idx] = data[i];
-                data[i] = g * (havePrev ? ch.prv[(size_t) (sliceSamples - 1 - idx)] : data[i]);
+                const float dry = data[i];
+                ch.rec[(size_t) idx] = dry;
+                const float wet = g * (havePrev ? ch.prv[(size_t) (sliceSamples - 1 - idx)] : dry);
+                data[i] = dry + mix * (wet - dry);
             }
             ++idx;
         }
@@ -123,12 +134,15 @@ private:
 
     DurationWeights weights;
     std::atomic<float>* fadeParam = nullptr;
+    std::atomic<float>* mixParam  = nullptr;
 
     std::vector<Channel> channels;
     int    maxSliceSamples = 1, sliceSamples = 32;
     float  fadeFrac = 0.02f;
     int    idx = 0;
     bool   havePrev = false;
+    bool   mixOverride = false;
+    float  mixValue    = 1.0f;
 };
 
 } // namespace mng

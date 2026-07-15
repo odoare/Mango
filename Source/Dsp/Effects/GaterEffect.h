@@ -16,7 +16,7 @@
     exponential decay. Implemented as gain = ramp^gamma with
     gamma = kCurveRange^(±(1 - 2*curve)).
 
-    Overrides: dur, att, rel, attcurve, relcurve.
+    Overrides: dur, att, rel, attcurve, relcurve, mix.
 
     Author: Olivier Doaré, github.com/odoare
     SPDX-License-Identifier: LGPL-3.0-or-later
@@ -50,6 +50,9 @@ public:
         params.push_back (std::make_unique<juce::AudioParameterFloat> (
             lanePrefix + "gate_relcurve", nameP + "Gate Release Curve",
             juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.5f));
+        params.push_back (std::make_unique<juce::AudioParameterFloat> (
+            lanePrefix + "gate_mix", nameP + "Gate Mix",
+            juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 1.0f));
     }
 
     void bindParameters (juce::AudioProcessorValueTreeState& apvts, const juce::String& lanePrefix)
@@ -59,6 +62,7 @@ public:
         relParam      = apvts.getRawParameterValue (lanePrefix + "gate_rel");
         attCurveParam = apvts.getRawParameterValue (lanePrefix + "gate_attcurve");
         relCurveParam = apvts.getRawParameterValue (lanePrefix + "gate_relcurve");
+        mixParam      = apvts.getRawParameterValue (lanePrefix + "gate_mix");
     }
 
     void prepare (double sr, int, int) override { sampleRate = sr; }
@@ -90,6 +94,9 @@ public:
         attGamma = attackGammaFor (attCurve);
         relGamma = releaseGammaFor (relCurve);
 
+        mixOverride = ctx.overrides != nullptr && ctx.overrides->find (OvKey::Mix) != nullptr;
+        mixValue    = juce::jlimit (0.0f, 1.0f, overrideOr (ctx, OvKey::Mix, mixParam->load()));
+
         // The sequence always starts with an open gate; a parameter refresh
         // keeps the running phase and just applies the new timing.
         if (! ctx.isReEnter)
@@ -100,6 +107,10 @@ public:
 
     void process (juce::AudioBuffer<float>& buffer, int startSample, int numSamples) override
     {
+        // Live knob value unless the block pinned it. mix scales the gate
+        // depth: the applied gain is 1 - mix + mix*gain (mix=0 transparent).
+        const float mix = mixOverride ? mixValue : mixParam->load();
+
         const int numCh = buffer.getNumChannels();
         for (int i = 0; i < numSamples; ++i)
         {
@@ -116,9 +127,10 @@ public:
             }
             ++pos;
 
-            if (gain < 1.0f)
+            const float eff = 1.0f - mix + mix * gain;
+            if (eff < 1.0f)
                 for (int ch = 0; ch < numCh; ++ch)
-                    buffer.getWritePointer (ch)[startSample + i] *= gain;
+                    buffer.getWritePointer (ch)[startSample + i] *= eff;
         }
     }
 
@@ -128,6 +140,9 @@ private:
     std::atomic<float>* relParam      = nullptr;
     std::atomic<float>* attCurveParam = nullptr;
     std::atomic<float>* relCurveParam = nullptr;
+    std::atomic<float>* mixParam      = nullptr;
+    bool  mixOverride = false;
+    float mixValue    = 1.0f;
 
     double  sampleRate     = 44100.0;
     int     gateSamples    = 1;

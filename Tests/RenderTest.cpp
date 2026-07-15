@@ -355,6 +355,33 @@ static void testBuses()
 }
 
 //==============================================================================
+static void testEffectMix()
+{
+    // Gater chopping at full depth, but mix=0: the effect must be
+    // bit-transparent (the universal per-effect mix, representative case).
+    MangoAudioProcessor p;
+    addFullBlock (p, 0);
+    setParam (p, "l0_gate_mix", 0.0f);
+    const auto out = render (p, 0.3);
+
+    std::vector<float> in (out.size());
+    {
+        double phase = 0.0;
+        const double inc = 2.0 * juce::MathConstants<double>::pi * 440.0 / kSampleRate;
+        for (auto& s : in)
+        {
+            s = (float) std::sin (phase);
+            phase += inc;
+        }
+    }
+    float maxDiff = 0.0f;
+    for (size_t i = 0; i < out.size(); ++i)
+        maxDiff = std::max (maxDiff, std::abs (out[i] - in[i]));
+    CHECK (maxDiff < 1e-6f);
+    std::printf ("effect mix: gate at mix=0 is transparent\n");
+}
+
+//==============================================================================
 static void testStateRoundTrip()
 {
     juce::MemoryBlock state;
@@ -758,6 +785,7 @@ int main (int argc, char* argv[])
     testReverser();
     testFreeze();
     testBuses();
+    testEffectMix();
     testStateRoundTrip();
     testHostSync();
     testLiveWeightChange();

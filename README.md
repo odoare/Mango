@@ -35,6 +35,10 @@ rel=0.5 acts as att=2/3, rel=1/3. The curves set the edge shapes: 0 slow,
 | Rev     | Reverser: chops the audio into drawn-duration slices and plays each backwards (the first slice of a block passes through — there is nothing to reverse yet) | slice probabilities, seam fade |
 | Freeze  | Spectral freeze (FFT): captures ~43 ms at block start (passed through while recording), then sustains its spectrum as a static, non-periodic wash for the rest of the block | mix |
 
+**Mix**: every effect has a wet/dry mix knob (override key `mix`) — except the
+ring modulator, whose `amount` plays that role. At 0 the lane is transparent;
+for the delay, mix scales the delayed signal added to the dry.
+
 **Duration probabilities**: effects that need a rhythmic duration (gate rate, grain
 length, filter ramp, ring glide, reverse slice) don't use a fixed value. You weight the probability of
 1/4, 1/8, 1/16, 1/32 and of straight/triplet/dotted; the actual duration is
