@@ -69,8 +69,10 @@ patterns), FxmeFX (Tube saturation origin), Gloubiboulga (formant origin).
   0.5 linear, 1 very fast (fast release ≈ exponential decay), mapped to
   exponents by `attackGammaFor`/`releaseGammaFor` (gamma = 6^±(1−2c)).
 - **Per-block override mini-language** (Neorix-style): block strings like
-  `dur=0.125 fb=0.6`, `dur=mididur/2`, `v0=a v1=u`. `mididur` = period (s)
-  of the last MIDI note-on. All lane parameters are reachable:
+  `dur=0.125 fb=0.6`, `dur=mididur/2`, `f0=midifreq`, `v0=a v1=u`.
+  `mididur` = period (s) of the last MIDI note-on; `midifreq` = its
+  frequency in Hz (1/mididur), same `*N` `/N` `N*` forms. All lane
+  parameters are reachable:
   `dur fb damp porta att rel attcurve relcurve q f0 f1 v0 v1 bits down
   drive bias sag mix model mode fade amp w4 w8 w16 w32 wstr wtrip wdot`.
 - **Globals**: dry/wet, seed (0–99999), step size, num steps, lane count
@@ -135,8 +137,10 @@ bus is bit-identical to the old serial chain, and an idle bus passes a
 copy of the dry input (so two all-idle buses output 2× the input — the
 parallel-rack convention). `busMapByLane()` (message thread, locks
 briefly) gives lane→bus for the GUI, which colours every lane by its bus
-(`theme::busColour`, 4 colours) — headers, blocks and panels re-accent
-live when the map changes (rack timer → `onBusMapChanged`).
+(`theme::busColour`, 4 colours), shaded progressively towards white by the
+lane's position inside the bus (`busColour(bus, depth)`) — headers, blocks
+and panels re-accent live when the map or the shading depths change (rack
+timer → `refreshBusCache` → `onBusMapChanged`).
 
 **processBlock flow** (`process()`): read transport → publish bpm → on first
 call after `prepare()` start the engines (deferred so the first draws use the

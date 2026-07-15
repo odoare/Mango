@@ -11,7 +11,8 @@ arrows on the left. Lanes group into up to **four parallel buses**: the **B**
 switch on a lane header starts a new bus at that row (row 1 always starts bus
 1), each bus processes its own copy of the input through its lanes in series,
 and the bus outputs are summed before the dry/wet control. Lane colours show
-the bus a lane belongs to. All randomness is seeded and reproducible: the same
+the bus a lane belongs to; within a bus, each following lane is shaded a
+little lighter. All randomness is seeded and reproducible: the same
 session with the same seed always glitches the same way, in real time and
 offline bounces alike.
 
@@ -57,6 +58,7 @@ string turns the field red and is kept for fixing):
 dur=0.125 fb=0.6        eighth-note delay with more feedback
 dur=mididur/2           half the period of the last MIDI note received
 dur=mididur fb=0.99 damp=0.4    plucked-string resonance on the last note
+f0=midifreq f1=midifreq*2       sweep from the note's fundamental to its octave
 v0=a v1=u               formant glide from A to U
 ```
 
@@ -68,7 +70,8 @@ v0=a v1=u               formant glide from A to U
   and the duration probability weights `w4 w8 w16 w32 wstr wtrip wdot`
   (each effect reads the keys it understands).
 - **`mididur`** is 1/f of the last MIDI note-on the plugin received, sampled when
-  the block starts.
+  the block starts; **`midifreq`** is its frequency in Hz (1/mididur), for the
+  frequency keys (`f0=midifreq`, `midifreq*2`, `midifreq/2`, `2*midifreq`).
 
 ## Global controls
 

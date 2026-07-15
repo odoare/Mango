@@ -82,14 +82,14 @@ inline float overrideOr (const BlockContext& ctx, OvKey key, float fallback)
 
 /** Resolve a `dur`-style override to seconds: a plain number is a fraction
     of a whole note (0.125 = eighth) at the context tempo; an expression
-    containing mididur is already a time in seconds. Returns `fallbackSeconds`
-    when the block doesn't override the key. */
+    containing mididur (or midifreq) is already a time in seconds. Returns
+    `fallbackSeconds` when the block doesn't override the key. */
 inline float overrideDurSeconds (const BlockContext& ctx, OvKey key, float fallbackSeconds)
 {
     if (ctx.overrides != nullptr)
         if (const auto* e = ctx.overrides->find (key))
         {
-            if (e->kind == Expr::MididurScaled)
+            if (e->kind != Expr::Const)
                 return e->eval (ctx.mididurSeconds);
             return e->value * 4.0f * 60.0f / (float) ctx.bpm;   // whole-note fraction
         }

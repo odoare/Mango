@@ -10,15 +10,17 @@
         dur=mididur/2
         v0=a v1=u
 
-    Values are numbers, the magic variable `mididur` (the period, in
-    seconds, of the last MIDI note the plugin received), or a simple product
-    `mididur*N`, `mididur/N`, `N*mididur`. Vowel keys also accept the letters
-    a e i o u.
+    Values are numbers, the magic variables `mididur` (the period, in
+    seconds, of the last MIDI note the plugin received) and `midifreq`
+    (its frequency in Hz, i.e. 1/mididur), or a simple product
+    `mididur*N`, `mididur/N`, `N*mididur` (same forms for midifreq).
+    Vowel keys also accept the letters a e i o u.
 
     Units: `dur` follows note-value convention for plain numbers — a fraction
     of a whole note (0.25 = quarter, 0.125 = eighth, ...) resolved against
     the host tempo — while any expression containing `mididur` is a time in
-    seconds. All other keys are in their parameter's native unit.
+    seconds. `midifreq` evaluates to Hz, meant for the frequency keys
+    (f0/f1). All other keys are in their parameter's native unit.
 
     Parsing is strict and all-or-nothing (unknown key, malformed value ->
     std::nullopt); an empty/whitespace string is a valid empty set. Parse on
@@ -42,17 +44,22 @@
 namespace mng
 {
 
-/** One override value: either a plain constant or `constant * mididur`
-    (division by N is folded into the constant at parse time). */
+/** One override value: a plain constant, `constant * mididur`, or
+    `constant * midifreq` = constant/mididur (division by N is folded into
+    the constant at parse time). */
 struct Expr
 {
-    enum Kind { Const, MididurScaled };
+    enum Kind { Const, MididurScaled, MidifreqScaled };
     Kind  kind  = Const;
     float value = 0.0f;
 
     float eval (float mididurSeconds) const
     {
-        return kind == Const ? value : value * mididurSeconds;
+        if (kind == MididurScaled)
+            return value * mididurSeconds;
+        if (kind == MidifreqScaled)
+            return mididurSeconds > 1.0e-6f ? value / mididurSeconds : 0.0f;
+        return value;
     }
 };
 
@@ -135,37 +142,43 @@ namespace detail
 
     inline std::optional<Expr> parseExpr (const std::string& s, bool vowelKey)
     {
-        static const std::string kMididur = "mididur";
-
         if (vowelKey)
             if (const auto v = parseVowel (s))
                 return Expr { Expr::Const, *v };
 
-        if (s == kMididur)
-            return Expr { Expr::MididurScaled, 1.0f };
+        static const std::pair<std::string, Expr::Kind> kMagic[] = {
+            { "mididur",  Expr::MididurScaled  },
+            { "midifreq", Expr::MidifreqScaled },
+        };
 
-        // mididur*N / mididur/N
-        if (s.rfind (kMididur, 0) == 0 && s.size() > kMididur.size() + 1)
+        for (const auto& [word, kind] : kMagic)
         {
-            const char op = s[kMididur.size()];
-            const auto n  = parseNumber (s.substr (kMididur.size() + 1));
-            if (! n)
-                return std::nullopt;
-            if (op == '*')
-                return Expr { Expr::MididurScaled, *n };
-            if (op == '/' && *n != 0.0f)
-                return Expr { Expr::MididurScaled, 1.0f / *n };
-            return std::nullopt;
-        }
+            if (s == word)
+                return Expr { kind, 1.0f };
 
-        // N*mididur
-        const auto star = s.find ('*');
-        if (star != std::string::npos && s.substr (star + 1) == kMididur)
-        {
-            const auto n = parseNumber (s.substr (0, star));
-            if (! n)
+            // word*N / word/N
+            if (s.rfind (word, 0) == 0 && s.size() > word.size() + 1)
+            {
+                const char op = s[word.size()];
+                const auto n  = parseNumber (s.substr (word.size() + 1));
+                if (! n)
+                    return std::nullopt;
+                if (op == '*')
+                    return Expr { kind, *n };
+                if (op == '/' && *n != 0.0f)
+                    return Expr { kind, 1.0f / *n };
                 return std::nullopt;
-            return Expr { Expr::MididurScaled, *n };
+            }
+
+            // N*word
+            const auto star = s.find ('*');
+            if (star != std::string::npos && s.substr (star + 1) == word)
+            {
+                const auto n = parseNumber (s.substr (0, star));
+                if (! n)
+                    return std::nullopt;
+                return Expr { kind, *n };
+            }
         }
 
         if (const auto n = parseNumber (s))

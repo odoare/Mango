@@ -58,6 +58,16 @@ namespace mng::theme
         return colours[juce::jlimit (0, numBuses - 1, busIndex)];
     }
 
+    /** Bus colour shaded by the lane's position inside the bus: the bus's
+        first lane gets the pure colour, each following lane steps a little
+        towards white — stacked lanes stay distinguishable while clearly
+        sharing the bus hue. */
+    inline juce::Colour busColour (int busIndex, int depthInBus) noexcept
+    {
+        const float t = juce::jlimit (0.0f, 0.6f, 0.15f * (float) juce::jmax (0, depthInBus));
+        return busColour (busIndex).interpolatedWith (juce::Colours::white, t);
+    }
+
     // FxmeTools rotary knob: dark disc, one accent per control on the value
     // arc / outline / pointer; FxmeLookAndFeel draws the value read-out inside
     // the knob and the label (the slider's name) just below it.

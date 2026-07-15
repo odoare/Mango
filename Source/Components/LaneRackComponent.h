@@ -37,7 +37,7 @@ public:
 
     explicit LaneRackComponent (MangoAudioProcessor& p) : processor (p)
     {
-        busOfLane = processor.engine.busMapByLane();
+        refreshBusCache();
 
         for (int i = 0; i < numLanes; ++i)
         {
@@ -84,10 +84,12 @@ public:
         the editor re-accents the effect panels from colourOfLane(). */
     std::function<void()> onBusMapChanged;
 
-    /** The lane's accent = the colour of the bus it currently belongs to. */
+    /** The lane's accent = its bus colour, shaded by the lane's position
+        inside the bus (the bus's first lane gets the pure colour). */
     juce::Colour colourOfLane (int laneIndex) const
     {
-        return theme::busColour (busOfLane[(size_t) juce::jlimit (0, numLanes - 1, laneIndex)]);
+        const auto lane = (size_t) juce::jlimit (0, numLanes - 1, laneIndex);
+        return theme::busColour (busOfLane[lane], depthOfLane[lane]);
     }
 
     void refreshOrder() { resized(); repaint(); }
@@ -348,7 +350,7 @@ private:
         {
             if (ov)
                 if (const auto* e = ov->find (OvKey::Dur))
-                    return e->kind == Expr::MididurScaled
+                    return e->kind != Expr::Const
                          ? (double) e->eval (mididur) * bpm / 60.0   // seconds -> beats
                          : (double) e->value * 4.0;                  // whole-note fraction
             return fallbackBeats;
@@ -413,7 +415,7 @@ private:
                 double delayBeats = param ("dly_dur") * bpm / 60.0;
                 if (ov)
                     if (const auto* e = ov->find (OvKey::Dur))
-                        delayBeats = e->kind == Expr::MididurScaled
+                        delayBeats = e->kind != Expr::Const
                                    ? (double) e->eval (mididur) * bpm / 60.0
                                    : (double) e->value * 4.0;
                 const float fb = ovOr (OvKey::Fb, param ("dly_fb"));
@@ -481,10 +483,10 @@ private:
         if (processor.engine.visibleLaneCount() != visibleRows)
             refreshOrder();
 
-        // Follow the bus layout: recolour rows when it changes.
-        if (const auto map = processor.engine.busMapByLane(); map != busOfLane)
+        // Follow the bus layout: recolour rows when it changes (including
+        // reorders inside a bus, which only change the shading depths).
+        if (refreshBusCache())
         {
-            busOfLane = map;
             for (auto& row : rows)
             {
                 row.header->refreshAccent();
@@ -516,9 +518,32 @@ private:
         std::unique_ptr<LockedRubber> rubber;
     };
 
+    /** Re-derives lane -> (bus, position-in-bus) from the engine; true if
+        anything changed and the rack needs recolouring. */
+    bool refreshBusCache()
+    {
+        const auto map   = processor.engine.busMapByLane();
+        const auto order = processor.engine.laneOrder();
+
+        std::array<int, numLanes> depth {};
+        int countInBus[numBuses] = {};
+        for (int row = 0; row < numLanes; ++row)
+        {
+            const auto lane = (size_t) order[(size_t) row];
+            depth[lane] = countInBus[map[lane]]++;
+        }
+
+        if (map == busOfLane && depth == depthOfLane)
+            return false;
+        busOfLane   = map;
+        depthOfLane = depth;
+        return true;
+    }
+
     MangoAudioProcessor& processor;
     std::array<Row, numLanes> rows;   // indexed by lane identity
-    std::array<int, numLanes> busOfLane {};   // cached lane -> bus map
+    std::array<int, numLanes> busOfLane {};     // cached lane -> bus map
+    std::array<int, numLanes> depthOfLane {};   // cached lane -> position in its bus
     int visualTick  = 0;
     int visibleRows = numLanes;       // cached view of the numlanes parameter
 

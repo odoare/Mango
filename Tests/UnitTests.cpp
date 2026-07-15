@@ -565,6 +565,22 @@ static int testOverrideParser()
     auto md4 = parseOverrides ("dur=3*mididur");
     CHECK (md4.has_value() && near (md4->find (OvKey::Dur)->eval (0.01f), 0.03f, 1e-7));
 
+    // midifreq = 1/mididur (Hz of the last MIDI note), same expression forms.
+    auto mf = parseOverrides ("f0=midifreq f1=midifreq*2");
+    CHECK (mf.has_value());
+    CHECK (mf->find (OvKey::F0)->kind == Expr::MidifreqScaled);
+    CHECK (near (mf->find (OvKey::F0)->eval (0.01f), 100.0f, 1e-4));
+    CHECK (near (mf->find (OvKey::F1)->eval (0.01f), 200.0f, 1e-4));
+
+    auto mf2 = parseOverrides ("f0=midifreq/2 f1=3*midifreq");
+    CHECK (mf2.has_value());
+    CHECK (near (mf2->find (OvKey::F0)->eval (0.01f), 50.0f, 1e-4));
+    CHECK (near (mf2->find (OvKey::F1)->eval (0.01f), 300.0f, 1e-4));
+    CHECK (near (mf2->find (OvKey::F0)->eval (0.0f), 0.0f, 1e-7));   // no note yet: safe 0
+
+    CHECK (! parseOverrides ("f0=midifreq/0").has_value());
+    CHECK (! parseOverrides ("f0=midifrequency").has_value());
+
     // Vowels.
     auto vow = parseOverrides ("v0=a v1=u");
     CHECK (vow.has_value());
