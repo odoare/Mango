@@ -112,6 +112,20 @@ juce::AudioProcessorValueTreeState::ParameterLayout MangoAudioProcessor::createP
     params.push_back (std::make_unique<juce::AudioParameterInt> (
         pid::numlanes, "Lanes", 1, numLanes, defaultNumLanes));
 
+    params.push_back (std::make_unique<juce::AudioParameterChoice> (
+        pid::busmode, "Bus Routing",
+        juce::StringArray { "Parallel", "3 after 1+2", "4 after 1-3" }, 0));
+    for (int b = 0; b < numBuses; ++b)
+    {
+        const auto nameP = "Bus " + juce::String (b + 1) + " ";
+        params.push_back (std::make_unique<juce::AudioParameterFloat> (
+            pid::busWet (b), nameP + "Wet",
+            juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 1.0f));
+        params.push_back (std::make_unique<juce::AudioParameterFloat> (
+            pid::busPan (b), nameP + "Pan",
+            juce::NormalisableRange<float> (-1.0f, 1.0f, 0.01f), 0.0f));
+    }
+
     MangoEngine::addLaneParameters (params);
 
     return { params.begin(), params.end() };

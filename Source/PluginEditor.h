@@ -20,6 +20,7 @@
 #include "PluginProcessor.h"
 #include "Theme.h"
 #include "Components/LaneRackComponent.h"
+#include "Components/BusBar.h"
 #include "Components/EffectPanel.h"
 #include "Components/BlockTextPanel.h"
 
@@ -53,6 +54,7 @@ private:
                                                            BinaryData::logo686_pngSize) };
 
     mng::LaneRackComponent rack;
+    mng::BusBar busBar;
 
     // Right column: globals.
     fxme::FxmeSlider drywetKnob, seedKnob, stepsKnob;
@@ -60,11 +62,6 @@ private:
     juce::Label stepSizeLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> drywetAtt, seedAtt, stepsAtt;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> stepSizeAtt;
-
-    // Lane count: - / + buttons driving the numlanes parameter.
-    juce::TextButton lanesMinusButton { "-" }, lanesPlusButton { "+" };
-    juce::Label lanesCaption, lanesCountLabel;
-    void adjustLaneCount (int delta);
 
     // Right column: one panel per (lane, effect type).
     std::array<std::array<std::unique_ptr<mng::EffectPanel>, mng::kNumEffectTypes>,

@@ -7,12 +7,16 @@ Mango is a rubber step sequencer of up to eight lanes (default 4) where every
 lane drives one effect. While
 the playhead is inside a block on a lane, that lane's effect processes the audio;
 lane order (top to bottom) is the processing order and can be changed with the
-arrows on the left. Lanes group into up to **four parallel buses**: the **B**
-switch on a lane header starts a new bus at that row (row 1 always starts bus
-1), each bus processes its own copy of the input through its lanes in series,
-and the bus outputs are summed before the dry/wet control. Lane colours show
-the bus a lane belongs to; within a bus, each following lane is shaded a
-little lighter. All randomness is seeded and reproducible: the same
+arrows on the left. Lanes group into up to **four buses**: the **B** switch on
+a lane header starts a new bus at that row (row 1 always starts bus 1). Each
+bus runs its lanes in series and has its own **wet** and **pan** controls in
+the bus bar under the rack, which also shows the routing diagram and cycles
+between three **routing modes**: all buses parallel (each processes its own
+copy of the input, outputs summed), bus 3 processing the mixed outputs of
+buses 1+2 (bus 4 parallel), or bus 4 processing the mixed outputs of buses
+1–3. A mode that needs more buses than exist falls back to parallel. Lane
+colours show the bus a lane belongs to; within a bus, each following lane is
+shaded a little lighter. All randomness is seeded and reproducible: the same
 session with the same seed always glitches the same way, in real time and
 offline bounces alike.
 
@@ -21,7 +25,7 @@ offline bounces alike.
 | Effect  | What it does | Lane parameters |
 |---------|--------------|-----------------|
 | Gater   | Cuts the sound rhythmically: open(dur), closed(dur), ... starting open | duration probabilities, attack/release lengths + curves |
-| Grain   | Records a grain at block start, loops it for the whole block | duration probabilities, seam fade, per-repetition attack/release lengths + curves |
+| Grain   | Records a grain at block start, loops it for the whole block (fixed 15 ms seam crossfade) | duration probabilities, per-repetition attack/release lengths + curves |
 
 Attack/release lengths are fractions (0–1) of the shaped duration (the gate's
 open phase, or one grain repetition — never the whole block). If their sum
@@ -76,8 +80,10 @@ v0=a v1=u               formant glide from A to U
 ## Global controls
 
 Dry/Wet, Seed (0–99999), the shared grid (step size 1/16…1/1, 1–64 steps),
-and the lane count (1–8, default 4, via the − / + buttons — hidden lanes
-keep their blocks and settings and simply stop processing).
+and the lane count (1–8, default 4 — hidden lanes keep their blocks and
+settings and simply stop processing). The bus bar under the rack holds the
+lane-count − / + chooser above the routing-mode button, the routing diagram
+and the per-bus wet/pan knobs (shown for active buses only).
 Each lane header also has **M**ute and **S**olo toggles (muted / non-soloed
 lanes keep sequencing — draws stay deterministic — but stop processing audio)
 and the **B**us-start switch. Note that an idle bus passes its copy of the dry

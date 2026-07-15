@@ -115,6 +115,12 @@ void MangoEngine::bindParameters (juce::AudioProcessorValueTreeState& apvts)
 {
     seedParam     = apvts.getRawParameterValue (pid::seed);
     numLanesParam = apvts.getRawParameterValue (pid::numlanes);
+    busModeParam  = apvts.getRawParameterValue (pid::busmode);
+    for (int b = 0; b < numBuses; ++b)
+    {
+        busWetParam[(size_t) b] = apvts.getRawParameterValue (pid::busWet (b));
+        busPanParam[(size_t) b] = apvts.getRawParameterValue (pid::busPan (b));
+    }
 
     for (auto& lane : lanes)
     {
@@ -135,6 +141,7 @@ void MangoEngine::prepare (double sr, int maxBlockSize, int numChannels)
     sampleRate = sr;
     dryBuffer.setSize (juce::jmax (1, numChannels), maxBlockSize);
     busBuffer.setSize (juce::jmax (1, numChannels), maxBlockSize);
+    feedBuffer.setSize (juce::jmax (1, numChannels), maxBlockSize);
     absoluteBeats = 0.0;
 
     const juce::ScopedLock sl (seqLock);
@@ -218,6 +225,15 @@ std::array<int, numLanes> MangoEngine::busMapByLane() const
         result[(size_t) order[(size_t) row]] = busCount - 1;   // hidden rows inherit the last bus
     }
     return result;
+}
+
+int MangoEngine::busCount() const
+{
+    const auto map = busMapByLane();
+    int highest = 0;
+    for (int b : map)
+        highest = juce::jmax (highest, b);
+    return highest + 1;
 }
 
 void MangoEngine::setGrid (fxme::SeqStepSize stepSize, int numSteps)
@@ -389,6 +405,55 @@ void MangoEngine::process (juce::AudioBuffer<float>& buffer,
         busOfRow[row] = busCount - 1;
     }
 
+    const int busMode = effectiveBusMode (
+        busModeParam != nullptr ? (int) busModeParam->load() : 0, busCount);
+
+    // One bus, into busBuffer: copy its input, run its rows serially, then
+    // the per-bus dry/wet (against the bus input) and pan (balance; only
+    // touched when not neutral, so defaults stay bit-transparent).
+    auto processBus = [&] (int bus, const juce::AudioBuffer<float>& input, int offset, int n)
+    {
+        for (int ch = 0; ch < numChannels; ++ch)
+            busBuffer.copyFrom (ch, offset, input, ch, offset, n);
+
+        for (int row = 0; row < visibleRows; ++row)
+        {
+            if (busOfRow[row] != bus)
+                continue;
+
+            auto& lane = lanes[(size_t) order[(size_t) row]];
+            const bool audible = lane.muteParam->load() < 0.5f
+                              && (! anySolo || lane.soloParam->load() > 0.5f);
+            if (lane.active && audible)
+                currentEffect (lane).process (busBuffer, offset, n);
+        }
+
+        const float wet = busWetParam[(size_t) bus] != nullptr
+                        ? juce::jlimit (0.0f, 1.0f, busWetParam[(size_t) bus]->load()) : 1.0f;
+        if (wet < 1.0f)
+            for (int ch = 0; ch < numChannels; ++ch)
+            {
+                const float* in = input.getReadPointer (ch) + offset;
+                float*       bb = busBuffer.getWritePointer (ch) + offset;
+                for (int i = 0; i < n; ++i)
+                    bb[i] = in[i] + wet * (bb[i] - in[i]);
+            }
+
+        const float pan = busPanParam[(size_t) bus] != nullptr
+                        ? juce::jlimit (-1.0f, 1.0f, busPanParam[(size_t) bus]->load()) : 0.0f;
+        if (pan != 0.0f && numChannels >= 2)
+        {
+            busBuffer.applyGain (0, offset, n, pan > 0.0f ? 1.0f - pan : 1.0f);
+            busBuffer.applyGain (1, offset, n, pan < 0.0f ? 1.0f + pan : 1.0f);
+        }
+    };
+
+    auto addBus = [&] (juce::AudioBuffer<float>& dest, int offset, int n)
+    {
+        for (int ch = 0; ch < numChannels; ++ch)
+            dest.addFrom (ch, offset, busBuffer, ch, offset, n);
+    };
+
     for (int offset = 0; offset < numSamples; offset += kChunk)
     {
         const int    n     = juce::jmin (kChunk, numSamples - offset);
@@ -402,32 +467,39 @@ void MangoEngine::process (juce::AudioBuffer<float>& buffer,
             lane.engine->advance (delta, lane.seq);
         }
 
-        // Then the buses, in parallel: each starts from its own copy of
-        // the dry input, runs its rows serially, and the bus outputs sum
-        // into the output buffer (a single bus is bit-identical to the old
-        // serial chain).
+        // Then the buses, per the routing mode. Parallel buses each start
+        // from the dry input and sum into the output; a "post" bus starts
+        // from the mixed outputs of its feeders instead.
         for (int ch = 0; ch < numChannels; ++ch)
             buffer.clear (ch, offset, n);
 
-        for (int bus = 0; bus < busCount; ++bus)
+        if (busMode == 0)
         {
-            for (int ch = 0; ch < numChannels; ++ch)
-                busBuffer.copyFrom (ch, offset, dryBuffer, ch, offset, n);
-
-            for (int row = 0; row < visibleRows; ++row)
+            for (int bus = 0; bus < busCount; ++bus)
             {
-                if (busOfRow[row] != bus)
-                    continue;
-
-                auto& lane = lanes[(size_t) order[(size_t) row]];
-                const bool audible = lane.muteParam->load() < 0.5f
-                                  && (! anySolo || lane.soloParam->load() > 0.5f);
-                if (lane.active && audible)
-                    currentEffect (lane).process (busBuffer, offset, n);
+                processBus (bus, dryBuffer, offset, n);
+                addBus (buffer, offset, n);
             }
-
+        }
+        else
+        {
+            const int numFeeders = busMode == 1 ? 2 : 3;   // feeders -> post bus
             for (int ch = 0; ch < numChannels; ++ch)
-                buffer.addFrom (ch, offset, busBuffer, ch, offset, n);
+                feedBuffer.clear (ch, offset, n);
+            for (int bus = 0; bus < numFeeders; ++bus)
+            {
+                processBus (bus, dryBuffer, offset, n);
+                addBus (feedBuffer, offset, n);
+            }
+            processBus (numFeeders, feedBuffer, offset, n);
+            addBus (buffer, offset, n);
+
+            // Mode 1 with four buses: bus 4 stays parallel from the input.
+            for (int bus = numFeeders + 1; bus < busCount; ++bus)
+            {
+                processBus (bus, dryBuffer, offset, n);
+                addBus (buffer, offset, n);
+            }
         }
 
         absoluteBeats += delta;

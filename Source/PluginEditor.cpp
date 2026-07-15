@@ -16,30 +16,31 @@ using ComboBoxAttachment = juce::AudioProcessorValueTreeState::ComboBoxAttachmen
 
 //==============================================================================
 MangoAudioProcessorEditor::MangoAudioProcessorEditor (MangoAudioProcessor& p)
-    : AudioProcessorEditor (&p), processor (p), rack (p)
+    : AudioProcessorEditor (&p), processor (p), rack (p), busBar (p)
 {
     setLookAndFeel (&lnf);
 
     addAndMakeVisible (topBar);
     addAndMakeVisible (rack);
+    addAndMakeVisible (busBar);
 
     // ---- globals -------------------------------------------------------------
-    theme::styleKnob (drywetKnob, "Dry/Wet", theme::drywetAccent);
+    theme::styleKnob (drywetKnob, "Dry/Wet", theme::globalAccent);
     addAndMakeVisible (drywetKnob);
     drywetAtt = std::make_unique<SliderAttachment> (processor.apvts, pid::drywet, drywetKnob);
 
-    theme::styleKnob (seedKnob, "Seed", theme::seedAccent);
+    theme::styleKnob (seedKnob, "Seed", theme::globalAccent);
     addAndMakeVisible (seedKnob);
     seedAtt = std::make_unique<SliderAttachment> (processor.apvts, pid::seed, seedKnob);
 
-    theme::styleKnob (stepsKnob, "Steps", theme::gridAccent);
+    theme::styleKnob (stepsKnob, "Steps", theme::globalAccent);
     addAndMakeVisible (stepsKnob);
     stepsAtt = std::make_unique<SliderAttachment> (processor.apvts, pid::numsteps, stepsKnob);
 
     if (auto* choice = dynamic_cast<juce::AudioParameterChoice*> (
             processor.apvts.getParameter (pid::stepsize)))
         stepSizeBox.addItemList (choice->choices, 1);
-    theme::styleCombo (stepSizeBox, theme::gridAccent);
+    theme::styleCombo (stepSizeBox, theme::globalAccent);
     addAndMakeVisible (stepSizeBox);
     stepSizeAtt = std::make_unique<ComboBoxAttachment> (processor.apvts, pid::stepsize, stepSizeBox);
 
@@ -47,27 +48,6 @@ MangoAudioProcessorEditor::MangoAudioProcessorEditor (MangoAudioProcessor& p)
     stepSizeLabel.setColour (juce::Label::textColourId, theme::dimText);
     stepSizeLabel.setFont (juce::Font (juce::FontOptions (12.0f)));
     addAndMakeVisible (stepSizeLabel);
-
-    // Lane count - / + (drives the numlanes parameter; the rack follows it).
-    lanesCaption.setText ("lanes", juce::dontSendNotification);
-    lanesCaption.setColour (juce::Label::textColourId, theme::dimText);
-    lanesCaption.setFont (juce::Font (juce::FontOptions (12.0f)));
-    addAndMakeVisible (lanesCaption);
-
-    lanesCountLabel.setJustificationType (juce::Justification::centred);
-    lanesCountLabel.setColour (juce::Label::textColourId, theme::text);
-    lanesCountLabel.setFont (juce::Font (juce::FontOptions (14.0f, juce::Font::bold)));
-    addAndMakeVisible (lanesCountLabel);
-
-    for (auto* b : { &lanesMinusButton, &lanesPlusButton })
-    {
-        b->setMouseClickGrabsKeyboardFocus (false);
-        b->setColour (juce::TextButton::buttonColourId, juce::Colour (0xff2b2b2b));
-        b->setColour (juce::TextButton::textColourOffId, theme::text);
-        addAndMakeVisible (*b);
-    }
-    lanesMinusButton.onClick = [this] { adjustLaneCount (-1); };
-    lanesPlusButton.onClick  = [this] { adjustLaneCount (+1); };
 
     // ---- effect panels (one per lane x type, hidden until selected) ----------
     for (int lane = 0; lane < numLanes; ++lane)
@@ -108,7 +88,7 @@ MangoAudioProcessorEditor::MangoAudioProcessorEditor (MangoAudioProcessor& p)
     processor.addChangeListener (this);
     startTimerHz (10);
 
-    setSize (1000, 650);
+    setSize (1050, 650);
 }
 
 MangoAudioProcessorEditor::~MangoAudioProcessorEditor()
@@ -121,6 +101,10 @@ MangoAudioProcessorEditor::~MangoAudioProcessorEditor()
 void MangoAudioProcessorEditor::paint (juce::Graphics& g)
 {
     theme::paintBackground (g, getLocalBounds().toFloat());
+
+    // Separation line between the top bar and the plugin controls.
+    g.setColour (theme::globalAccent);
+    g.fillRect (0, topBar.getBottom(), getWidth(), 2);
 }
 
 void MangoAudioProcessorEditor::resized()
@@ -128,8 +112,12 @@ void MangoAudioProcessorEditor::resized()
     auto r = getLocalBounds();
     topBar.setBounds (r.removeFromTop (54));
 
-    auto right = r.removeFromRight (270).reduced (10, 8);
-    rack.setBounds (r.reduced (8, 4));
+    auto right = r.removeFromRight (320).reduced (10, 8);
+
+    // Left: the lane rack with the bus routing strip below it.
+    auto left = r;
+    busBar.setBounds (left.removeFromBottom (78).reduced (8, 4));
+    rack.setBounds (left.reduced (8, 4));
 
     // Globals: three knobs + the step-size box.
     auto knobRow = right.removeFromTop (96);
@@ -143,11 +131,6 @@ void MangoAudioProcessorEditor::resized()
     stepSizeBox.setBounds (sizeRow);
     right.removeFromTop (4);
 
-    auto lanesRow = right.removeFromTop (24);
-    lanesCaption.setBounds (lanesRow.removeFromLeft (40));
-    lanesMinusButton.setBounds (lanesRow.removeFromLeft (24));
-    lanesCountLabel.setBounds (lanesRow.removeFromLeft (30));
-    lanesPlusButton.setBounds (lanesRow.removeFromLeft (24));
     right.removeFromTop (8);
 
     // Block string at the bottom, panel area in between.
@@ -200,27 +183,13 @@ void MangoAudioProcessorEditor::refreshBlockText()
         blockText.setBlock (-1, -1, {}, false);
 }
 
-void MangoAudioProcessorEditor::adjustLaneCount (int delta)
-{
-    if (auto* param = processor.apvts.getParameter (pid::numlanes))
-    {
-        const int current = (int) processor.apvts.getRawParameterValue (pid::numlanes)->load();
-        const int wanted  = juce::jlimit (1, numLanes, current + delta);
-        param->setValueNotifyingHost (param->convertTo0to1 ((float) wanted));
-    }
-}
-
 void MangoAudioProcessorEditor::timerCallback()
 {
     // Follow lane-type changes (combo/automation) for the visible panel.
     refreshVisiblePanel();
 
-    // Lane-count readout, and drop a selection that became hidden.
+    // Drop a selection that became hidden by a lane-count change.
     const int count = processor.engine.visibleLaneCount();
-    lanesCountLabel.setText (juce::String (count), juce::dontSendNotification);
-    lanesMinusButton.setEnabled (count > 1);
-    lanesPlusButton.setEnabled (count < numLanes);
-
     if (selectedLane >= 0 && processor.engine.rowOfLane (selectedLane) >= count)
     {
         rack.deselectAllExcept (-1);

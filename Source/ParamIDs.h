@@ -26,9 +26,22 @@ namespace mng
     /** Maximum parallel effect buses. Rows group into contiguous buses in
         display order: row 0 always starts bus 0, and every visible row
         whose "bus start" switch is on opens the next bus (extra switches
-        beyond the fourth bus are ignored). Buses each process the plugin
-        input and are summed at the output. */
+        beyond the fourth bus are ignored). Each bus has a dry/wet and a
+        pan; the `busmode` parameter picks the routing (see
+        effectiveBusMode). */
     inline constexpr int numBuses = 4;
+
+    /** Bus routing modes (`busmode`): 0 = all buses parallel; 1 = bus 3
+        processes the mixed outputs of buses 1+2 (bus 4, if present, stays
+        parallel); 2 = bus 4 processes the mixed outputs of buses 1–3.
+        A mode needing more buses than exist falls back to parallel — this
+        helper applies that rule (used by the engine and the GUI). */
+    inline int effectiveBusMode (int mode, int busCount) noexcept
+    {
+        if (mode == 1 && busCount >= 3) return 1;
+        if (mode == 2 && busCount >= 4) return 2;
+        return 0;
+    }
 
     namespace pid
     {
@@ -38,6 +51,19 @@ namespace mng
         inline constexpr const char* stepsize = "stepsize";
         inline constexpr const char* numsteps = "numsteps";
         inline constexpr const char* numlanes = "numlanes";
+        inline constexpr const char* busmode  = "busmode";
+
+        /** Per-bus dry/wet, e.g. "bus2_wet" (busIndex 0-based). */
+        inline juce::String busWet (int busIndex)
+        {
+            return "bus" + juce::String (busIndex + 1) + "_wet";
+        }
+
+        /** Per-bus pan (-1..1 balance), e.g. "bus2_pan". */
+        inline juce::String busPan (int busIndex)
+        {
+            return "bus" + juce::String (busIndex + 1) + "_pan";
+        }
 
         /** Prefix for one lane's parameters, e.g. lane 3 -> "l3_". */
         inline juce::String lanePrefix (int laneIndex)

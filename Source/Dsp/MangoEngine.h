@@ -10,12 +10,15 @@
     permutation over the fixed lane identities 0..7 — parameters, sequences
     and random draws stay attached to the identity when lanes are moved.
 
-    Routing: the visible rows group into up to four parallel buses (row 0
-    starts bus 0; every row whose `busstart` switch is on opens the next
-    bus). Each bus processes its own copy of the plugin input through its
-    rows serially, and the bus outputs are summed before the global
-    dry/wet — so with a single bus the chain behaves exactly as before,
-    and idle buses each pass a copy of the dry input.
+    Routing: the visible rows group into up to four buses (row 0 starts
+    bus 0; every row whose `busstart` switch is on opens the next bus).
+    Each bus runs its rows serially and has its own dry/wet and pan
+    (balance); `busmode` picks the topology (see effectiveBusMode):
+    all-parallel, bus 3 fed by the mix of buses 1+2 (bus 4 parallel), or
+    bus 4 fed by the mix of buses 1-3. Parallel bus outputs are summed
+    before the global dry/wet — with a single bus at default wet/pan the
+    chain is bit-identical to the plain serial chain, and idle parallel
+    buses each pass a copy of the dry input.
 
     Locking contract: one CriticalSection (`lock()`) guards the lane
     sequencers, the display order and the parsed-override map. The audio thread
@@ -91,6 +94,10 @@ public:
         visible one). Message thread; locks briefly — the GUI colours come
         from this. */
     std::array<int, numLanes> busMapByLane() const;
+
+    /** How many buses the visible rows currently form (1..numBuses).
+        Message thread; locks briefly. */
+    int busCount() const;
 
     /** Re-parses every block string into the override cache. Parsing happens
         outside the lock; only the map swap is locked. Call after any content
@@ -170,9 +177,13 @@ private:
 
     std::atomic<float>* seedParam     = nullptr;
     std::atomic<float>* numLanesParam = nullptr;
+    std::atomic<float>* busModeParam  = nullptr;
+    std::array<std::atomic<float>*, numBuses> busWetParam {};
+    std::array<std::atomic<float>*, numBuses> busPanParam {};
 
     juce::AudioBuffer<float> dryBuffer;
-    juce::AudioBuffer<float> busBuffer;   // per-bus working copy of the dry input
+    juce::AudioBuffer<float> busBuffer;   // per-bus working buffer
+    juce::AudioBuffer<float> feedBuffer;  // mixed feed for a post bus (serial modes)
 
     double sampleRate = 44100.0;
     double currentBpm = 120.0;

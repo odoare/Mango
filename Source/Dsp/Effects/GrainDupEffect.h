@@ -5,7 +5,7 @@
     Grain duplicator: at block entry a grain of the input is recorded and
     then looped for the whole block (fxme::GrainLooper per channel). The
     grain duration is drawn from the lane's probability weights, like the
-    gater; `fade` sets the grain-seam crossfade. Each individual repetition
+    gater; the grain-seam crossfade is fixed (15 ms). Each individual repetition
     is shaped by an attack and a release envelope (never the block as a
     whole): `att` / `rel` are lengths as fractions (0..1) of the grain, and
     when their sum exceeds 1 they share the grain proportionally to their
@@ -13,7 +13,7 @@
     shapes (0 slow, 0.5 linear, 1 very fast; a fast release looks like an
     exponential decay) — same conventions as the gater.
 
-    Overrides: dur, fade, att, attcurve, rel, relcurve, mix.
+    Overrides: dur, att, attcurve, rel, relcurve, mix.
 
     Author: Olivier Doaré, github.com/odoare
     SPDX-License-Identifier: LGPL-3.0-or-later
@@ -32,14 +32,12 @@ class GrainDupEffect : public EffectBase
 {
 public:
     static constexpr float kMaxGrainSeconds = 2.0f;
+    static constexpr float kSeamFadeSeconds = 0.015f;   // fixed grain-seam crossfade
 
     static void addParameters (std::vector<std::unique_ptr<juce::RangedAudioParameter>>& params,
                                const juce::String& lanePrefix, const juce::String& nameP)
     {
         DurationWeights::addParameters (params, lanePrefix + "grain_", nameP + "Grain");
-        params.push_back (std::make_unique<juce::AudioParameterFloat> (
-            lanePrefix + "grain_fade", nameP + "Grain Fade",
-            juce::NormalisableRange<float> (0.001f, 0.05f, 0.0001f, 0.5f), 0.015f));
         params.push_back (std::make_unique<juce::AudioParameterFloat> (
             lanePrefix + "grain_att", nameP + "Grain Attack",
             juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.0f));
@@ -60,7 +58,6 @@ public:
     void bindParameters (juce::AudioProcessorValueTreeState& apvts, const juce::String& lanePrefix)
     {
         weights.bind (apvts, lanePrefix + "grain_");
-        fadeParam     = apvts.getRawParameterValue (lanePrefix + "grain_fade");
         attParam      = apvts.getRawParameterValue (lanePrefix + "grain_att");
         attCurveParam = apvts.getRawParameterValue (lanePrefix + "grain_attcurve");
         relParam      = apvts.getRawParameterValue (lanePrefix + "grain_rel");
@@ -72,7 +69,10 @@ public:
     {
         loopers.resize ((size_t) juce::jmax (1, numChannels));
         for (auto& l : loopers)
+        {
             l.prepare (sr, kMaxGrainSeconds);
+            l.setCrossfade (kSeamFadeSeconds);
+        }
     }
 
     void reset() override
@@ -89,8 +89,6 @@ public:
         const float  defaultSec = (float) (beats * 60.0 / ctx.bpm);
         const float  durSec     = juce::jlimit (0.005f, kMaxGrainSeconds,
                                                 overrideDurSeconds (ctx, OvKey::Dur, defaultSec));
-        const float  fade       = juce::jlimit (0.001f, 0.5f,
-                                                overrideOr (ctx, OvKey::Fade, fadeParam->load()));
 
         // Shaped per-repetition attack/release (gater conventions: curve
         // 0 slow, 0.5 linear, 1 fast; lengths share the grain
@@ -107,7 +105,6 @@ public:
 
         for (auto& l : loopers)
         {
-            l.setCrossfade (fade);
             l.setAttack (attFrac, attGamma);
             l.setRelease (relFrac, relGamma);
         }
@@ -151,7 +148,6 @@ public:
 
 private:
     DurationWeights weights;
-    std::atomic<float>* fadeParam     = nullptr;
     std::atomic<float>* attParam      = nullptr;
     std::atomic<float>* attCurveParam = nullptr;
     std::atomic<float>* relParam      = nullptr;

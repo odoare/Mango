@@ -24,7 +24,8 @@ namespace mng::theme
 {
     inline void paintBackground (juce::Graphics& g, juce::Rectangle<float> b)
     {
-        const auto base = juce::Colour::fromFloatRGBA (0.16f, 0.14f, 0.20f, 1.0f);
+        // Dark violet, the global accent's tint (see globalAccent below).
+        const auto base = juce::Colour::fromFloatRGBA (0.175f, 0.14f, 0.27f, 1.0f);
         juce::ColourGradient grad (base.darker().darker().darker(), b.getBottomLeft(),
                                    base, b.getTopRight(), false);
         g.setGradientFill (grad);
@@ -39,10 +40,10 @@ namespace mng::theme
     inline const juce::Colour accent    { 0xffe0784a };   // coral
     inline const juce::Colour topBarBg  { 0xff14101a };   // near-black header
 
-    // Global-control accents.
-    inline const juce::Colour drywetAccent { 0xffe0784a };   // coral
-    inline const juce::Colour seedAccent   { 0xff9ac93c };   // lime
-    inline const juce::Colour gridAccent   { 0xff4cc9f0 };   // cyan
+    // One accent for every global control (dry/wet, seed, grid, lanes, bus
+    // mode): violet — it also tints the backdrop and draws the separation
+    // line under the top bar.
+    inline const juce::Colour globalAccent { 0xff9a72f0 };
 
     // One accent per effect bus (0..3): a lane's strip, header and control
     // panel are coloured by the bus it currently belongs to (which follows

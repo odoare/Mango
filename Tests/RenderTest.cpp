@@ -402,6 +402,120 @@ static void testBuses()
 }
 
 //==============================================================================
+static void testBusModes()
+{
+    auto makeInput = [] (size_t count)
+    {
+        std::vector<float> in (count);
+        double phase = 0.0;
+        const double inc = 2.0 * juce::MathConstants<double>::pi * 440.0 / kSampleRate;
+        for (auto& s : in)
+        {
+            s = (float) std::sin (phase);
+            phase += inc;
+        }
+        return in;
+    };
+
+    // Mode 2: buses 1-3 (idle -> dry copies) feed bus 4, whose 1-bit
+    // quantizer sees the tripled input: the output is pure integers up to
+    // +-3 — impossible in parallel routing.
+    {
+        MangoAudioProcessor p;
+        setParam (p, "l1_busstart", 1.0f);
+        setParam (p, "l2_busstart", 1.0f);
+        setParam (p, "l3_busstart", 1.0f);
+        setParam (p, "busmode", 2.0f);
+        setParam (p, "l3_type", 5.0f);           // Quantizer on the post bus
+        setParam (p, "l3_qnt_bits", 1.0f);
+        addFullBlock (p, 3);
+        const auto out = render (p, 0.4);
+        bool integers = true;
+        float peak = 0.0f;
+        for (size_t i = (size_t) (0.05 * kSampleRate); i < out.size(); ++i)
+        {
+            integers = integers && std::abs (out[i] - std::round (out[i])) < 1e-4f;
+            peak = std::max (peak, std::abs (out[i]));
+        }
+        CHECK (integers);
+        CHECK (peak > 2.5f);
+    }
+
+    // Mode 1: buses 1+2 feed bus 3 (quantizer -> integers up to +-2) while
+    // bus 4 stays parallel and adds the clean input on top.
+    {
+        MangoAudioProcessor p;
+        setParam (p, "l1_busstart", 1.0f);
+        setParam (p, "l2_busstart", 1.0f);
+        setParam (p, "l3_busstart", 1.0f);
+        setParam (p, "busmode", 1.0f);
+        setParam (p, "l2_type", 5.0f);           // Quantizer on the post bus (bus 3)
+        setParam (p, "l2_qnt_bits", 1.0f);
+        addFullBlock (p, 2);
+        const auto out = render (p, 0.4);
+        const auto in  = makeInput (out.size());
+        bool integers = true;
+        float peak = 0.0f;
+        for (size_t i = (size_t) (0.05 * kSampleRate); i < out.size(); ++i)
+        {
+            const float d = out[i] - in[i];     // remove the parallel bus 4
+            integers = integers && std::abs (d - std::round (d)) < 1e-4f;
+            peak = std::max (peak, std::abs (d));
+        }
+        CHECK (integers);
+        CHECK (peak > 1.5f);
+    }
+
+    // Per-bus wet at 0 bypasses everything the bus does...
+    {
+        MangoAudioProcessor p;
+        setParam (p, "l0_type", 5.0f);
+        setParam (p, "l0_qnt_bits", 1.0f);
+        setParam (p, "bus1_wet", 0.0f);
+        addFullBlock (p, 0);
+        const auto out = render (p, 0.2);
+        const auto in  = makeInput (out.size());
+        float maxDiff = 0.0f;
+        for (size_t i = 0; i < out.size(); ++i)
+            maxDiff = std::max (maxDiff, std::abs (out[i] - in[i]));
+        CHECK (maxDiff < 1e-6f);
+    }
+
+    // ...and pan hard right silences the bus's left channel.
+    {
+        MangoAudioProcessor p;
+        setParam (p, "bus1_pan", 1.0f);
+        p.prepareToPlay (kSampleRate, kBlockSize);
+        juce::AudioBuffer<float> buffer (2, kBlockSize);
+        juce::MidiBuffer midi;
+        double phase = 0.0;
+        const double inc = 2.0 * juce::MathConstants<double>::pi * 440.0 / kSampleRate;
+        float maxL = 0.0f, maxRDiff = 0.0f;
+        for (int b = 0; b < 20; ++b)
+        {
+            std::vector<float> ref ((size_t) kBlockSize);
+            for (int i = 0; i < kBlockSize; ++i)
+            {
+                ref[(size_t) i] = (float) std::sin (phase);
+                phase += inc;
+                buffer.setSample (0, i, ref[(size_t) i]);
+                buffer.setSample (1, i, ref[(size_t) i]);
+            }
+            p.processBlock (buffer, midi);
+            for (int i = 0; i < kBlockSize; ++i)
+            {
+                maxL     = std::max (maxL, std::abs (buffer.getSample (0, i)));
+                maxRDiff = std::max (maxRDiff, std::abs (buffer.getSample (1, i) - ref[(size_t) i]));
+            }
+        }
+        CHECK (maxL < 1e-6f);
+        CHECK (maxRDiff < 1e-6f);
+    }
+
+    std::printf ("bus modes: serial feeds, wet bypass and pan verified\n");
+}
+
+//==============================================================================
 static void testEffectMix()
 {
     // Gater chopping at full depth, but mix=0: the effect must be
@@ -772,6 +886,7 @@ static void dumpEditorSnapshot (const juce::String& path)
     setParam (p, "l2_busstart", 1.0f); // four buses -> four lane colours
     setParam (p, "l4_busstart", 1.0f);
     setParam (p, "l6_busstart", 1.0f);
+    setParam (p, "busmode", 1.0f);     // show a serial routing in the bus bar
     setParam (p, "l0_gate_att", 0.2f);
     setParam (p, "l0_gate_rel", 0.25f);
     setParam (p, "l0_gate_relcurve", 1.0f);
@@ -793,7 +908,7 @@ static void dumpEditorSnapshot (const juce::String& path)
     juce::MessageManager::getInstance()->runDispatchLoopUntil (100);
 
     std::unique_ptr<juce::AudioProcessorEditor> editor (p.createEditor());
-    editor->setSize (1000, 650);
+    editor->setSize (1050, 650);
     const juce::File base (path);
     writePng (*editor, base);
 
@@ -804,7 +919,7 @@ static void dumpEditorSnapshot (const juce::String& path)
     {
         mng::EffectPanel panel (p.apvts, 0, type, mng::theme::busColour (0));
         panel.setLookAndFeel (&lnf);
-        panel.setSize (250, 334);   // the editor's real panel-area height
+        panel.setSize (300, 334);   // the editor's real panel-area size
         writePng (panel, base.getSiblingFile (base.getFileNameWithoutExtension()
                                               + "_" + name + ".png"));
         panel.setLookAndFeel (nullptr);
@@ -832,6 +947,7 @@ int main (int argc, char* argv[])
     testReverser();
     testFreeze();
     testBuses();
+    testBusModes();
     testEffectMix();
     testStateRoundTrip();
     testHostSync();

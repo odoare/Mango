@@ -24,7 +24,7 @@ patterns), FxmeFX (Tube saturation origin), Gloubiboulga (formant origin).
 ## 1. Feature summary
 
 - **Variable lane count, 1–8** (the `numlanes` parameter, default 4, driven
-  by −/+ buttons in the globals). Architecturally there are always eight lanes
+  by −/+ buttons in the bus bar). Architecturally there are always eight lanes
   (identities 0–7) with parameters/engines/state pre-built; `numlanes` sets
   how many **rows** are shown and processed. Hidden rows keep sequencing
   silently (like mute) so re-showing them is seamless; solo only counts
@@ -39,7 +39,7 @@ patterns), FxmeFX (Tube saturation origin), Gloubiboulga (formant origin).
   | Type | DSP | Lane parameters (`l<i>_` prefix) |
   |---|---|---|
   | Gater | open(dur)/closed(dur) cycles, starts open | `gate_`: 7 duration weights, `att`, `rel`, `attcurve`, `relcurve` |
-  | Grain | records a grain at block entry, loops it (`fxme::GrainLooper`/channel) | `grain_`: 7 weights, `fade`, `att`, `attcurve`, `rel`, `relcurve` |
+  | Grain | records a grain at block entry, loops it (`fxme::GrainLooper`/channel); seam crossfade fixed at 15 ms (the `grain_fade` param was removed as not useful) | `grain_`: 7 weights, `att`, `attcurve`, `rel`, `relcurve` |
   | Delay | feedback delay (`fxme::DelayLine`/channel), buffer persists across blocks; feedback reaches 0.999, a damping lowpass sits in the loop and the time glide is settable (1–50 ms), so `dur=mididur fb=0.99` is a Karplus-Strong style resonator | `dly_dur` (s), `dly_fb`, `dly_damp`, `dly_porta` (ms) |
   | Dist | tube saturation (`fxme::Saturator`/channel); `dist_gain` = ±24 dB makeup on the saturated signal, before the mix (loudness depends on input level — manual compensation) | `dist_model/drive/bias/sag/gain/mix` |
   | Filter | LP/HP sweep f0→f1 or formant vowel glide, ramp repeats at a drawn rate | `flt_`: 7 weights, `mode`, `q`, `f0`, `f1`, `v0`, `v1` |
@@ -76,7 +76,8 @@ patterns), FxmeFX (Tube saturation origin), Gloubiboulga (formant origin).
   `dur fb damp porta att rel attcurve relcurve q f0 f1 v0 v1 bits down
   drive bias sag gain mix width model mode fade amp w4 w8 w16 w32 wstr
   wtrip wdot`.
-- **Globals**: dry/wet, seed (0–99999), step size, num steps, lane count
+- **Globals**: dry/wet, seed (0–99999), step size, num steps, bus routing
+  mode + per-bus wet/pan (see §3 buses), lane count
   (−/+ buttons).
 - **Live updates**: any parameter change refreshes the sounding block in
   place immediately (same draw, new values, phase preserved) — no transport
@@ -128,20 +129,36 @@ The core. Owns:
 - the parsed-override map, one `juce::CriticalSection seqLock`, a dry buffer
   and a bus working buffer.
 
-**Buses** (up to `numBuses` = 4, parallel): the visible rows group into
-contiguous buses in display order — row 0 always starts bus 0, and every
-row whose `l<i>_busstart` switch is on opens the next bus (switches beyond
-the fourth bus, and switches on hidden rows, are ignored). Each bus
-processes its own copy of the dry input through its rows serially, and the
-bus outputs are **summed** (not averaged) before the global dry/wet: one
-bus is bit-identical to the old serial chain, and an idle bus passes a
-copy of the dry input (so two all-idle buses output 2× the input — the
-parallel-rack convention). `busMapByLane()` (message thread, locks
-briefly) gives lane→bus for the GUI, which colours every lane by its bus
-(`theme::busColour`, 4 colours), shaded progressively towards white by the
-lane's position inside the bus (`busColour(bus, depth)`) — headers, blocks
-and panels re-accent live when the map or the shading depths change (rack
-timer → `refreshBusCache` → `onBusMapChanged`).
+**Buses** (up to `numBuses` = 4): the visible rows group into contiguous
+buses in display order — row 0 always starts bus 0, and every row whose
+`l<i>_busstart` switch is on opens the next bus (switches beyond the
+fourth bus, and switches on hidden rows, are ignored). Each bus runs its
+rows serially, then applies its own dry/wet (`bus<n>_wet`, blended against
+the bus's input) and pan (`bus<n>_pan`, −1..1 balance law, stereo only) —
+both bit-transparent at defaults. `busmode` picks the topology
+(`effectiveBusMode(mode, busCount)` in ParamIDs.h — shared by engine and
+GUI; a mode needing more buses than exist falls back to parallel):
+
+  - 0 parallel: every bus processes its own copy of the dry input;
+    outputs are **summed** (not averaged) before the global dry/wet. One
+    bus is bit-identical to the old serial chain; an idle bus passes a
+    copy of the dry input (two all-idle buses output 2× — the
+    parallel-rack convention).
+  - 1 (needs ≥3 buses): buses 1+2 are parallel feeders; their summed
+    outputs are the **input** of bus 3 (its wet reference too); bus 4, if
+    present, stays parallel from the plugin input.
+  - 2 (needs 4 buses): buses 1–3 parallel feeders → bus 4 processes their
+    mix; the output is bus 4 alone.
+
+`busMapByLane()` / `busCount()` (message thread, lock briefly) feed the
+GUI: every lane is coloured by its bus (`theme::busColour`, 4 colours),
+shaded progressively towards white by the lane's position inside the bus
+(`busColour(bus, depth)`) — headers, blocks and panels re-accent live when
+the map or the shading depths change (rack timer → `refreshBusCache` →
+`onBusMapChanged`). The **BusBar** (Components/BusBar.h, under the rack)
+draws the active buses as numbered coloured boxes with feed lines per the
+effective mode, cycles `busmode` with a button, and holds the per-bus
+wet/pan knob pairs (visible for active buses only).
 
 **processBlock flow** (`process()`): read transport → publish bpm → on first
 call after `prepare()` start the engines (deferred so the first draws use the
@@ -184,7 +201,8 @@ sampleRate, bpm, mididurSeconds (sampled at entry), `overrides` pointer
 
 ## 4. Parameters & state
 
-- ~630 APVTS parameters, all pre-declared (IDs frozen): 5 globals + per lane
+- ~630 APVTS parameters, all pre-declared (IDs frozen): 14 globals
+  (incl. `busmode`, `bus<n>_wet/pan`) + per lane
   `type`, `mute`, `solo`, `busstart` + every effect type's set, ids
   `l<i>_<fx>_<name>`
   (FxmeFX `addParameters(prefix)` pattern — each effect class has static
@@ -227,7 +245,12 @@ same session + seed → bit-identical renders; loop passes identical; block
 visuals can show the *exact* draw (they recompute the same hash on the
 message thread).
 
-## 7. GUI (fixed 1000×650)
+## 7. GUI (fixed 1050×650; right column 320, bus bar under the rack)
+
+All global controls share the violet `theme::globalAccent` (dry/wet, seed
+and grid knobs in the top right, the lanes −/+ and routing-mode buttons in
+the bus bar); the same violet tints the backdrop gradient and draws the
+2 px separation line between the top bar and the controls.
 
 - `fxme::TopBar` (54 px, logo from BinaryData) · `fxme::FxmeLookAndFeel` ·
   `fxme::FxmeSlider` knobs (right-click value entry; styleKnob = dark disc +

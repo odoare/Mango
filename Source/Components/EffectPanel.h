@@ -50,7 +50,6 @@ public:
                 break;
 
             case EffectType::Grain:
-                addKnob (prefix + "grain_fade", "Fade");
                 addKnob (prefix + "grain_att", "Attack");
                 addKnob (prefix + "grain_attcurve", "Att Curve");
                 addKnob (prefix + "grain_rel", "Release");
@@ -162,7 +161,7 @@ public:
             r.removeFromTop (3);
         }
 
-        layoutKnobRow (knobs, r, 4, 70);   // 4/row: the widest sets (filter) keep one row
+        layoutKnobRow (knobs, r, 5, 70);   // 5/row: the widest sets keep one row
 
         if (! weightKnobs.empty())
         {
@@ -202,7 +201,7 @@ private:
         switch (t)
         {
             case EffectType::Gater:      return "dur att rel attcurve relcurve mix\n" + weights;
-            case EffectType::Grain:      return "dur fade att rel attcurve relcurve mix\n" + weights;
+            case EffectType::Grain:      return "dur att rel attcurve relcurve mix\n" + weights;
             case EffectType::Delay:      return "dur fb damp porta mix";
             case EffectType::Distortion: return "model drive bias sag gain mix";
             case EffectType::FilterEnv:  return "dur mode q f0 f1 v0 v1 mix\n" + weights;
