@@ -609,6 +609,10 @@ static int testOverrideParser()
     CHECK (frz.has_value());
     CHECK (near (frz->find (OvKey::Width)->value, 0.25f, 1e-6));
 
+    auto dist = parseOverrides ("drive=30 gain=-6.5");
+    CHECK (dist.has_value());
+    CHECK (near (dist->find (OvKey::Gain)->value, -6.5f, 1e-6));
+
     // mididur forms.
     auto md = parseOverrides ("dur=mididur");
     CHECK (md.has_value() && md->find (OvKey::Dur)->kind == Expr::MididurScaled);

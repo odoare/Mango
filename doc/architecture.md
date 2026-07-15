@@ -41,7 +41,7 @@ patterns), FxmeFX (Tube saturation origin), Gloubiboulga (formant origin).
   | Gater | open(dur)/closed(dur) cycles, starts open | `gate_`: 7 duration weights, `att`, `rel`, `attcurve`, `relcurve` |
   | Grain | records a grain at block entry, loops it (`fxme::GrainLooper`/channel) | `grain_`: 7 weights, `fade`, `att`, `attcurve`, `rel`, `relcurve` |
   | Delay | feedback delay (`fxme::DelayLine`/channel), buffer persists across blocks; feedback reaches 0.999, a damping lowpass sits in the loop and the time glide is settable (1–50 ms), so `dur=mididur fb=0.99` is a Karplus-Strong style resonator | `dly_dur` (s), `dly_fb`, `dly_damp`, `dly_porta` (ms) |
-  | Dist | tube saturation (`fxme::Saturator`/channel) | `dist_model/drive/bias/sag/mix` |
+  | Dist | tube saturation (`fxme::Saturator`/channel); `dist_gain` = ±24 dB makeup on the saturated signal, before the mix (loudness depends on input level — manual compensation) | `dist_model/drive/bias/sag/gain/mix` |
   | Filter | LP/HP sweep f0→f1 or formant vowel glide, ramp repeats at a drawn rate | `flt_`: 7 weights, `mode`, `q`, `f0`, `f1`, `v0`, `v1` |
   | Quant | lo-fi: bit crusher (`fxme::BitCrusher`) + sample & hold decimator (`fxme::Downsampler`/channel, hold phase restarts at block entry — but not on live-tweak re-enters — so passes reproduce) + wet/dry mix | `qnt_bits` (1–24), `qnt_down` (÷1–64), `qnt_mix` |
   | Ring | ring modulator: sine carrier glides exponentially f0→f1 over a drawn tempo-synced ramp, repeating for the block; amount 0–1 blends clean → full ±1 modulation (`x·(1−amp+amp·sin)`); carrier phase restarts at block entry (not on re-enters) so passes reproduce; one carrier feeds all channels | `ring_`: 7 weights, `f0`, `f1` (0.5 Hz–10 kHz), `amp` |
@@ -74,8 +74,8 @@ patterns), FxmeFX (Tube saturation origin), Gloubiboulga (formant origin).
   frequency in Hz (1/mididur), same `*N` `/N` `N*` forms. All lane
   parameters are reachable:
   `dur fb damp porta att rel attcurve relcurve q f0 f1 v0 v1 bits down
-  drive bias sag mix width model mode fade amp w4 w8 w16 w32 wstr wtrip
-  wdot`.
+  drive bias sag gain mix width model mode fade amp w4 w8 w16 w32 wstr
+  wtrip wdot`.
 - **Globals**: dry/wet, seed (0–99999), step size, num steps, lane count
   (−/+ buttons).
 - **Live updates**: any parameter change refreshes the sounding block in
@@ -184,7 +184,7 @@ sampleRate, bpm, mididurSeconds (sampled at entry), `overrides` pointer
 
 ## 4. Parameters & state
 
-- ~620 APVTS parameters, all pre-declared (IDs frozen): 5 globals + per lane
+- ~630 APVTS parameters, all pre-declared (IDs frozen): 5 globals + per lane
   `type`, `mute`, `solo`, `busstart` + every effect type's set, ids
   `l<i>_<fx>_<name>`
   (FxmeFX `addParameters(prefix)` pattern — each effect class has static

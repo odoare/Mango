@@ -72,6 +72,7 @@ public:
                 addKnob (prefix + "dist_drive", "Drive");
                 addKnob (prefix + "dist_bias", "Bias");
                 addKnob (prefix + "dist_sag", "Sag");
+                addKnob (prefix + "dist_gain", "Out dB");
                 addKnob (prefix + "dist_mix", "Mix");
                 break;
 
@@ -203,7 +204,7 @@ private:
             case EffectType::Gater:      return "dur att rel attcurve relcurve mix\n" + weights;
             case EffectType::Grain:      return "dur fade att rel attcurve relcurve mix\n" + weights;
             case EffectType::Delay:      return "dur fb damp porta mix";
-            case EffectType::Distortion: return "model drive bias sag mix";
+            case EffectType::Distortion: return "model drive bias sag gain mix";
             case EffectType::FilterEnv:  return "dur mode q f0 f1 v0 v1 mix\n" + weights;
             case EffectType::Quantizer:  return "bits down mix";
             case EffectType::RingMod:    return "dur f0 f1 amp\n" + weights;

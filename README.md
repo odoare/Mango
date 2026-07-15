@@ -29,7 +29,7 @@ exceeds 1 they share the duration proportionally to their values: att=1,
 rel=0.5 acts as att=2/3, rel=1/3. The curves set the edge shapes: 0 slow,
 0.5 linear, 1 very fast (a fast release ≈ exponential decay).
 | Delay   | Feedback delay (buffer persists across blocks); damping mellows the repeats, portamento sets the time-glide (1–50 ms). With `dur=mididur fb=0.99` it is a Karplus-Strong style resonator tuned by MIDI | time, feedback, damping, portamento |
-| Dist    | Tube-style saturation (Standard / Dynamic / Triode / Class AB) | model, drive, bias, sag, mix |
+| Dist    | Tube-style saturation (Standard / Dynamic / Triode / Class AB). Saturation loudness depends on the input level, so the output gain (±24 dB, on the saturated signal) is the manual makeup | model, drive, bias, sag, out gain, mix |
 | Filter  | LP / HP sweep from start to end frequency, or a formant vowel glide, repeating at a drawn rhythmic rate | mode, Q, start/end freq, start/end vowel, ramp probabilities |
 | Quant   | Lo-fi: bit-depth reduction + sample-rate reduction (raw sample & hold — the aliasing is the point) | bits (1–24), downsample (÷1–64), mix |
 | Ring    | Ring modulator: a sine carrier glides from a start to an end frequency over a drawn tempo-synced ramp, repeating for the block. Amount 0 = clean, 1 = full ring modulation (low frequencies give tremolo) | start/end freq (0.5 Hz–10 kHz), amount, glide probabilities |
@@ -66,7 +66,7 @@ v0=a v1=u               formant glide from A to U
   eighth) resolved against the host tempo; any expression with `mididur` is a
   time in seconds (`mididur`, `mididur*2`, `mididur/4`, `3*mididur`).
 - Other keys are in the parameter's native unit:
-  `fb damp porta att rel attcurve relcurve q f0 f1 v0 v1 bits down drive bias sag mix width model mode fade amp`
+  `fb damp porta att rel attcurve relcurve q f0 f1 v0 v1 bits down drive bias sag gain mix width model mode fade amp`
   and the duration probability weights `w4 w8 w16 w32 wstr wtrip wdot`
   (each effect reads the keys it understands).
 - **`mididur`** is 1/f of the last MIDI note-on the plugin received, sampled when

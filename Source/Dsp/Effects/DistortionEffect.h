@@ -3,10 +3,13 @@
     DistortionEffect.h
 
     Tube-style saturation (fxme::Saturator per channel): four models
-    (Standard, Dynamic, Triode, Class AB), drive, bias, supply sag, and an
-    internal dry/wet mix.
+    (Standard, Dynamic, Triode, Class AB), drive, bias, supply sag, an
+    output (makeup) gain in dB on the saturated signal — saturation
+    loudness depends on the input level, so compensation is manual — and
+    an internal dry/wet mix (the gain sits before the mix, so it only
+    scales the wet part).
 
-    Overrides: model, drive, bias, sag, mix.
+    Overrides: model, drive, bias, sag, gain (dB), mix.
 
     Author: Olivier Doaré, github.com/odoare
     SPDX-License-Identifier: LGPL-3.0-or-later
@@ -39,6 +42,9 @@ public:
             lanePrefix + "dist_sag", nameP + "Dist Sag",
             juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.3f));
         params.push_back (std::make_unique<juce::AudioParameterFloat> (
+            lanePrefix + "dist_gain", nameP + "Dist Out Gain",
+            juce::NormalisableRange<float> (-24.0f, 24.0f, 0.1f), 0.0f));
+        params.push_back (std::make_unique<juce::AudioParameterFloat> (
             lanePrefix + "dist_mix", nameP + "Dist Mix",
             juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 1.0f));
     }
@@ -49,6 +55,7 @@ public:
         driveParam = apvts.getRawParameterValue (lanePrefix + "dist_drive");
         biasParam  = apvts.getRawParameterValue (lanePrefix + "dist_bias");
         sagParam   = apvts.getRawParameterValue (lanePrefix + "dist_sag");
+        gainParam  = apvts.getRawParameterValue (lanePrefix + "dist_gain");
         mixParam   = apvts.getRawParameterValue (lanePrefix + "dist_mix");
     }
 
@@ -72,6 +79,7 @@ public:
         ovDrive = resolve (OvKey::Drive, ctx);
         ovBias  = resolve (OvKey::Bias, ctx);
         ovSag   = resolve (OvKey::Sag, ctx);
+        ovGain  = resolve (OvKey::Gain, ctx);
         ovMix   = resolve (OvKey::Mix, ctx);
     }
 
@@ -84,6 +92,8 @@ public:
         const float bias  = pick (ovBias, biasParam);
         const float sag   = pick (ovSag, sagParam);
         const float mix   = juce::jlimit (0.0f, 1.0f, pick (ovMix, mixParam));
+        const float gain  = juce::Decibels::decibelsToGain (
+                                juce::jlimit (-24.0f, 24.0f, pick (ovGain, gainParam)));
 
         const int numCh = juce::jmin (buffer.getNumChannels(), (int) sats.size());
         for (int ch = 0; ch < numCh; ++ch)
@@ -96,7 +106,7 @@ public:
 
             float* data = buffer.getWritePointer (ch) + startSample;
             for (int i = 0; i < numSamples; ++i)
-                data[i] = mix * s.processSample (data[i]) + (1.0f - mix) * data[i];
+                data[i] = mix * gain * s.processSample (data[i]) + (1.0f - mix) * data[i];
         }
     }
 
@@ -120,11 +130,12 @@ private:
     std::atomic<float>* driveParam = nullptr;
     std::atomic<float>* biasParam  = nullptr;
     std::atomic<float>* sagParam   = nullptr;
+    std::atomic<float>* gainParam  = nullptr;
     std::atomic<float>* mixParam   = nullptr;
 
     std::vector<fxme::Saturator> sats;
     const ParsedOverrides* ov = nullptr;
-    Resolved ovModel, ovDrive, ovBias, ovSag, ovMix;
+    Resolved ovModel, ovDrive, ovBias, ovSag, ovGain, ovMix;
 };
 
 } // namespace mng
