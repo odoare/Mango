@@ -46,7 +46,7 @@ patterns), FxmeFX (Tube saturation origin), Gloubiboulga (formant origin).
   | Quant | lo-fi: bit crusher (`fxme::BitCrusher`) + sample & hold decimator (`fxme::Downsampler`/channel, hold phase restarts at block entry — but not on live-tweak re-enters — so passes reproduce) + wet/dry mix | `qnt_bits` (1–24), `qnt_down` (÷1–64), `qnt_mix` |
   | Ring | ring modulator: sine carrier glides exponentially f0→f1 over a drawn tempo-synced ramp, repeating for the block; amount 0–1 blends clean → full ±1 modulation (`x·(1−amp+amp·sin)`); carrier phase restarts at block entry (not on re-enters) so passes reproduce; one carrier feeds all channels | `ring_`: 7 weights, `f0`, `f1` (0.5 Hz–10 kHz), `amp` |
   | Rev | reverser: records drawn-duration slices and plays each backwards (while slice k records, slice k−1 plays reversed; the first slice of a block passes through); `fade` = 0–0.5 slice fraction faded at the seams; slice grid restarts at block entry (not on re-enters) so passes reproduce; pure sample copy, no interpolation | `rev_`: 7 weights, `fade` |
-  | Freeze | spectral freeze (`fxme::SpectralFreeze`/channel, WDL FFT): captures one 2048-sample window at block entry (passed through while recording, so blocks shorter than ~43 ms stay dry), then random-phase resynthesis of its magnitude spectrum — Hann/75% OLA, one iFFT per 512-sample hop (4 at the capture→wash switch) — sustains a static wash; phases keyed on (seed, lane, block, channel) with the frame counter restarting at entry, so passes reproduce and the two channels decorrelate into a wide image | `frz_mix` |
+  | Freeze | spectral freeze (`fxme::SpectralFreezeMulti` — Mango's effect is only the APVTS adapter; WDL FFT): captures one 2048-sample window at block entry (passed through while recording, so blocks shorter than ~43 ms stay dry), then random-phase resynthesis of its magnitude spectrum — Hann/75% OLA, one iFFT per 512-sample hop (4 at the capture→wash switch) — sustains a static wash; phases keyed on (seed, lane, block, channel) with the frame counter restarting at entry, so passes reproduce and the two channels decorrelate into a wide image; `frz_width` blends the two wet channels (L' = (1/2+w/2)·L + (1/2−w/2)·R, mirrored: 1 wide, 0 mono) | `frz_mix`, `frz_width` |
 
 - **Per-effect mix**: every effect has a wet/dry `<fx>_mix` parameter
   (default 1, override key `mix`) — except the ring modulator, whose
@@ -74,7 +74,8 @@ patterns), FxmeFX (Tube saturation origin), Gloubiboulga (formant origin).
   frequency in Hz (1/mididur), same `*N` `/N` `N*` forms. All lane
   parameters are reachable:
   `dur fb damp porta att rel attcurve relcurve q f0 f1 v0 v1 bits down
-  drive bias sag mix model mode fade amp w4 w8 w16 w32 wstr wtrip wdot`.
+  drive bias sag mix width model mode fade amp w4 w8 w16 w32 wstr wtrip
+  wdot`.
 - **Globals**: dry/wet, seed (0–99999), step size, num steps, lane count
   (−/+ buttons).
 - **Live updates**: any parameter change refreshes the sounding block in
@@ -183,7 +184,7 @@ sampleRate, bpm, mididurSeconds (sampled at entry), `overrides` pointer
 
 ## 4. Parameters & state
 
-- ~610 APVTS parameters, all pre-declared (IDs frozen): 5 globals + per lane
+- ~620 APVTS parameters, all pre-declared (IDs frozen): 5 globals + per lane
   `type`, `mute`, `solo`, `busstart` + every effect type's set, ids
   `l<i>_<fx>_<name>`
   (FxmeFX `addParameters(prefix)` pattern — each effect class has static
@@ -287,7 +288,12 @@ umbrella `FxmeTools/FxmeTools.h` (module v0.0.3):
   target, which Mango's CMake does for the plugin and both test apps).
   Capture window + random-phase OLA resynthesis; deterministic phases via
   `setIdentity`; `prepare()` self-calibrates the FFT round-trip gain, so
-  it is immune to the library's scaling convention.
+  it is immune to the library's scaling convention. The same header's
+  `SpectralFreezeMulti` is the complete multichannel freeze (per-channel
+  phase streams, stereo width, wet/dry mix — the low 8 bits of the
+  identity tag are the channel index): a standalone freeze plugin only
+  needs to add parameters around it, and Mango's FreezeEffect is exactly
+  that adapter.
   `dsp/ArEnvelope.h` (unused by Mango currently), `dsp/DeterministicRandom.h`,
   `midi/NoteDuration.h`.
 - `dsp/GrainLooper.h` (pre-existing) gained: `setAttack(frac, gamma)` /

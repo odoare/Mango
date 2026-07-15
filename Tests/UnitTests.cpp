@@ -228,6 +228,51 @@ static int testSpectralFreeze()
 }
 
 //==============================================================================
+static int testSpectralFreezeMulti()
+{
+    const int N = fxme::SpectralFreeze::kSize;
+
+    fxme::SpectralFreezeMulti m;
+    m.prepare (2);
+    m.setIdentity (42, 0x100);   // low byte clear: reserved for the channel
+    m.startCapture();
+
+    // Capture one window of the same sine on both channels...
+    std::vector<float> l ((size_t) N), r ((size_t) N);
+    const double w = 2.0 * 3.14159265358979 * 330.0 / 48000.0;
+    for (int i = 0; i < N; ++i)
+        l[(size_t) i] = r[(size_t) i] = (float) std::sin (w * i);
+    float* ptrs[2] = { l.data(), r.data() };
+    m.process (ptrs, 2, N);
+
+    // ...then feed silence. Width 0: both channels must be the identical
+    // mono average, and still sounding.
+    m.setWidth (0.0f);
+    std::fill (l.begin(), l.end(), 0.0f);
+    std::fill (r.begin(), r.end(), 0.0f);
+    m.process (ptrs, 2, N);
+    float diff0 = 0.0f, level = 0.0f;
+    for (int i = N / 2; i < N; ++i)   // past the capture->wash crossfade
+    {
+        diff0 = std::max (diff0, std::fabs (l[(size_t) i] - r[(size_t) i]));
+        level = std::max (level, std::fabs (l[(size_t) i]));
+    }
+    CHECK (diff0 == 0.0f);
+    CHECK (level > 0.1f);
+
+    // Width 1: the two phase streams are decorrelated, channels differ.
+    m.setWidth (1.0f);
+    std::fill (l.begin(), l.end(), 0.0f);
+    std::fill (r.begin(), r.end(), 0.0f);
+    m.process (ptrs, 2, N);
+    float diff1 = 0.0f;
+    for (int i = 0; i < N; ++i)
+        diff1 = std::max (diff1, std::fabs (l[(size_t) i] - r[(size_t) i]));
+    CHECK (diff1 > 0.01f);
+    return 0;
+}
+
+//==============================================================================
 static int testDelayLine()
 {
     fxme::DelayLine dl;
@@ -551,6 +596,10 @@ static int testOverrideParser()
     CHECK (ring.has_value());
     CHECK (near (ring->find (OvKey::Amp)->value, 0.7f, 1e-6));
 
+    auto frz = parseOverrides ("mix=0.8 width=0.25");
+    CHECK (frz.has_value());
+    CHECK (near (frz->find (OvKey::Width)->value, 0.25f, 1e-6));
+
     // mididur forms.
     auto md = parseOverrides ("dur=mididur");
     CHECK (md.has_value() && md->find (OvKey::Dur)->kind == Expr::MididurScaled);
@@ -617,6 +666,7 @@ int main()
     if (testBitCrusher())               return 1;
     if (testDownsampler())              return 1;
     if (testSpectralFreeze())           return 1;
+    if (testSpectralFreezeMulti())      return 1;
     if (testDelayLine())                return 1;
     if (testSaturator())                return 1;
     if (testGrainLooperAttack())        return 1;

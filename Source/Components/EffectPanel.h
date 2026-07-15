@@ -107,6 +107,7 @@ public:
 
             case EffectType::Freeze:
                 addKnob (prefix + "frz_mix", "Mix");
+                addKnob (prefix + "frz_width", "Width");
                 break;
         }
     }
@@ -207,7 +208,7 @@ private:
             case EffectType::Quantizer:  return "bits down mix";
             case EffectType::RingMod:    return "dur f0 f1 amp\n" + weights;
             case EffectType::Reverser:   return "dur fade mix\n" + weights;
-            case EffectType::Freeze:     return "mix";
+            case EffectType::Freeze:     return "mix width";
         }
         return {};
     }

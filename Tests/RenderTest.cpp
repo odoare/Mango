@@ -299,7 +299,54 @@ static void testFreeze()
     for (size_t i = 0; i < out.size(); ++i)
         md = std::max (md, std::abs (out[i] - out2[i]));
     CHECK (md == 0.0f);
-    std::printf ("freeze: wash rms = %.3f, decorrelation L1 = %.3f\n",
+
+    // Width: the L/R washes have independent phase streams; width=0 blends
+    // them to an identical mono pair, width=1 (default) leaves them apart.
+    auto renderStereo = [] (float width)
+    {
+        MangoAudioProcessor p;
+        setParam (p, "l0_type", 8.0f);
+        setParam (p, "l0_frz_width", width);
+        addFullBlock (p, 0);
+        p.prepareToPlay (kSampleRate, kBlockSize);
+
+        std::pair<std::vector<float>, std::vector<float>> lr;
+        juce::AudioBuffer<float> buffer (2, kBlockSize);
+        juce::MidiBuffer midi;
+        double phase = 0.0;
+        const double inc = 2.0 * juce::MathConstants<double>::pi * 440.0 / kSampleRate;
+        for (int b = 0; b < (int) std::ceil (0.3 * kSampleRate / kBlockSize); ++b)
+        {
+            for (int i = 0; i < kBlockSize; ++i)
+            {
+                const float s = (float) std::sin (phase);
+                phase += inc;
+                buffer.setSample (0, i, s);
+                buffer.setSample (1, i, s);
+            }
+            p.processBlock (buffer, midi);
+            for (int i = 0; i < kBlockSize; ++i)
+            {
+                lr.first.push_back (buffer.getSample (0, i));
+                lr.second.push_back (buffer.getSample (1, i));
+            }
+        }
+        return lr;
+    };
+
+    const auto mono = renderStereo (0.0f);
+    float lrDiff = 0.0f;
+    for (size_t i = 0; i < mono.first.size(); ++i)
+        lrDiff = std::max (lrDiff, std::abs (mono.first[i] - mono.second[i]));
+    CHECK (lrDiff < 1e-6f);
+
+    const auto wide = renderStereo (1.0f);
+    double lrL1 = 0.0;
+    for (size_t i = (size_t) (0.15 * kSampleRate); i < wide.first.size(); ++i)
+        lrL1 += std::abs ((double) wide.first[i] - (double) wide.second[i]);
+    CHECK (lrL1 > 1.0);
+
+    std::printf ("freeze: wash rms = %.3f, decorrelation L1 = %.3f, width ok\n",
                  rms, l1 / (double) (out.size() - i0));
 }
 

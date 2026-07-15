@@ -34,7 +34,7 @@ rel=0.5 acts as att=2/3, rel=1/3. The curves set the edge shapes: 0 slow,
 | Quant   | Lo-fi: bit-depth reduction + sample-rate reduction (raw sample & hold — the aliasing is the point) | bits (1–24), downsample (÷1–64), mix |
 | Ring    | Ring modulator: a sine carrier glides from a start to an end frequency over a drawn tempo-synced ramp, repeating for the block. Amount 0 = clean, 1 = full ring modulation (low frequencies give tremolo) | start/end freq (0.5 Hz–10 kHz), amount, glide probabilities |
 | Rev     | Reverser: chops the audio into drawn-duration slices and plays each backwards (the first slice of a block passes through — there is nothing to reverse yet) | slice probabilities, seam fade |
-| Freeze  | Spectral freeze (FFT): captures ~43 ms at block start (passed through while recording), then sustains its spectrum as a static, non-periodic wash for the rest of the block | mix |
+| Freeze  | Spectral freeze (FFT): captures ~43 ms at block start (passed through while recording), then sustains its spectrum as a static, non-periodic wash for the rest of the block. Width sets how similar L and R are (1 = fully decorrelated/wide, 0 = mono) | mix, width |
 
 **Mix**: every effect has a wet/dry mix knob (override key `mix`) — except the
 ring modulator, whose `amount` plays that role. At 0 the lane is transparent;
@@ -66,7 +66,7 @@ v0=a v1=u               formant glide from A to U
   eighth) resolved against the host tempo; any expression with `mididur` is a
   time in seconds (`mididur`, `mididur*2`, `mididur/4`, `3*mididur`).
 - Other keys are in the parameter's native unit:
-  `fb damp porta att rel attcurve relcurve q f0 f1 v0 v1 bits down drive bias sag mix model mode fade amp`
+  `fb damp porta att rel attcurve relcurve q f0 f1 v0 v1 bits down drive bias sag mix width model mode fade amp`
   and the duration probability weights `w4 w8 w16 w32 wstr wtrip wdot`
   (each effect reads the keys it understands).
 - **`mididur`** is 1/f of the last MIDI note-on the plugin received, sampled when
