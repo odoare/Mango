@@ -251,24 +251,33 @@ static int testSpectralFreezeMulti()
     std::fill (l.begin(), l.end(), 0.0f);
     std::fill (r.begin(), r.end(), 0.0f);
     m.process (ptrs, 2, N);
-    float diff0 = 0.0f, level = 0.0f;
+    float  diff0 = 0.0f, level = 0.0f;
+    double acc0 = 0.0;
     for (int i = N / 2; i < N; ++i)   // past the capture->wash crossfade
     {
         diff0 = std::max (diff0, std::fabs (l[(size_t) i] - r[(size_t) i]));
         level = std::max (level, std::fabs (l[(size_t) i]));
+        acc0 += (double) l[(size_t) i] * l[(size_t) i];
     }
     CHECK (diff0 == 0.0f);
     CHECK (level > 0.1f);
 
-    // Width 1: the two phase streams are decorrelated, channels differ.
+    // Width 1: the two phase streams are decorrelated, channels differ —
+    // and thanks to the equal-power blend the energy matches width 0.
     m.setWidth (1.0f);
     std::fill (l.begin(), l.end(), 0.0f);
     std::fill (r.begin(), r.end(), 0.0f);
     m.process (ptrs, 2, N);
-    float diff1 = 0.0f;
+    float  diff1 = 0.0f;
+    double acc1 = 0.0;
     for (int i = 0; i < N; ++i)
         diff1 = std::max (diff1, std::fabs (l[(size_t) i] - r[(size_t) i]));
+    for (int i = N / 2; i < N; ++i)
+        acc1 += (double) l[(size_t) i] * l[(size_t) i];
     CHECK (diff1 > 0.01f);
+
+    const double rmsRatio = std::sqrt (acc0 / acc1);
+    CHECK (rmsRatio > 0.7 && rmsRatio < 1.4);
     return 0;
 }
 

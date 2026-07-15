@@ -8,7 +8,8 @@
     records — then sustains its magnitude spectrum as a static,
     non-periodic wash for the rest of the block (random-phase resynthesis).
     Each channel gets its own phase stream; `width` blends the two wet
-    channels back together (1 = fully decorrelated/wide, 0 = mono). Blocks
+    channels back together with an equal-power law (1 = fully
+    decorrelated/wide, 0 = mono, constant energy across the sweep). Blocks
     shorter than the capture window just pass audio through.
 
     Determinism: the phase streams are keyed on (seed, lane, block,
