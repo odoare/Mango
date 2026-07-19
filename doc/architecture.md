@@ -252,6 +252,20 @@ and grid knobs in the top right, the lanes −/+ and routing-mode buttons in
 the bus bar); the same violet tints the backdrop gradient and draws the
 2 px separation line between the top bar and the controls.
 
+**Presets** (`fxme::PresetManager`, AmbiRR2 pattern): the processor owns
+the manager (user dir `.../Mango/Presets`, factory bank = BinaryData
+`*_xml` resources — none shipped yet). Because presets are the plain
+APVTS state and Mango's blocks are side state, the processor sets the
+manager's `onBeforeSave` / `onAfterLoad` hooks (a Mango-driven FxmeTools
+addition) to merge `MangoSeq` in before saving and rebuild the sequencers
+(+ grid + overrides + editor notify) after loading — without them presets
+would silently lose all blocks. GUI: `fxme::PresetBarComponent` + toggle
+parked in the top bar via `fxme::TopBar::setRightControls` (promoted from
+AmbiRR2's local TopBar), full `fxme::PresetComponent` in a PresetOverlay
+covering the right column when toggled. Caveat: block edits alone don't
+mark the preset dirty (the dirty tracker watches apvts.state, and blocks
+live outside it until save time).
+
 - `fxme::TopBar` (54 px, logo from BinaryData) · `fxme::FxmeLookAndFeel` ·
   `fxme::FxmeSlider` knobs (right-click value entry; styleKnob = dark disc +
   per-control accent).
@@ -325,6 +339,15 @@ umbrella `FxmeTools/FxmeTools.h` (module v0.0.3):
   same `instanceEnv()`** — without this the first grain of every block
   played unshaped (user-reported bug). First seam is sequential, not
   overlapped (documented one-off dip).
+- `presets/PresetManager.{h,cpp}` (pre-existing) gained the optional
+  `onBeforeSave` / `onAfterLoad` side-state hooks (both run with dirty
+  tracking suppressed): processors that keep non-parameter data outside
+  apvts.state (Mango's MangoSeq) merge it in before a preset save and
+  rebuild from it after a preset load.
+- `components/TopBar.h` gained `setRightControls(bar, w, button, w)`
+  (promoted from AmbiRR2's local TopBar): parks externally-owned controls
+  — the compact preset bar and its toggle — left of the version string,
+  keeping the blurb clear.
 - `midi/StringSequencer.h` gained `addBlockWithId` (id-stable restore) and
   `moveBlock` (whole-block move with walls).
 - `midi/SequencerEngine.h` gained `setEnterEmptyBlocks`, `relocate()` (always

@@ -64,6 +64,17 @@ public:
 
     mng::MangoEngine engine;
 
+    /** Factory (BinaryData *_xml) + user presets; the side-state hooks keep
+        the sequencer blocks (MangoSeq) inside preset files (see ctor). */
+    fxme::PresetManager presetManager {
+        apvts,
+        fxme::PresetManager::getDefaultUserPresetDirectory ("Mango"),
+        BinaryData::namedResourceList,
+        BinaryData::namedResourceListSize,
+        BinaryData::getNamedResource };
+
+    fxme::PresetManager& getPresetManager() noexcept { return presetManager; }
+
     // ---- message-thread helpers used by the editor ---------------------------
 
     /** Stores a block's override string (under the engine lock) and re-parses

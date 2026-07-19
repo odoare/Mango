@@ -27,6 +27,21 @@ MangoAudioProcessor::MangoAudioProcessor()
             apvts.addParameterListener (rp->paramID, this);
 
     applyGridFromParameters();
+
+    // Presets are the plain APVTS state, so the sequencer blocks (side
+    // state) are merged in before a save and rebuilt after a load — the
+    // same dance as get/setStateInformation.
+    presetManager.onBeforeSave = [this]
+    {
+        apvts.state.removeChild (apvts.state.getChildWithName ("MangoSeq"), nullptr);
+        apvts.state.appendChild (sequencersToTree(), nullptr);
+    };
+    presetManager.onAfterLoad = [this]
+    {
+        applyGridFromParameters();   // grid before blocks, so ranges are right
+        sequencersFromTree (apvts.state.getChildWithName ("MangoSeq"));
+        sendChangeMessage();         // editor: reload everything
+    };
 }
 
 MangoAudioProcessor::~MangoAudioProcessor()

@@ -84,6 +84,12 @@ and the lane count (1–8, default 4 — hidden lanes keep their blocks and
 settings and simply stop processing). The bus bar under the rack holds the
 lane-count − / + chooser above the routing-mode button, the routing diagram
 and the per-bus wet/pan knobs (shown for active buses only).
+
+**Presets**: the top bar hosts a compact preset strip (previous / name /
+next) and a toggle that expands the full browser over the right column —
+factory presets plus user presets saved as XML under the platform user-data
+folder (`.../Mango/Presets`). Presets carry the complete state, sequencer
+blocks and override strings included.
 Each lane header also has **M**ute and **S**olo toggles (muted / non-soloed
 lanes keep sequencing — draws stay deterministic — but stop processing audio)
 and the **B**us-start switch. Note that an idle bus passes its copy of the dry

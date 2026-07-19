@@ -23,6 +23,7 @@
 #include "Components/BusBar.h"
 #include "Components/EffectPanel.h"
 #include "Components/BlockTextPanel.h"
+#include "Components/PresetOverlay.h"
 
 //==============================================================================
 class MangoAudioProcessorEditor : public juce::AudioProcessorEditor,
@@ -48,13 +49,20 @@ private:
 
     fxme::FxmeLookAndFeel lnf;
 
-    fxme::TopBar topBar { "Mango", "modular sound glitcher",
+    fxme::TopBar topBar { "Mango", "modular sound glitcher/mangler",
                           JucePlugin_VersionString,
                           juce::ImageCache::getFromMemory (BinaryData::logo686_png,
                                                            BinaryData::logo686_pngSize) };
 
     mng::LaneRackComponent rack;
     mng::BusBar busBar;
+
+    // Presets: compact strip + toggle in the top bar, full browser over
+    // the right column when toggled.
+    fxme::PresetBarComponent presetBar { processor.getPresetManager() };
+    juce::TextButton presetToggle;
+    mng::PresetOverlay presetOverlay { processor.getPresetManager() };
+    juce::Rectangle<int> rightColumnBounds;
 
     // Right column: globals.
     fxme::FxmeSlider drywetKnob, seedKnob, stepsKnob;

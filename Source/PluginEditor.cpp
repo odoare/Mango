@@ -24,6 +24,29 @@ MangoAudioProcessorEditor::MangoAudioProcessorEditor (MangoAudioProcessor& p)
     addAndMakeVisible (rack);
     addAndMakeVisible (busBar);
 
+    // Presets: compact strip + toggle hosted by the top bar; the full
+    // browser sits (hidden) over the right column until toggled.
+    presetBar.setAccentColour (theme::globalAccent);
+    presetToggle.setClickingTogglesState (true);
+    presetToggle.setMouseClickGrabsKeyboardFocus (false);
+    presetToggle.setColour (juce::TextButton::buttonColourId,  juce::Colours::black.withAlpha (0.4f));
+    presetToggle.setColour (juce::TextButton::buttonOnColourId, juce::Colours::black.withAlpha (0.4f));
+    presetToggle.setColour (juce::TextButton::textColourOffId, theme::globalAccent.brighter (0.3f));
+    presetToggle.setColour (juce::TextButton::textColourOnId,  theme::globalAccent.brighter (0.6f));
+    presetToggle.setTooltip ("Show / hide the preset browser");
+    presetToggle.setButtonText (juce::String::fromUTF8 ("\xe2\x96\xbe"));   // down triangle
+    presetToggle.onClick = [this]
+    {
+        const bool show = presetToggle.getToggleState();
+        presetToggle.setButtonText (juce::String::fromUTF8 (show ? "\xe2\x96\xb4"    // up triangle
+                                                                 : "\xe2\x96\xbe")); // down triangle
+        presetOverlay.setVisible (show);
+        if (show)
+            presetOverlay.toFront (false);
+    };
+    topBar.setRightControls (&presetBar, 230, &presetToggle, 30);
+    addChildComponent (presetOverlay);   // shown on demand, over the right column
+
     // ---- globals -------------------------------------------------------------
     theme::styleKnob (drywetKnob, "Dry/Wet", theme::globalAccent);
     addAndMakeVisible (drywetKnob);
@@ -113,6 +136,8 @@ void MangoAudioProcessorEditor::resized()
     topBar.setBounds (r.removeFromTop (54));
 
     auto right = r.removeFromRight (320).reduced (10, 8);
+    rightColumnBounds = right;
+    presetOverlay.setBounds (rightColumnBounds);
 
     // Left: the lane rack with the bus routing strip below it.
     auto left = r;
