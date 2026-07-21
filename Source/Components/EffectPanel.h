@@ -120,6 +120,13 @@ public:
                 addKnob (prefix + "aux_relcurve", "Rel Curve");
                 addWeights (prefix + "aux_");
                 break;
+
+            case EffectType::Panner:
+                addCombo (prefix + "pan_mode", "Mode");
+                addKnob (prefix + "pan_glide", "Glide");
+                addKnob (prefix + "pan_mix", "Mix");
+                addWeights (prefix + "pan_");
+                break;
         }
     }
 
@@ -221,6 +228,7 @@ private:
             case EffectType::Reverser:   return "dur fade mix\n" + weights;
             case EffectType::Freeze:     return "mix width";
             case EffectType::AuxSend:    return "dur att rel attcurve relcurve aux1 aux2 pass\n" + weights;
+            case EffectType::Panner:     return "dur mode glide mix\n" + weights;
         }
         return {};
     }

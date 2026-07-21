@@ -24,6 +24,7 @@
 #include "../Theme.h"
 #include "../Dsp/DurationWeights.h"
 #include "BlockGraphics.h"
+#include "../Dsp/Effects/PannerEffect.h"   // panStateAt: the visual follows the DSP
 
 namespace mng
 {
@@ -465,6 +466,19 @@ private:
                                                ovOr (OvKey::Aux2, param ("aux_send2")));
                 blockgfx::paintSendEnv (g, r, blockBeats, s, send,
                                         ovOr (OvKey::Pass, param ("aux_pass")), curveColour);
+                break;
+            }
+
+            case EffectType::Panner:
+            {
+                const double step = juce::jmax (1.0e-3, ovDurBeats (drawnBeats ("pan_")));
+                const auto mode = (PanMode) juce::jlimit (0, 3,
+                    (int) ovOr (OvKey::Mode, param ("pan_mode")));
+                const auto seed = (uint64_t) (int64_t) apvts.getRawParameterValue (pid::seed)->load();
+                blockgfx::paintPanSteps (g, r, blockBeats, step,
+                                         ovOr (OvKey::Glide, param ("pan_glide")),
+                                         [&] (int64_t k) { return panStateAt (mode, seed, laneIndex, b.id, k); },
+                                         curveColour);
                 break;
             }
         }

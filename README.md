@@ -40,6 +40,7 @@ rel=0.5 acts as att=2/3, rel=1/3. The curves set the edge shapes: 0 slow,
 | Rev     | Reverser: chops the audio into drawn-duration slices and plays each backwards (the first slice of a block passes through — there is nothing to reverse yet) | slice probabilities, seam fade |
 | Freeze  | Spectral freeze (FFT): captures ~43 ms at block start (passed through while recording), then sustains its spectrum as a static, non-periodic wash for the rest of the block. Width sets how similar L and R are (1 = fully decorrelated/wide, 0 = mono; equal-power, so the level stays constant) | mix, width |
 | Aux     | Rhythmic aux send: the gater's envelope, but it *routes* rather than cuts — while the gate is open the shaped signal is added to the two aux outputs at their send levels, and the main path passes at a constant passthrough level (1 = transparent, a send on top; 0 = the block leaves the main chain entirely). Needs the aux outputs enabled in the host | aux 1 / aux 2 send, passthrough, attack/release lengths + curves, duration probabilities |
+| Pan     | Rhythmic panner: the gater's clock, but each step lands on one of three positions — hard left, centre, hard right — cycling rightwards (`->`), leftwards (`<-`), back and forth (`<->`, which turns round at the edges instead of jumping), or drawn per step from the seed. Glide sets how much of a step is spent travelling to the new position (0 clicks) | mode, glide, mix, duration probabilities |
 
 **Mix**: every effect has a wet/dry mix knob (override key `mix`) — except the
 ring modulator, whose `amount` plays that role, and the aux send, whose
@@ -47,7 +48,7 @@ ring modulator, whose `amount` plays that role, and the aux send, whose
 for the delay, mix scales the delayed signal added to the dry.
 
 **Duration probabilities**: effects that need a rhythmic duration (gate rate, grain
-length, filter ramp, ring glide, reverse slice, aux send rate) don't use a fixed value. You weight the probability of
+length, filter ramp, ring glide, reverse slice, aux send rate, pan step) don't use a fixed value. You weight the probability of
 1/4, 1/8, 1/16, 1/32 and of straight/triplet/dotted; the actual duration is
 drawn from those weights — e.g. with P(1/4)=1, P(1/8)=0.5, P(1/16)=0.1 the
 chance of an uncut quarter is 1/1.6. The draw is a pure function of
@@ -72,7 +73,7 @@ v0=a v1=u               formant glide from A to U
   eighth) resolved against the host tempo; any expression with `mididur` is a
   time in seconds (`mididur`, `mididur*2`, `mididur/4`, `3*mididur`).
 - Other keys are in the parameter's native unit:
-  `fb damp porta att rel attcurve relcurve q f0 f1 v0 v1 bits down drive bias sag gain mix width model mode fade amp aux1 aux2 pass`
+  `fb damp porta att rel attcurve relcurve q f0 f1 v0 v1 bits down drive bias sag gain mix width model mode fade amp aux1 aux2 pass glide`
   and the duration probability weights `w4 w8 w16 w32 wstr wtrip wdot`
   (each effect reads the keys it understands).
 - **`mididur`** is 1/f of the last MIDI note-on the plugin received, sampled when

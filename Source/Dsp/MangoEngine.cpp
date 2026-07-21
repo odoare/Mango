@@ -17,6 +17,7 @@
 #include "Effects/ReverserEffect.h"
 #include "Effects/FreezeEffect.h"
 #include "Effects/AuxSendEffect.h"
+#include "Effects/PannerEffect.h"
 
 namespace mng
 {
@@ -37,6 +38,7 @@ namespace
             case EffectType::Reverser:   return std::make_unique<ReverserEffect>();
             case EffectType::Freeze:     return std::make_unique<FreezeEffect>();
             case EffectType::AuxSend:    return std::make_unique<AuxSendEffect>();
+            case EffectType::Panner:     return std::make_unique<PannerEffect>();
         }
         return nullptr;
     }
@@ -56,6 +58,7 @@ namespace
             case EffectType::Reverser:   static_cast<ReverserEffect&>   (fx).bindParameters (apvts, prefix); break;
             case EffectType::Freeze:     static_cast<FreezeEffect&>     (fx).bindParameters (apvts, prefix); break;
             case EffectType::AuxSend:    static_cast<AuxSendEffect&>    (fx).bindParameters (apvts, prefix); break;
+            case EffectType::Panner:     static_cast<PannerEffect&>     (fx).bindParameters (apvts, prefix); break;
         }
     }
 }
@@ -112,6 +115,7 @@ void MangoEngine::addLaneParameters (std::vector<std::unique_ptr<juce::RangedAud
         ReverserEffect::addParameters   (params, prefix, nameP);
         FreezeEffect::addParameters     (params, prefix, nameP);
         AuxSendEffect::addParameters    (params, prefix, nameP);
+        PannerEffect::addParameters     (params, prefix, nameP);
     }
 }
 

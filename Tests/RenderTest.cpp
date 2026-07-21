@@ -19,6 +19,7 @@
 
 #include "../Source/PluginProcessor.h"
 #include "../Source/Components/EffectPanel.h"
+#include "../Source/Dsp/Effects/PannerEffect.h"
 #include <cstdio>
 #include <cmath>
 
@@ -476,6 +477,147 @@ static void testAuxSend()
         addFullBlock (q, 0);
         const auto out = render (q, 0.4);
         CHECK (std::abs (rmsOf (out, 0.05, 0.35) - 0.5f * dryRms) < 0.01f);
+    }
+}
+
+//==============================================================================
+/** Panner: three positions on the gater's clock. Checks the cycle order,
+    and that the Random mode's audible sequence is exactly what panStateAt
+    predicts — the invariant that keeps the block picture honest. */
+static void testPanner()
+{
+    // Renders `seconds` and returns the two channels separately.
+    auto renderStereo = [] (MangoAudioProcessor& p, double seconds)
+    {
+        p.prepareToPlay (kSampleRate, kBlockSize);
+
+        std::vector<float> l, rr;
+        juce::AudioBuffer<float> buffer (2, kBlockSize);
+        juce::MidiBuffer midi;
+
+        double phase = 0.0;
+        const double inc = 2.0 * juce::MathConstants<double>::pi * 440.0 / kSampleRate;
+        const int numBlocks = (int) std::ceil (seconds * kSampleRate / kBlockSize);
+
+        for (int b = 0; b < numBlocks; ++b)
+        {
+            for (int i = 0; i < kBlockSize; ++i)
+            {
+                const float s = (float) std::sin (phase);
+                phase += inc;
+                buffer.setSample (0, i, s);
+                buffer.setSample (1, i, s);
+            }
+            p.processBlock (buffer, midi);
+            for (int i = 0; i < kBlockSize; ++i)
+            {
+                l.push_back (buffer.getSample (0, i));
+                rr.push_back (buffer.getSample (1, i));
+            }
+        }
+        return std::make_pair (l, rr);
+    };
+
+    const float dryRms = 1.0f / std::sqrt (2.0f);
+
+    // Cycle: left, centre, right on successive 1-beat steps (0.5 s at the
+    // 120 bpm free-run).
+    {
+        MangoAudioProcessor p;
+        setParam (p, "l0_type", 10.0f);        // Panner
+        setParam (p, "l0_pan_mode", 0.0f);     // Cycle ->
+        setParam (p, "l0_pan_glide", 0.0f);    // hard steps: exact levels
+        addFullBlock (p, 0);
+
+        const auto [l, r] = renderStereo (p, 1.5);
+
+        CHECK (std::abs (rmsOf (l, 0.05, 0.45) - dryRms) < 0.01f);   // step 0: hard left
+        CHECK (rmsOf (r, 0.05, 0.45) < 0.001f);
+        CHECK (std::abs (rmsOf (l, 0.55, 0.95) - dryRms) < 0.01f);   // step 1: centre
+        CHECK (std::abs (rmsOf (r, 0.55, 0.95) - dryRms) < 0.01f);
+        CHECK (rmsOf (l, 1.05, 1.45) < 0.001f);                      // step 2: hard right
+        CHECK (std::abs (rmsOf (r, 1.05, 1.45) - dryRms) < 0.01f);
+
+        std::printf ("panner cycle: L %.3f %.3f %.4f / R %.4f %.3f %.3f\n",
+                     rmsOf (l, 0.05, 0.45), rmsOf (l, 0.55, 0.95), rmsOf (l, 1.05, 1.45),
+                     rmsOf (r, 0.05, 0.45), rmsOf (r, 0.55, 0.95), rmsOf (r, 1.05, 1.45));
+    }
+
+    // Cycle <->: left, centre, right, centre — it turns round rather than
+    // jumping back across the image.
+    {
+        MangoAudioProcessor p;
+        setParam (p, "l0_type", 10.0f);
+        setParam (p, "l0_pan_mode", 2.0f);     // Cycle <->
+        setParam (p, "l0_pan_glide", 0.0f);
+        addFullBlock (p, 0);
+
+        const auto [l, r] = renderStereo (p, 2.0);
+        const float want[4][2] = { { 1.0f, 0.0f }, { 1.0f, 1.0f },
+                                   { 0.0f, 1.0f }, { 1.0f, 1.0f } };
+        bool ok = true;
+        for (int step = 0; step < 4; ++step)
+        {
+            const double t0 = 0.5 * step + 0.05, t1 = 0.5 * (step + 1) - 0.05;
+            ok = ok && std::abs (rmsOf (l, t0, t1) - want[step][0] * dryRms) < 0.01f
+                    && std::abs (rmsOf (r, t0, t1) - want[step][1] * dryRms) < 0.01f;
+        }
+        CHECK (ok);
+    }
+
+    // Cycle <- is the mirror of Cycle ->: same sequence, channels swapped.
+    {
+        for (int step = 0; step < 6; ++step)
+            CHECK (mng::panStateAt (mng::PanMode::CycleLeft, 0, 0, 0, step)
+                   == -mng::panStateAt (mng::PanMode::CycleRight, 0, 0, 0, step));
+    }
+
+    // Random: the audible balance of every step must match panStateAt, the
+    // same function the block visual draws from.
+    {
+        MangoAudioProcessor p;
+        setParam (p, "l0_type", 10.0f);
+        setParam (p, "l0_pan_mode", 3.0f);     // Random
+        setParam (p, "l0_pan_glide", 0.0f);
+        setParam (p, "seed", 4242.0f);
+        const int blockId = addFullBlock (p, 0);
+
+        const auto [l, r] = renderStereo (p, 2.0);
+
+        bool allMatch = true;
+        for (int step = 0; step < 4; ++step)
+        {
+            const float pan = mng::panStateAt (mng::PanMode::Random, 4242, 0, blockId, step);
+            const float t0 = 0.5 * step + 0.05, t1 = 0.5 * (step + 1) - 0.05;
+            const float wantL = (pan > 0.0f ? 1.0f - pan : 1.0f) * dryRms;
+            const float wantR = (pan < 0.0f ? 1.0f + pan : 1.0f) * dryRms;
+
+            allMatch = allMatch && std::abs (rmsOf (l, t0, t1) - wantL) < 0.01f
+                                && std::abs (rmsOf (r, t0, t1) - wantR) < 0.01f;
+        }
+        CHECK (allMatch);
+
+        // ...and the draws really do wander over all three positions (a
+        // constant sequence would satisfy the match check above).
+        bool seen[3] = {};
+        for (int step = 0; step < 60; ++step)
+        {
+            const float pan = mng::panStateAt (mng::PanMode::Random, 4242, 0, blockId, step);
+            seen[pan < -0.5f ? 0 : (pan > 0.5f ? 2 : 1)] = true;
+        }
+        CHECK (seen[0] && seen[1] && seen[2]);
+        std::printf ("panner random: sequence matches panStateAt\n");
+    }
+
+    // Mix at 0 is transparent, whatever the position.
+    {
+        MangoAudioProcessor p;
+        setParam (p, "l0_type", 10.0f);
+        setParam (p, "l0_pan_mix", 0.0f);
+        addFullBlock (p, 0);
+        const auto [l, r] = renderStereo (p, 0.6);
+        CHECK (std::abs (rmsOf (l, 0.05, 0.55) - dryRms) < 0.001f);
+        CHECK (std::abs (rmsOf (r, 0.05, 0.55) - dryRms) < 0.001f);
     }
 }
 
@@ -1134,6 +1276,7 @@ int main (int argc, char* argv[])
     testFreeze();
     testBuses();
     testAuxSend();
+    testPanner();
     testBusModes();
     testEffectMix();
     testConfigBank();

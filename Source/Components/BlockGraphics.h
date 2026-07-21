@@ -22,6 +22,8 @@
       AuxSend    the gate envelope filled (what leaves for the aux buses)
                  under a dashed line at the passthrough level (what carries
                  on down the main path)
+      Panner     the stepped pan position (upper = left, centre, lower =
+                 right) with its glide ramps, following the actual sequence
 
     Everything is drawn in *beats*: durations drawn from the probability
     weights are in beats, and the block's width maps linearly onto its
@@ -37,6 +39,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include <functional>
 
 namespace mng::blockgfx
 {
@@ -301,6 +304,48 @@ inline void paintSendEnv (juce::Graphics& g, juce::Rectangle<float> r,
     const float y = bottom - juce::jlimit (0.0f, 1.0f, passLevel) * (bottom - top);
     g.setColour (colour.withMultipliedAlpha (0.75f));
     g.drawDashedLine (juce::Line<float> (r.getX(), y, r.getRight(), y), dashes, 2, 1.2f);
+}
+
+/** Panner: the stepped pan position across the block — upper edge = hard
+    left, centre line = centred, lower edge = hard right — with the glide
+    ramps drawn as they sound. `stateAt(step)` must be the effect's own
+    panStateAt, so the picture follows the actual (cycled or drawn)
+    sequence. Faint guides mark the three positions. */
+inline void paintPanSteps (juce::Graphics& g, juce::Rectangle<float> r,
+                           double blockBeats, double stepBeats, float glideFrac,
+                           const std::function<float (int64_t)>& stateAt,
+                           juce::Colour colour)
+{
+    if (r.getWidth() < 4.0f || blockBeats <= 0.0 || stepBeats <= 1.0e-6)
+        return;
+
+    const float top = r.getY() + 2.0f, bottom = r.getBottom() - 2.0f;
+    const float mid = 0.5f * (top + bottom), half = 0.5f * (bottom - top);
+
+    g.setColour (colour.withMultipliedAlpha (0.2f));
+    for (const float y : { top, mid, bottom })
+        g.drawLine (r.getX(), y, r.getRight(), y, 1.0f);
+
+    const float glide = juce::jlimit (0.0f, 1.0f, glideFrac);
+    const int   n     = (int) r.getWidth();
+
+    juce::Path p;
+    for (int x = 0; x <= n; ++x)
+    {
+        const double t         = blockBeats * x / r.getWidth();
+        const auto   step      = (int64_t) std::floor (t / stepBeats);
+        const double posInStep = (t - (double) step * stepBeats) / stepBeats;
+
+        const float from = stateAt (step > 0 ? step - 1 : 0);
+        const float to   = stateAt (step);
+        const float k    = glide > 0.0f ? (float) juce::jmin (1.0, posInStep / glide) : 1.0f;
+        const float y    = mid + (from + (to - from) * k) * half;
+
+        if (x == 0) p.startNewSubPath (r.getX(), y);
+        else        p.lineTo (r.getX() + (float) x, y);
+    }
+    g.setColour (colour);
+    g.strokePath (p, juce::PathStrokeType (1.6f));
 }
 
 } // namespace mng::blockgfx

@@ -68,6 +68,7 @@ enum class OvKey
     Dur = 0, Fb, Damp, Porta, Att, Rel, AttCurve, RelCurve, Q, F0, F1, V0, V1,
     Bits, Down, Drive, Bias, Sag, Mix, Model, Mode, Fade, Amp, Width, Gain,
     Aux1, Aux2, Pass,                      // aux send levels + main passthrough
+    Glide,                                 // panner: move time between positions
     W4, W8, W16, W32, Wstr, Wtrip, Wdot,   // duration probability weights
     Count
 };
@@ -102,7 +103,7 @@ namespace detail
     inline const char* keyNames[(int) OvKey::Count] = {
         "dur", "fb", "damp", "porta", "att", "rel", "attcurve", "relcurve", "q", "f0", "f1", "v0", "v1",
         "bits", "down", "drive", "bias", "sag", "mix", "model", "mode", "fade", "amp", "width", "gain",
-        "aux1", "aux2", "pass",
+        "aux1", "aux2", "pass", "glide",
         "w4", "w8", "w16", "w32", "wstr", "wtrip", "wdot"
     };
 
