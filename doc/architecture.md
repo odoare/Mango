@@ -151,6 +151,16 @@ GUI; a mode needing more buses than exist falls back to parallel):
     present, stays parallel from the plugin input.
   - 2 (needs 4 buses): buses 1–3 parallel feeders → bus 4 processes their
     mix; the output is bus 4 alone.
+  - 3 (needs 4 buses) **diamond**: bus 1 processes the input, its output
+    feeds buses 2 and 3 in parallel, and *their* mix feeds bus 4, which
+    alone reaches the output. Two chained stages, so it needs a second
+    intermediate buffer (`stageBuffer` holds bus 1's output while
+    `feedBuffer` accumulates 2+3).
+  - 4 (needs ≥2 buses) **fan-out**: bus 1 is a common front end whose
+    output feeds every remaining bus in parallel; those are summed and bus
+    1 is not heard directly. The only mode that *degrades* rather than
+    falling back — with three buses it fans out to two, with two it is a
+    plain 1 → 2 series.
 
 **Aux outputs**: the processor declares two extra stereo output buses,
 "Aux 1" and "Aux 2", **disabled by default** so a host (or the standalone

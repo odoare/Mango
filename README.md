@@ -11,10 +11,14 @@ arrows on the left. Lanes group into up to **four buses**: the **B** switch on
 a lane header starts a new bus at that row (row 1 always starts bus 1). Each
 bus runs its lanes in series and has its own **wet** and **pan** controls in
 the bus bar under the rack, which also shows the routing diagram and cycles
-between three **routing modes**: all buses parallel (each processes its own
-copy of the input, outputs summed), bus 3 processing the mixed outputs of
-buses 1+2 (bus 4 parallel), or bus 4 processing the mixed outputs of buses
-1–3. A mode that needs more buses than exist falls back to parallel. Lane
+between five **routing modes**: all buses parallel (each processes its own
+copy of the input, outputs summed); bus 3 processing the mixed outputs of
+buses 1+2 (bus 4 parallel); bus 4 processing the mixed outputs of buses
+1–3; a **diamond**, where bus 1 splits into buses 2 and 3 and their mix
+feeds bus 4; and a **fan-out**, where bus 1 is a common front end feeding
+every remaining bus in parallel. A mode that needs more buses than exist
+falls back to parallel — except the fan-out, which simply fans out to
+however many buses there are. Lane
 colours show the bus a lane belongs to; within a bus, each following lane is
 shaded a little lighter. All randomness is seeded and reproducible: the same
 session with the same seed always glitches the same way, in real time and

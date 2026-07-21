@@ -3,7 +3,7 @@
     BusBar.h
 
     The bus routing strip under the lane rack: the lane-count −/+ chooser
-    stacked above a button cycling the three `busmode` configurations, a
+    stacked above a button cycling the `busmode` configurations, a
     small diagram of the active buses in the current routing (numbered
     boxes in the bus colours, with feed lines in the serial modes), and a
     wet + pan knob pair per active bus. The diagram shows the *effective*
@@ -54,7 +54,8 @@ public:
             if (auto* param = processor.apvts.getParameter (pid::busmode))
             {
                 param->beginChangeGesture();
-                param->setValueNotifyingHost (param->convertTo0to1 ((float) ((chosenMode + 1) % 3)));
+                param->setValueNotifyingHost (
+                    param->convertTo0to1 ((float) ((chosenMode + 1) % numBusModes)));
                 param->endChangeGesture();
             }
         };
@@ -148,8 +149,9 @@ private:
 
         busCount   = count;
         chosenMode = mode;
-        static const char* names[] = { "parallel", "3 < 1+2", "4 < 1-3" };
-        modeButton.setButtonText (names[juce::jlimit (0, 2, chosenMode)]);
+        static const char* names[numBusModes] = { "parallel", "3 < 1+2", "4 < 1-3",
+                                                 "1>2,3>4", "1>2,3,4" };
+        modeButton.setButtonText (names[juce::jlimit (0, numBusModes - 1, chosenMode)]);
         for (int b = 0; b < numBuses; ++b)
         {
             groups[(size_t) b].wet.setVisible (b < busCount);
@@ -169,41 +171,109 @@ private:
         g.drawText (juce::String (bus + 1), r, juce::Justification::centred);
     }
 
+    /** A routing drawn as rows of boxes: every box in a row feeds every box
+        in the row below it. That one rule covers all the topologies —
+        parallel is a single row, the diamond is three — leaving only mode
+        1's unconnected bus 4 as a special case (`parallelBus`, parked at
+        the end of the top row with no feed line). */
+    struct Layout
+    {
+        int rows = 0;
+        int count[3] {};
+        int bus[3][numBuses] {};
+        int parallelBus = -1;
+    };
+
+    static Layout layoutFor (int effective, int busCount)
+    {
+        Layout l;
+        auto row = [&l] (std::initializer_list<int> buses)
+        {
+            const int r = l.rows++;
+            for (int b : buses)
+                l.bus[r][l.count[r]++] = b;
+        };
+
+        switch (effective)
+        {
+            case 1:
+                row ({ 0, 1 });
+                row ({ 2 });
+                if (busCount >= 4)
+                    l.parallelBus = 3;
+                break;
+
+            case 2:
+                row ({ 0, 1, 2 });
+                row ({ 3 });
+                break;
+
+            case 3:
+                row ({ 0 });
+                row ({ 1, 2 });
+                row ({ 3 });
+                break;
+
+            case 4:
+            {
+                row ({ 0 });
+                const int r = l.rows++;
+                for (int b = 1; b < busCount; ++b)
+                    l.bus[r][l.count[r]++] = b;
+                break;
+            }
+
+            default:
+            {
+                const int r = l.rows++;
+                for (int b = 0; b < busCount; ++b)
+                    l.bus[r][l.count[r]++] = b;
+                break;
+            }
+        }
+        return l;
+    }
+
     void paintDiagram (juce::Graphics& g, juce::Rectangle<float> area) const
     {
-        const int effective = effectiveBusMode (chosenMode, busCount);
-        const float cx = area.getCentreX();
-
-        if (effective == 0)
-        {
-            const float w = (float) busCount * kStep - (kStep - kBox);
-            for (int b = 0; b < busCount; ++b)
-                paintBox (g, { cx - w / 2 + kBox / 2 + (float) b * kStep, area.getCentreY() }, b);
+        const auto l = layoutFor (effectiveBusMode (chosenMode, busCount), busCount);
+        if (l.rows < 1)
             return;
-        }
 
-        // Serial modes: the feeders (plus a parallel bus 4 in mode 1) on
-        // top, the post bus below, feed lines in between.
-        const int   numFeeders = effective == 1 ? 2 : 3;
-        const int   topCount   = numFeeders + (effective == 1 && busCount >= 4 ? 1 : 0);
+        const float cx   = area.getCentreX();
         const float yTop = area.getY() + kBox / 2 + 2.0f;
         const float yBot = area.getBottom() - kBox / 2 - 2.0f;
-        const float w    = (float) topCount * kStep - (kStep - kBox);
-        const float x0   = cx - w / 2 + kBox / 2;
 
-        auto topCentre = [&] (int i) { return juce::Point<float> (x0 + (float) i * kStep, yTop); };
-        const float feedersMidX = x0 + (float) (numFeeders - 1) * kStep / 2;
-        const juce::Point<float> post (feedersMidX, yBot);
+        auto rowY = [&] (int r)
+        {
+            return l.rows < 2 ? area.getCentreY()
+                              : yTop + (yBot - yTop) * (float) r / (float) (l.rows - 1);
+        };
 
+        // Row 0 also carries mode 1's unconnected bus, so it is laid out (and
+        // centred) as one box wider than it has feeders.
+        auto boxesInRow = [&] (int r) { return l.count[r] + (r == 0 && l.parallelBus >= 0 ? 1 : 0); };
+
+        auto centreOf = [&] (int r, int i)
+        {
+            const float w = (float) boxesInRow (r) * kStep - (kStep - kBox);
+            return juce::Point<float> (cx - w / 2 + kBox / 2 + (float) i * kStep, rowY (r));
+        };
+
+        // Feed lines first, so the boxes sit on top of them.
         g.setColour (theme::dimText);
-        for (int i = 0; i < numFeeders; ++i)
-            g.drawLine ({ topCentre (i).translated (0.0f, kBox / 2), post.translated (0.0f, -kBox / 2) }, 1.2f);
+        for (int r = 0; r + 1 < l.rows; ++r)
+            for (int i = 0; i < l.count[r]; ++i)
+                for (int j = 0; j < l.count[r + 1]; ++j)
+                    g.drawLine ({ centreOf (r, i).translated (0.0f, kBox / 2),
+                                  centreOf (r + 1, j).translated (0.0f, -kBox / 2) }, 1.2f);
 
-        for (int i = 0; i < numFeeders; ++i)
-            paintBox (g, topCentre (i), i);
-        if (effective == 1 && busCount >= 4)
-            paintBox (g, topCentre (numFeeders), 3);   // bus 4 stays parallel
-        paintBox (g, post, numFeeders);                // the post bus
+        for (int r = 0; r < l.rows; ++r)
+            for (int i = 0; i < l.count[r]; ++i)
+                paintBox (g, centreOf (r, i), l.bus[r][i]);
+
+        if (l.parallelBus >= 0)
+            paintBox (g, centreOf (0, l.count[0]), l.parallelBus);
     }
 
     struct Group

@@ -31,15 +31,29 @@ namespace mng
         effectiveBusMode). */
     inline constexpr int numBuses = 4;
 
-    /** Bus routing modes (`busmode`): 0 = all buses parallel; 1 = bus 3
-        processes the mixed outputs of buses 1+2 (bus 4, if present, stays
-        parallel); 2 = bus 4 processes the mixed outputs of buses 1–3.
+    /** Bus routing modes (`busmode`):
+
+          0  all buses parallel from the input, outputs summed.
+          1  bus 3 processes the mixed outputs of buses 1+2; bus 4, if
+             present, stays parallel from the input.        (needs >= 3)
+          2  bus 4 processes the mixed outputs of buses 1-3. (needs 4)
+          3  diamond: bus 1 feeds buses 2 and 3 in parallel, and their mix
+             feeds bus 4.                                    (needs 4)
+          4  fan-out: bus 1 feeds every remaining bus in parallel, their
+             outputs summed.                                 (needs >= 2)
+
         A mode needing more buses than exist falls back to parallel — this
-        helper applies that rule (used by the engine and the GUI). */
+        helper applies that rule (used by the engine and the GUI). Mode 4 is
+        the exception that degrades rather than falls back: with three buses
+        it fans out to two, with two it is a plain 1 -> 2 series. */
+    inline constexpr int numBusModes = 5;
+
     inline int effectiveBusMode (int mode, int busCount) noexcept
     {
         if (mode == 1 && busCount >= 3) return 1;
         if (mode == 2 && busCount >= 4) return 2;
+        if (mode == 3 && busCount >= 4) return 3;
+        if (mode == 4 && busCount >= 2) return 4;
         return 0;
     }
 

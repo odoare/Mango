@@ -211,7 +211,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout MangoAudioProcessor::createP
 
     params.push_back (std::make_unique<juce::AudioParameterChoice> (
         pid::busmode, "Bus Routing",
-        juce::StringArray { "Parallel", "3 after 1+2", "4 after 1-3" }, 0));
+        juce::StringArray { "Parallel", "3 after 1+2", "4 after 1-3",
+                            "Diamond 1>2,3>4", "Fan-out 1>2,3,4" }, 0));
 
     // The config bank's only parameter: which slot is active. The configs
     // themselves live in the state tree (see the bank helpers below).

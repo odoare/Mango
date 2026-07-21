@@ -686,6 +686,101 @@ static void testBusModes()
         CHECK (peak > 1.5f);
     }
 
+    // Mode 3, the diamond: bus 1 -> buses 2 and 3 -> bus 4. With every bus
+    // idle each just passes what it is fed, so the split-and-remix doubles
+    // the input exactly — and nothing else: parallel would give 4x, modes 1
+    // and 2 give 3x.
+    {
+        MangoAudioProcessor p;
+        setParam (p, "l1_busstart", 1.0f);
+        setParam (p, "l2_busstart", 1.0f);
+        setParam (p, "l3_busstart", 1.0f);
+        setParam (p, "busmode", 3.0f);
+        const auto out = render (p, 0.2);
+        const auto in  = makeInput (out.size());
+        float maxDiff = 0.0f;
+        for (size_t i = 0; i < out.size(); ++i)
+            maxDiff = std::max (maxDiff, std::abs (out[i] - 2.0f * in[i]));
+        CHECK (maxDiff < 1e-6f);
+    }
+
+    // ...and bus 4 really sees the *mix* of 2 and 3: a 1-bit quantizer there
+    // is handed 2x the input, so the output is integers reaching +-2.
+    {
+        MangoAudioProcessor p;
+        setParam (p, "l1_busstart", 1.0f);
+        setParam (p, "l2_busstart", 1.0f);
+        setParam (p, "l3_busstart", 1.0f);
+        setParam (p, "busmode", 3.0f);
+        setParam (p, "l3_type", 5.0f);           // Quantizer on the tail bus
+        setParam (p, "l3_qnt_bits", 1.0f);
+        addFullBlock (p, 3);
+        const auto out = render (p, 0.4);
+        bool integers = true;
+        float peak = 0.0f;
+        for (size_t i = (size_t) (0.05 * kSampleRate); i < out.size(); ++i)
+        {
+            integers = integers && std::abs (out[i] - std::round (out[i])) < 1e-4f;
+            peak = std::max (peak, std::abs (out[i]));
+        }
+        CHECK (integers);
+        CHECK (peak > 1.5f);
+        CHECK (peak < 2.5f);                     // not the 3x of modes 1/2
+    }
+
+    // Mode 4, the fan-out: bus 1 is the common front end for buses 2-4. A
+    // 1-bit quantizer on bus 1 means all three tails carry the same -1/0/+1,
+    // so the sum only ever lands on -3, 0 or +3. Parallel routing would put
+    // the clean input alongside it and break that.
+    {
+        MangoAudioProcessor p;
+        setParam (p, "l1_busstart", 1.0f);
+        setParam (p, "l2_busstart", 1.0f);
+        setParam (p, "l3_busstart", 1.0f);
+        setParam (p, "busmode", 4.0f);
+        setParam (p, "l0_type", 5.0f);           // Quantizer on the head bus
+        setParam (p, "l0_qnt_bits", 1.0f);
+        addFullBlock (p, 0);
+        const auto out = render (p, 0.4);
+        bool tripled = true;
+        for (size_t i = (size_t) (0.05 * kSampleRate); i < out.size(); ++i)
+        {
+            const float v = std::abs (out[i]);
+            tripled = tripled && (v < 1e-4f || std::abs (v - 3.0f) < 1e-4f);
+        }
+        CHECK (tripled);
+    }
+
+    // Fan-out degrades instead of falling back: with only two buses it is a
+    // plain 1 -> 2 series, so two idle buses pass the input once (parallel
+    // would double it).
+    {
+        MangoAudioProcessor p;
+        setParam (p, "l1_busstart", 1.0f);       // two buses only
+        setParam (p, "busmode", 4.0f);
+        const auto out = render (p, 0.2);
+        const auto in  = makeInput (out.size());
+        float maxDiff = 0.0f;
+        for (size_t i = 0; i < out.size(); ++i)
+            maxDiff = std::max (maxDiff, std::abs (out[i] - in[i]));
+        CHECK (maxDiff < 1e-6f);
+    }
+
+    // The diamond needs all four buses; with three it falls back to
+    // parallel, which passes three idle copies.
+    {
+        MangoAudioProcessor p;
+        setParam (p, "l1_busstart", 1.0f);
+        setParam (p, "l2_busstart", 1.0f);
+        setParam (p, "busmode", 3.0f);
+        const auto out = render (p, 0.2);
+        const auto in  = makeInput (out.size());
+        float maxDiff = 0.0f;
+        for (size_t i = 0; i < out.size(); ++i)
+            maxDiff = std::max (maxDiff, std::abs (out[i] - 3.0f * in[i]));
+        CHECK (maxDiff < 1e-6f);
+    }
+
     // Per-bus wet at 0 bypasses everything the bus does...
     {
         MangoAudioProcessor p;

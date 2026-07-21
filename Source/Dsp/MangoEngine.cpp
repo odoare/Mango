@@ -150,6 +150,7 @@ void MangoEngine::prepare (double sr, int maxBlockSize, int numChannels)
     dryBuffer.setSize (juce::jmax (1, numChannels), maxBlockSize);
     busBuffer.setSize (juce::jmax (1, numChannels), maxBlockSize);
     feedBuffer.setSize (juce::jmax (1, numChannels), maxBlockSize);
+    stageBuffer.setSize (juce::jmax (1, numChannels), maxBlockSize);
     absoluteBeats = 0.0;
 
     const juce::ScopedLock sl (seqLock);
@@ -472,6 +473,20 @@ void MangoEngine::process (juce::AudioBuffer<float>& buffer,
             dest.addFrom (ch, offset, busBuffer, ch, offset, n);
     };
 
+    // The bus just processed becomes the source for the ones it feeds
+    // (busBuffer is reused by the very next processBus call).
+    auto holdBus = [&] (juce::AudioBuffer<float>& dest, int offset, int n)
+    {
+        for (int ch = 0; ch < numChannels; ++ch)
+            dest.copyFrom (ch, offset, busBuffer, ch, offset, n);
+    };
+
+    auto clearRange = [&] (juce::AudioBuffer<float>& dest, int offset, int n)
+    {
+        for (int ch = 0; ch < numChannels; ++ch)
+            dest.clear (ch, offset, n);
+    };
+
     for (int offset = 0; offset < numSamples; offset += kChunk)
     {
         const int    n     = juce::jmin (kChunk, numSamples - offset);
@@ -491,33 +506,69 @@ void MangoEngine::process (juce::AudioBuffer<float>& buffer,
         for (int ch = 0; ch < numChannels; ++ch)
             buffer.clear (ch, offset, n);
 
-        if (busMode == 0)
+        switch (busMode)
         {
-            for (int bus = 0; bus < busCount; ++bus)
+            case 1:
+            case 2:
             {
-                processBus (bus, dryBuffer, offset, n);
+                // Feeders in parallel from the input, their mix into the
+                // next bus, which alone reaches the output.
+                const int numFeeders = busMode == 1 ? 2 : 3;
+                clearRange (feedBuffer, offset, n);
+                for (int bus = 0; bus < numFeeders; ++bus)
+                {
+                    processBus (bus, dryBuffer, offset, n);
+                    addBus (feedBuffer, offset, n);
+                }
+                processBus (numFeeders, feedBuffer, offset, n);
                 addBus (buffer, offset, n);
-            }
-        }
-        else
-        {
-            const int numFeeders = busMode == 1 ? 2 : 3;   // feeders -> post bus
-            for (int ch = 0; ch < numChannels; ++ch)
-                feedBuffer.clear (ch, offset, n);
-            for (int bus = 0; bus < numFeeders; ++bus)
-            {
-                processBus (bus, dryBuffer, offset, n);
-                addBus (feedBuffer, offset, n);
-            }
-            processBus (numFeeders, feedBuffer, offset, n);
-            addBus (buffer, offset, n);
 
-            // Mode 1 with four buses: bus 4 stays parallel from the input.
-            for (int bus = numFeeders + 1; bus < busCount; ++bus)
-            {
-                processBus (bus, dryBuffer, offset, n);
-                addBus (buffer, offset, n);
+                // Mode 1 with four buses: bus 4 stays parallel from the input.
+                for (int bus = numFeeders + 1; bus < busCount; ++bus)
+                {
+                    processBus (bus, dryBuffer, offset, n);
+                    addBus (buffer, offset, n);
+                }
+                break;
             }
+
+            case 3:
+                // Diamond: bus 1 splits into buses 2 and 3, whose mix feeds
+                // bus 4 — the only one reaching the output.
+                processBus (0, dryBuffer, offset, n);
+                holdBus (stageBuffer, offset, n);
+
+                clearRange (feedBuffer, offset, n);
+                for (int bus = 1; bus <= 2; ++bus)
+                {
+                    processBus (bus, stageBuffer, offset, n);
+                    addBus (feedBuffer, offset, n);
+                }
+                processBus (3, feedBuffer, offset, n);
+                addBus (buffer, offset, n);
+                break;
+
+            case 4:
+                // Fan-out: bus 1 feeds every remaining bus in parallel and
+                // their outputs are summed (bus 1 itself is not heard
+                // directly — it is the common front end).
+                processBus (0, dryBuffer, offset, n);
+                holdBus (stageBuffer, offset, n);
+
+                for (int bus = 1; bus < busCount; ++bus)
+                {
+                    processBus (bus, stageBuffer, offset, n);
+                    addBus (buffer, offset, n);
+                }
+                break;
+
+            default:   // 0: every bus parallel from the input
+                for (int bus = 0; bus < busCount; ++bus)
+                {
+                    processBus (bus, dryBuffer, offset, n);
+                    addBus (buffer, offset, n);
+                }
+                break;
         }
 
         absoluteBeats += delta;
