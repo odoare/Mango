@@ -9,6 +9,9 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 #include "ParamIDs.h"
+#include <cstring>
+#include <functional>
+#include <string>
 
 using namespace mng;
 
@@ -40,6 +43,14 @@ MangoAudioProcessor::MangoAudioProcessor()
     {
         applyGridFromParameters();   // grid before blocks, so ranges are right
         sequencersFromTree (apvts.state.getChildWithName ("MangoSeq"));
+
+        // replaceState moved the config selector, which queued a recall:
+        // cancel it, or the preset's live setup would be overwritten by
+        // its own stored config.
+        pendingRecall.store (-1);
+        armedSlot = -1;
+        noteConfigApplied (activeConfig());
+
         sendChangeMessage();         // editor: reload everything
     };
 }
@@ -130,6 +141,14 @@ juce::AudioProcessorValueTreeState::ParameterLayout MangoAudioProcessor::createP
     params.push_back (std::make_unique<juce::AudioParameterChoice> (
         pid::busmode, "Bus Routing",
         juce::StringArray { "Parallel", "3 after 1+2", "4 after 1-3" }, 0));
+
+    // The config bank's only parameter: which slot is active. The configs
+    // themselves live in the state tree (see the bank helpers below).
+    params.push_back (std::make_unique<juce::AudioParameterInt> (
+        pid::config, "Config", 1, numConfigs, 1));
+    params.push_back (std::make_unique<juce::AudioParameterChoice> (
+        pid::configsync, "Config Recall",
+        juce::StringArray { "Immediate", "Next bar", "Next pattern" }, 0));
     for (int b = 0; b < numBuses; ++b)
     {
         const auto nameP = "Bus " + juce::String (b + 1) + " ";
@@ -147,12 +166,21 @@ juce::AudioProcessorValueTreeState::ParameterLayout MangoAudioProcessor::createP
 }
 
 //==============================================================================
-void MangoAudioProcessor::parameterChanged (const juce::String& id, float)
+void MangoAudioProcessor::parameterChanged (const juce::String& id, float newValue)
 {
     // May fire on any thread — only atomics / async triggers here.
     if (id == pid::stepsize || id == pid::numsteps)
     {
         triggerAsyncUpdate();   // grid applies on the message thread
+        return;
+    }
+
+    if (id == pid::config)
+    {
+        // Queue the recall; the async handler applies it (message thread),
+        // honouring the timing mode. A state/preset load cancels this.
+        pendingRecall.store ((int) newValue - 1);
+        triggerAsyncUpdate();
         return;
     }
 
@@ -171,6 +199,39 @@ void MangoAudioProcessor::handleAsyncUpdate()
 {
     applyGridFromParameters();
     sendChangeMessage();    // let the editor repaint the grids
+
+    const int slot = pendingRecall.exchange (-1);
+    if (slot < 0)
+        return;
+
+    const int sync = (int) apvts.getRawParameterValue (pid::configsync)->load();
+    if (sync == 0)
+        applyConfig (slot);
+    else
+        armRecall (slot);
+}
+
+void MangoAudioProcessor::timerCallback()
+{
+    // Quantised recall: wait for the engine to cross the next boundary.
+    if (armedSlot < 0)
+    {
+        stopTimer();
+        return;
+    }
+
+    const int sync = (int) apvts.getRawParameterValue (pid::configsync)->load();
+    const uint32_t now = sync == 2 ? engine.patternWrapCount() : engine.barWrapCount();
+
+    // Boundaries only arrive while the plugin is processing; give up after
+    // ~5 s (suspended / not rendering) rather than staying armed forever.
+    if (now == armedAtWrap && ++armedTicks < 300)
+        return;
+
+    const int slot = armedSlot;
+    armedSlot = -1;
+    stopTimer();
+    applyConfig (slot);
 }
 
 void MangoAudioProcessor::applyGridFromParameters()
@@ -275,6 +336,231 @@ void MangoAudioProcessor::sequencersFromTree (const juce::ValueTree& tree)
     engine.rebuildOverrides();
 }
 
+//==============================================================================
+// Sequencer config bank. Configs live in the state tree (child "MangoBank"),
+// so they cost no parameters, travel inside sessions and presets, and can
+// hold the blocks — which are side state and could never be parameters.
+
+juce::ValueTree MangoAudioProcessor::bankTree()
+{
+    return apvts.state.getOrCreateChildWithName ("MangoBank", nullptr);
+}
+
+juce::ValueTree MangoAudioProcessor::configTree (int slot) const
+{
+    const auto bank = apvts.state.getChildWithName ("MangoBank");
+    if (bank.isValid())
+        for (const auto& cfg : bank)
+            if (cfg.hasType ("Config") && (int) cfg.getProperty ("index", -1) == slot)
+                return cfg;
+    return {};
+}
+
+bool MangoAudioProcessor::configIsStored (int slot) const
+{
+    return configTree (slot).isValid();
+}
+
+bool MangoAudioProcessor::configHasParams (int slot) const
+{
+    const auto cfg = configTree (slot);
+    return cfg.isValid() && (bool) cfg.getProperty ("hasParams", false);
+}
+
+void MangoAudioProcessor::storeConfig (int slot, bool includeParams)
+{
+    if (slot < 0 || slot >= numConfigs)
+        return;
+
+    juce::ValueTree cfg ("Config");
+    cfg.setProperty ("index", slot, nullptr);
+    cfg.setProperty ("hasParams", includeParams, nullptr);
+
+    juce::ValueTree params ("Params");
+    for (auto* p : getParameters())
+        if (auto* rp = dynamic_cast<juce::RangedAudioParameter*> (p))
+        {
+            const auto kind = configParamKind (rp->paramID);
+            if (kind == ConfigParamKind::Always
+                || (includeParams && kind == ConfigParamKind::Optional))
+                params.setProperty (juce::Identifier (rp->paramID),
+                                    apvts.getRawParameterValue (rp->paramID)->load(), nullptr);
+        }
+    cfg.appendChild (params, nullptr);
+    cfg.appendChild (sequencersToTree(), nullptr);
+
+    auto bank = bankTree();
+    const auto previous = configTree (slot);
+    undoSlot = slot;                                       // one level of undo:
+    undoTree = previous.isValid() ? previous.createCopy()  // keep what we replace
+                                  : juce::ValueTree();     // (invalid = was empty)
+    if (previous.isValid())
+        bank.removeChild (previous, nullptr);
+    bank.appendChild (cfg, nullptr);
+
+    // Storing makes the slot current, so the active marker follows the
+    // click. The live setup already *is* that config, so cancel the recall
+    // the selector move just queued.
+    requestConfigRecallSelectorOnly (slot);
+    pendingRecall.store (-1);
+    armedSlot = -1;
+
+    noteConfigApplied (slot);
+    sendChangeMessage();
+}
+
+bool MangoAudioProcessor::configIncludeParams() const
+{
+    const auto bank = apvts.state.getChildWithName ("MangoBank");
+    return bank.isValid() ? (bool) bank.getProperty ("includeParams", true) : true;
+}
+
+void MangoAudioProcessor::setConfigIncludeParams (bool shouldInclude)
+{
+    bankTree().setProperty ("includeParams", shouldInclude, nullptr);
+    sendChangeMessage();
+}
+
+void MangoAudioProcessor::clearConfig (int slot)
+{
+    const auto cfg = configTree (slot);
+    if (! cfg.isValid())
+        return;
+
+    undoSlot = slot;
+    undoTree = cfg.createCopy();
+    bankTree().removeChild (cfg, nullptr);
+    sendChangeMessage();
+}
+
+void MangoAudioProcessor::undoStore()
+{
+    if (undoSlot < 0)
+        return;
+
+    auto bank = bankTree();
+    const auto current = configTree (undoSlot);
+    if (current.isValid())
+        bank.removeChild (current, nullptr);
+    if (undoTree.isValid())
+        bank.appendChild (undoTree.createCopy(), nullptr);
+
+    undoSlot = -1;
+    undoTree = juce::ValueTree();
+    sendChangeMessage();
+}
+
+int MangoAudioProcessor::activeConfig() const
+{
+    return (int) apvts.getRawParameterValue (pid::config)->load() - 1;
+}
+
+void MangoAudioProcessor::requestConfigRecall (int slot)
+{
+    if (slot < 0 || slot >= numConfigs)
+        return;
+
+    const bool alreadyActive = activeConfig() == slot;
+    requestConfigRecallSelectorOnly (slot);
+
+    // The parameter didn't move, so no recall was queued: force one, which
+    // makes re-clicking the active slot a "revert to stored".
+    if (alreadyActive)
+    {
+        pendingRecall.store (slot);
+        triggerAsyncUpdate();
+    }
+}
+
+void MangoAudioProcessor::requestConfigRecallSelectorOnly (int slot)
+{
+    if (auto* param = apvts.getParameter (pid::config))
+    {
+        param->beginChangeGesture();
+        param->setValueNotifyingHost (param->convertTo0to1 ((float) (slot + 1)));
+        param->endChangeGesture();
+    }
+}
+
+void MangoAudioProcessor::armRecall (int slot)
+{
+    const int sync = (int) apvts.getRawParameterValue (pid::configsync)->load();
+    armedSlot   = slot;
+    armedTicks  = 0;
+    armedAtWrap = sync == 2 ? engine.patternWrapCount() : engine.barWrapCount();
+    startTimerHz (60);   // lands within ~16 ms of the boundary
+    sendChangeMessage(); // the panel shows the armed slot
+}
+
+void MangoAudioProcessor::applyConfig (int slot)
+{
+    const auto cfg = configTree (slot);
+    if (! cfg.isValid())
+        return;   // empty slot: never clobber the live setup
+
+    const auto params = cfg.getChildWithName ("Params");
+    for (int i = 0; i < params.getNumProperties(); ++i)
+    {
+        const auto id = params.getPropertyName (i);
+        if (auto* param = apvts.getParameter (id.toString()))
+            param->setValueNotifyingHost (
+                param->convertTo0to1 ((float) (double) params.getProperty (id)));
+    }
+
+    applyGridFromParameters();   // grid before blocks, so ranges are right
+    sequencersFromTree (cfg.getChildWithName ("MangoSeq"));
+
+    noteConfigApplied (slot);
+    sendChangeMessage();         // editor: reload everything
+}
+
+void MangoAudioProcessor::noteConfigApplied (int slot)
+{
+    signatureIncludesParams = configHasParams (slot);
+    signatureAtApply = configSignature (signatureIncludesParams);
+}
+
+bool MangoAudioProcessor::configIsModified() const
+{
+    if (! configIsStored (activeConfig()))
+        return false;
+    return configSignature (signatureIncludesParams) != signatureAtApply;
+}
+
+juce::uint64 MangoAudioProcessor::configSignature (bool includeParams) const
+{
+    juce::uint64 h = 1469598103934665603ULL;          // FNV-1a
+    auto mix = [&h] (juce::uint64 v) { h ^= v; h *= 1099511628211ULL; };
+
+    for (auto* p : getParameters())
+        if (auto* rp = dynamic_cast<juce::RangedAudioParameter*> (p))
+        {
+            const auto kind = configParamKind (rp->paramID);
+            if (kind == ConfigParamKind::Always
+                || (includeParams && kind == ConfigParamKind::Optional))
+            {
+                const float v = apvts.getRawParameterValue (rp->paramID)->load();
+                juce::uint32 bits;
+                std::memcpy (&bits, &v, sizeof (bits));
+                mix (bits);
+            }
+        }
+
+    {
+        const juce::ScopedLock sl (engine.lock());
+        for (int lane : engine.laneOrder())
+            mix ((juce::uint64) lane);
+        for (int i = 0; i < numLanes; ++i)
+            for (const auto& b : engine.sequencerFor (i).blocks())
+            {
+                mix ((juce::uint64) ((b.id << 20) ^ (b.startStep << 10) ^ b.endStep));
+                mix ((juce::uint64) std::hash<std::string> {} (b.content));
+            }
+    }
+    return h;
+}
+
+//==============================================================================
 void MangoAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
     auto state = apvts.copyState();
@@ -298,6 +584,13 @@ void MangoAudioProcessor::setStateInformation (const void* data, int sizeInBytes
 
     applyGridFromParameters();   // grid before blocks, so ranges are right
     sequencersFromTree (seqTree);
+
+    // As in the preset hook: the restored session's live setup wins over
+    // the config the selector happens to point at.
+    pendingRecall.store (-1);
+    armedSlot = -1;
+    noteConfigApplied (activeConfig());
+
     sendChangeMessage();         // editor: reload everything
 }
 

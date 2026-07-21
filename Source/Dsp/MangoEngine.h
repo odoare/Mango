@@ -138,6 +138,12 @@ public:
     float  guiMididur() const                    { return mididurSeconds.load(); }
     double guiBpm() const                        { return publishedBpm.load(); }
 
+    /** Counters bumped every time the timeline crosses a bar / pattern
+        boundary. The message thread polls them to land a quantised config
+        recall on a musical boundary (see MangoAudioProcessor). */
+    uint32_t barWrapCount() const     { return barWraps.load(); }
+    uint32_t patternWrapCount() const { return patternWraps.load(); }
+
 private:
     static constexpr int kChunk = 32;
 
@@ -195,6 +201,10 @@ private:
     std::array<std::atomic<int>, numLanes>    guiActive {};
     std::array<std::atomic<uint32_t>, numLanes> laneParamVersion {};
     std::atomic<double> publishedBpm { 120.0 };
+
+    std::atomic<uint32_t> barWraps { 0 }, patternWraps { 0 };
+    int64_t lastBarIndex = 0, lastPatternIndex = 0;
+    double  beatsPerBar = 4.0;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MangoEngine)
 };

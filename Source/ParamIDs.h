@@ -43,6 +43,12 @@ namespace mng
         return 0;
     }
 
+    /** Slots in the sequencer-configuration bank. A config is a snapshot of
+        the sequencer setup (blocks + structure), optionally including the
+        effect parameters; it lives in the state tree, NOT in parameters —
+        only the `config` selector is automatable. */
+    inline constexpr int numConfigs = 8;
+
     namespace pid
     {
         // Globals
@@ -52,6 +58,8 @@ namespace mng
         inline constexpr const char* numsteps = "numsteps";
         inline constexpr const char* numlanes = "numlanes";
         inline constexpr const char* busmode  = "busmode";
+        inline constexpr const char* config     = "config";      // 1..numConfigs selector
+        inline constexpr const char* configsync = "configsync";  // recall timing
 
         /** Per-bus dry/wet, e.g. "bus2_wet" (busIndex 0-based). */
         inline juce::String busWet (int busIndex)
@@ -82,5 +90,30 @@ namespace mng
         {
             return lanePrefix (laneIndex) + "busstart";
         }
+    }
+
+    /** How a parameter relates to a stored sequencer config:
+
+          Always   — structure the blocks are meaningless without (grid,
+                     lane count/order/types, bus grouping, seed).
+          Optional — the effect parameter sets and the bus wet/pan, stored
+                     only when "include effect parameters" is on.
+          Never    — live performance controls that a recall must not
+                     clobber (mute/solo, global dry/wet) and the config
+                     selector itself. */
+    enum class ConfigParamKind { Never, Always, Optional };
+
+    inline ConfigParamKind configParamKind (const juce::String& id)
+    {
+        if (id == pid::drywet || id == pid::config || id == pid::configsync
+            || id.endsWith ("_mute") || id.endsWith ("_solo"))
+            return ConfigParamKind::Never;
+
+        if (id == pid::numlanes || id == pid::busmode || id == pid::seed
+            || id == pid::stepsize || id == pid::numsteps
+            || id.endsWith ("_type") || id.endsWith ("_busstart"))
+            return ConfigParamKind::Always;
+
+        return ConfigParamKind::Optional;   // effect params + bus wet/pan
     }
 }

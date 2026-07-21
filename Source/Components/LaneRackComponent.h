@@ -246,32 +246,13 @@ private:
         }
 
     private:
-        /** A square letter toggle small enough for the lane header (the
-            stock LookAndFeel text indents leave no room at this size). */
-        struct MiniToggle : juce::TextButton
-        {
-            void paintButton (juce::Graphics& g, bool highlighted, bool) override
-            {
-                const bool on = getToggleState();
-                auto bg = findColour (on ? buttonOnColourId : buttonColourId);
-                g.setColour (highlighted ? bg.brighter (0.2f) : bg);
-                g.fillRoundedRectangle (getLocalBounds().toFloat().reduced (1.0f), 4.0f);
-                g.setColour (findColour (on ? textColourOnId : textColourOffId));
-                g.setFont (juce::Font (juce::FontOptions ((float) getHeight() * 0.62f,
-                                                          juce::Font::bold)));
-                g.drawText (getButtonText(), getLocalBounds(), juce::Justification::centred);
-            }
-        };
+        /** The square letter toggles (M / S / B). */
+        using MiniToggle = fxme::AccentToggle;
 
-        void setupToggle (juce::TextButton& b, const juce::String& text, juce::Colour accent)
+        void setupToggle (fxme::AccentToggle& b, const juce::String& text, juce::Colour accent)
         {
             b.setButtonText (text);
-            b.setClickingTogglesState (true);
-            b.setMouseClickGrabsKeyboardFocus (false);
-            b.setColour (juce::TextButton::buttonColourId, juce::Colour (0xff2b2b2b));
-            b.setColour (juce::TextButton::buttonOnColourId, accent);
-            b.setColour (juce::TextButton::textColourOffId, theme::text);
-            b.setColour (juce::TextButton::textColourOnId, juce::Colours::black);
+            b.setAccent (accent, theme::text);
             addAndMakeVisible (b);
         }
 

@@ -24,6 +24,7 @@
 #include "Components/EffectPanel.h"
 #include "Components/BlockTextPanel.h"
 #include "Components/PresetOverlay.h"
+#include "Components/ConfigPanel.h"
 
 //==============================================================================
 class MangoAudioProcessorEditor : public juce::AudioProcessorEditor,
@@ -44,6 +45,7 @@ private:
     void selectBlock (int laneIndex, int blockId);
     void refreshVisiblePanel();
     void refreshBlockText();
+    void showConfigs (bool shouldShow);
 
     MangoAudioProcessor& processor;
 
@@ -71,10 +73,15 @@ private:
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> drywetAtt, seedAtt, stepsAtt;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> stepSizeAtt;
 
-    // Right column: one panel per (lane, effect type).
+    // Right column: one panel per (lane, effect type), or the config bank
+    // in their place when the Configs button is on.
     std::array<std::array<std::unique_ptr<mng::EffectPanel>, mng::kNumEffectTypes>,
                mng::numLanes> panels;
     juce::Rectangle<int> panelArea;
+
+    fxme::AccentToggle configToggle;
+    mng::ConfigPanel configPanel;
+    bool configsShown = false;
 
     mng::BlockTextPanel blockText;
 

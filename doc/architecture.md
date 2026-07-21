@@ -201,14 +201,16 @@ sampleRate, bpm, mididurSeconds (sampled at entry), `overrides` pointer
 
 ## 4. Parameters & state
 
-- ~630 APVTS parameters, all pre-declared (IDs frozen): 14 globals
-  (incl. `busmode`, `bus<n>_wet/pan`) + per lane
+- ~630 APVTS parameters, all pre-declared (IDs frozen): 16 globals
+  (incl. `busmode`, `bus<n>_wet/pan`, `config`, `configsync`) + per lane
   `type`, `mute`, `solo`, `busstart` + every effect type's set, ids
   `l<i>_<fx>_<name>`
   (FxmeFX `addParameters(prefix)` pattern — each effect class has static
   `addParameters` + member `bindParameters`).
-- **Not** parameters: block data. `getStateInformation` appends a `MangoSeq`
-  child to the APVTS tree: `laneOrder` + per lane `<Block id start len text/>`.
+- **Not** parameters: block data and the config bank. `getStateInformation`
+  appends a `MangoSeq` child to the APVTS tree (`laneOrder` + per lane
+  `<Block id start len text/>`); the `MangoBank` child lives permanently in
+  `apvts.state`, so sessions *and* presets carry the whole bank.
   Restore uses `StringSequencer::addBlockWithId` (FxmeTools addition) so
   **block ids survive sessions** — required because ids seed the draws.
   Grid params are applied before blocks on load. `sendChangeMessage()` tells
@@ -251,6 +253,40 @@ All global controls share the violet `theme::globalAccent` (dry/wet, seed
 and grid knobs in the top right, the lanes −/+ and routing-mode buttons in
 the bus bar); the same violet tints the backdrop gradient and draws the
 2 px separation line between the top bar and the controls.
+
+**Sequencer config bank** (8 slots): a config is a *snapshot*, stored in the
+state tree (`MangoBank` child of `apvts.state`), **not** in parameters — the
+only parameters are the `config` selector (1–8, automatable) and
+`configsync` (Immediate / Next bar / Next pattern). Eight copies of the
+~630 parameters would have meant ~5,000 host-visible parameters; generic
+"lane N param M" slots would have cost the host-facing naming and broken
+every existing session. What a config contains is decided by
+`mng::configParamKind(id)` in ParamIDs.h:
+
+  - **Always** — grid (`stepsize`/`numsteps`), `numlanes`, lane order, per-lane
+    `type` and `busstart`, `busmode`, `seed`, plus the blocks (a `MangoSeq`
+    child, the same format the session uses). Blocks are meaningless without
+    their grid and seed, hence those being unconditional.
+  - **Optional** (`includeParams` flag on the bank, per stored slot) — the
+    effect parameter sets and the bus wet/pan.
+  - **Never** — mute, solo, global dry/wet, and the selector itself.
+
+Recall flow: GUI clicks and host automation both go through the `config`
+parameter (one source of truth for the active-slot indicator) →
+`parameterChanged` queues `pendingRecall` → `handleAsyncUpdate` (message
+thread) applies immediately, or `armRecall` starts a 60 Hz timer that waits
+for the engine's `barWrapCount()` / `patternWrapCount()` atomic to advance
+(bumped per sub-block in `process()`), landing the switch within ~16 ms of
+the boundary. Re-clicking the active slot forces a reload ("revert to
+stored"); an empty slot is a no-op and never clobbers the live setup.
+**Both state-restore paths (`setStateInformation` and the preset
+`onAfterLoad` hook) must cancel `pendingRecall`** — `replaceState` moves the
+selector, which would otherwise overwrite the just-restored live setup with
+its own stored config. `configIsModified()` compares an FNV-1a signature of
+the config-relevant parameters + blocks against the one taken at the last
+load/store. Store keeps one level of undo (the overwritten slot's subtree).
+GUI: Components/ConfigPanel.h, in the right column's panel area (mutually
+exclusive with the preset overlay).
 
 **Presets** (`fxme::PresetManager`, AmbiRR2 pattern): the processor owns
 the manager (user dir `.../Mango/Presets`, factory bank = BinaryData
@@ -344,6 +380,12 @@ umbrella `FxmeTools/FxmeTools.h` (module v0.0.3):
   tracking suppressed): processors that keep non-parameter data outside
   apvts.state (Mango's MangoSeq) merge it in before a preset save and
   rebuild from it after a preset load.
+- `components/AccentToggle.h` — the latching on/off button (rounded body
+  that lights in its accent colour, bold centred text, legible down to
+  ~18 px squares; custom-painted because the stock LookAndFeel's text
+  indents leave no room at that size). Mango uses it for the lane
+  headers' M/S/B letters, the Configs button and the config panel's
+  include-parameters toggle.
 - `components/TopBar.h` gained `setRightControls(bar, w, button, w)`
   (promoted from AmbiRR2's local TopBar): parks externally-owned controls
   — the compact preset bar and its toggle — left of the version string,

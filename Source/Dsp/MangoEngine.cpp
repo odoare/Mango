@@ -342,6 +342,10 @@ void MangoEngine::process (juce::AudioBuffer<float>& buffer,
     if (position && position->getBpm())
         currentBpm = juce::jmax (1.0, *position->getBpm());
 
+    if (position)
+        if (const auto sig = position->getTimeSignature())
+            beatsPerBar = juce::jmax (1.0, (double) sig->numerator * 4.0 / (double) sig->denominator);
+
     if (pendingStart)
     {
         pendingStart = false;
@@ -503,6 +507,25 @@ void MangoEngine::process (juce::AudioBuffer<float>& buffer,
         }
 
         absoluteBeats += delta;
+
+        // Publish bar / pattern boundary crossings for quantised config
+        // recalls (the message thread polls these counters).
+        const auto barIndex = (int64_t) std::floor (absoluteBeats / beatsPerBar);
+        if (barIndex != lastBarIndex)
+        {
+            lastBarIndex = barIndex;
+            barWraps.fetch_add (1);
+        }
+        const double patternBeats = lanes[0].seq.getPatternLengthBeats();
+        if (patternBeats > 1.0e-6)
+        {
+            const auto patternIndex = (int64_t) std::floor (absoluteBeats / patternBeats);
+            if (patternIndex != lastPatternIndex)
+            {
+                lastPatternIndex = patternIndex;
+                patternWraps.fetch_add (1);
+            }
+        }
     }
 
     // Global dry/wet.

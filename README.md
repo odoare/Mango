@@ -85,6 +85,18 @@ settings and simply stop processing). The bus bar under the rack holds the
 lane-count − / + chooser above the routing-mode button, the routing diagram
 and the per-bus wet/pan knobs (shown for active buses only).
 
+**Sequencer configs**: the **Configs** button swaps the lane panel for a bank
+of 8 configuration slots — one row to load, one to store. A config holds the
+blocks and override strings, the grid, the lane count/order/effect types, the
+bus grouping and the seed; tick *include effect parameters* to store the knob
+values too. Mute, solo and dry/wet are never stored, so a recall can't
+clobber your live mix. Slots show their state (filled = active, outlined =
+stored, dim = empty, dot = edited since loaded); alt-click a store slot to
+clear it, and *undo store* takes back the last overwrite. Recalls can be
+immediate or quantised to the next bar or pattern. Only the slot **selector**
+is a plugin parameter, so the bank is fully automatable from the host without
+multiplying the parameter count.
+
 **Presets**: the top bar hosts a compact preset strip (previous / name /
 next) and a toggle that expands the full browser over the right column —
 factory presets plus user presets saved as XML under the platform user-data

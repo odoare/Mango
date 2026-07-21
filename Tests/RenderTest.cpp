@@ -543,6 +543,100 @@ static void testEffectMix()
 }
 
 //==============================================================================
+static void testConfigBank()
+{
+    auto pump    = [] { juce::MessageManager::getInstance()->runDispatchLoopUntil (60); };
+    auto getP    = [] (MangoAudioProcessor& p, const juce::String& id)
+                   { return p.apvts.getRawParameterValue (id)->load(); };
+    auto numBlocks = [] (MangoAudioProcessor& p, int lane)
+    {
+        const juce::ScopedLock sl (p.engine.lock());
+        return (int) p.engine.sequencerFor (lane).blocks().size();
+    };
+
+    MangoAudioProcessor p;
+    setParam (p, "configsync", 0.0f);   // immediate recall
+
+    // --- config 1: a block on lane 0, seed 7, gate attack 0.4, WITH params.
+    const int blockA = addFullBlock (p, 0);
+    CHECK (p.setBlockContent (0, blockA, "dur=0.25"));
+    setParam (p, "seed", 7.0f);
+    setParam (p, "l0_gate_att", 0.4f);
+    p.storeConfig (0, true);
+    CHECK (p.configIsStored (0));
+    CHECK (p.configHasParams (0));
+    CHECK (p.activeConfig() == 0);
+    CHECK (! p.configIsModified());
+
+    // --- config 2: different blocks / seed / attack, stored WITHOUT params.
+    {
+        const juce::ScopedLock sl (p.engine.lock());
+        p.engine.sequencerFor (0).clear();
+        p.engine.sequencerFor (1).addBlock (0, 8);
+    }
+    setParam (p, "seed", 21.0f);
+    setParam (p, "l0_gate_att", 0.9f);
+    p.storeConfig (1, false);
+    CHECK (p.configIsStored (1));
+    CHECK (! p.configHasParams (1));
+
+    // --- recall 1: blocks, seed and (stored with params) attack all return.
+    p.requestConfigRecall (0);
+    pump();
+    CHECK (p.activeConfig() == 0);
+    CHECK (numBlocks (p, 0) == 1);
+    CHECK (numBlocks (p, 1) == 0);
+    CHECK (std::abs (getP (p, "seed") - 7.0f) < 0.5f);
+    CHECK (std::abs (getP (p, "l0_gate_att") - 0.4f) < 1e-3f);
+    CHECK (p.blockContent (0, blockA) == "dur=0.25");
+
+    // --- recall 2: blocks-only, so the attack keeps its live value while
+    // the blocks and the seed (an "always" member) come from the config.
+    setParam (p, "l0_gate_att", 0.7f);
+    p.requestConfigRecall (1);
+    pump();
+    CHECK (numBlocks (p, 0) == 0);
+    CHECK (numBlocks (p, 1) == 1);
+    CHECK (std::abs (getP (p, "seed") - 21.0f) < 0.5f);
+    CHECK (std::abs (getP (p, "l0_gate_att") - 0.7f) < 1e-3f);   // untouched
+
+    // --- mute is never stored: a recall must not clobber performance state.
+    setParam (p, "l0_mute", 1.0f);
+    p.requestConfigRecall (0);
+    pump();
+    CHECK (getP (p, "l0_mute") > 0.5f);
+    setParam (p, "l0_mute", 0.0f);
+
+    // --- an empty slot never clobbers the live setup.
+    const int before = numBlocks (p, 0);
+    CHECK (! p.configIsStored (5));
+    p.requestConfigRecall (5);
+    pump();
+    CHECK (numBlocks (p, 0) == before);
+
+    // --- the modified marker follows edits to the active config.
+    p.requestConfigRecall (0);
+    pump();
+    CHECK (! p.configIsModified());
+    setParam (p, "seed", 99.0f);
+    CHECK (p.configIsModified());
+
+    // --- undo restores what a store overwrote.
+    p.requestConfigRecall (0);
+    pump();
+    p.storeConfig (1, false);          // overwrite config 2 with config 1's setup
+    CHECK (numBlocks (p, 0) == 1);
+    CHECK (p.canUndoStore());
+    p.undoStore();
+    p.requestConfigRecall (1);
+    pump();
+    CHECK (numBlocks (p, 0) == 0);     // config 2's original lane-1 pattern is back
+    CHECK (numBlocks (p, 1) == 1);
+
+    std::printf ("config bank: store/recall, blocks-only, never-set, undo verified\n");
+}
+
+//==============================================================================
 static void testStateRoundTrip()
 {
     juce::MemoryBlock state;
@@ -949,6 +1043,7 @@ int main (int argc, char* argv[])
     testBuses();
     testBusModes();
     testEffectMix();
+    testConfigBank();
     testStateRoundTrip();
     testHostSync();
     testLiveWeightChange();

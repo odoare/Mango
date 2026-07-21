@@ -16,7 +16,7 @@ using ComboBoxAttachment = juce::AudioProcessorValueTreeState::ComboBoxAttachmen
 
 //==============================================================================
 MangoAudioProcessorEditor::MangoAudioProcessorEditor (MangoAudioProcessor& p)
-    : AudioProcessorEditor (&p), processor (p), rack (p), busBar (p)
+    : AudioProcessorEditor (&p), processor (p), rack (p), busBar (p), configPanel (p)
 {
     setLookAndFeel (&lnf);
 
@@ -35,17 +35,30 @@ MangoAudioProcessorEditor::MangoAudioProcessorEditor (MangoAudioProcessor& p)
     presetToggle.setColour (juce::TextButton::textColourOnId,  theme::globalAccent.brighter (0.6f));
     presetToggle.setTooltip ("Show / hide the preset browser");
     presetToggle.setButtonText (juce::String::fromUTF8 ("\xe2\x96\xbe"));   // down triangle
+    topBar.setRightControls (&presetBar, 230, &presetToggle, 30);
+    addChildComponent (presetOverlay);   // shown on demand, over the right column
+
+    // The preset browser covers the whole right column, so the two views are
+    // mutually exclusive.
     presetToggle.onClick = [this]
     {
         const bool show = presetToggle.getToggleState();
-        presetToggle.setButtonText (juce::String::fromUTF8 (show ? "\xe2\x96\xb4"    // up triangle
-                                                                 : "\xe2\x96\xbe")); // down triangle
+        presetToggle.setButtonText (juce::String::fromUTF8 (show ? "\xe2\x96\xb4" : "\xe2\x96\xbe"));
         presetOverlay.setVisible (show);
         if (show)
+        {
             presetOverlay.toFront (false);
+            showConfigs (false);
+        }
     };
-    topBar.setRightControls (&presetBar, 230, &presetToggle, 30);
-    addChildComponent (presetOverlay);   // shown on demand, over the right column
+
+    // ---- config bank ---------------------------------------------------------
+    configToggle.setButtonText ("Configs");
+    configToggle.setAccent (theme::globalAccent, theme::globalAccent.brighter (0.3f));
+    configToggle.setTooltip ("Store / recall sequencer configurations");
+    configToggle.onClick = [this] { showConfigs (configToggle.getToggleState()); };
+    addAndMakeVisible (configToggle);
+    addChildComponent (configPanel);
 
     // ---- globals -------------------------------------------------------------
     theme::styleKnob (drywetKnob, "Dry/Wet", theme::globalAccent);
@@ -153,8 +166,12 @@ void MangoAudioProcessorEditor::resized()
 
     auto sizeRow = right.removeFromTop (26);
     stepSizeLabel.setBounds (sizeRow.removeFromLeft (40));
+    configToggle.setBounds (sizeRow.removeFromRight (84).reduced (0, 1));
+    sizeRow.removeFromRight (8);
     stepSizeBox.setBounds (sizeRow);
     right.removeFromTop (4);
+
+    right.removeFromTop (8);
 
     right.removeFromTop (8);
 
@@ -166,6 +183,7 @@ void MangoAudioProcessorEditor::resized()
     for (auto& lanePanels : panels)
         for (auto& panel : lanePanels)
             panel->setBounds (panelArea);
+    configPanel.setBounds (panelArea);
 }
 
 //==============================================================================
@@ -177,8 +195,34 @@ void MangoAudioProcessorEditor::selectBlock (int laneIndex, int blockId)
     refreshBlockText();
 }
 
+void MangoAudioProcessorEditor::showConfigs (bool shouldShow)
+{
+    if (configsShown == shouldShow)
+        return;
+
+    configsShown = shouldShow;
+    configToggle.setToggleState (shouldShow, juce::dontSendNotification);
+    configPanel.setVisible (shouldShow);
+
+    if (shouldShow)
+    {
+        configPanel.toFront (false);
+        for (auto& lanePanels : panels)
+            for (auto& panel : lanePanels)
+                panel->setVisible (false);
+        visibleLane = visibleType = -1;   // force a rebuild when we come back
+    }
+    else
+    {
+        refreshVisiblePanel();
+    }
+}
+
 void MangoAudioProcessorEditor::refreshVisiblePanel()
 {
+    if (configsShown)
+        return;   // the config bank has the panel area
+
     const int lane = selectedLane;
     const int type = lane >= 0
         ? (int) processor.apvts.getRawParameterValue (pid::laneType (lane))->load()
