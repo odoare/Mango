@@ -2,9 +2,21 @@
   ------------------------------------------------------------------------------
     Theme.h
 
-    Mango colour scheme, after the Spread / AmbiRR2 pattern: dark diagonal
-    gradient backdrop, warm coral identity accent, and one accent colour per
-    sequencer lane so a lane's strip, header and control panel all share a hue.
+    Mango colour scheme, after the Spread / AmbiRR2 pattern.
+
+    The identity is the fruit: a yellow -> green -> red ramp (mangoAt), used
+    both as a gradient — the line under the top bar, the config bank's eight
+    slots — and as three discrete accents that divide the global controls by
+    what they do:
+
+        yellow  the mix side: dry/wet, seed, and the preset chrome
+        green   the structure: step size / count, lane count, bus routing
+        red     the config bank: its button, its panel and its options
+
+    The backdrop is the same ramp taken down to near-black, so the whole
+    window sits inside the fruit's colours without competing with them.
+    Lane/bus colours are deliberately *outside* this scheme (see busColour):
+    they mark identity, not chrome, and must stay told apart from it.
 
     Also centralises the FxmeTools control styling (styleKnob / styleCombo):
     dark disc body, accent on the value arc / outline / pointer.
@@ -22,32 +34,66 @@
 
 namespace mng::theme
 {
-    inline void paintBackground (juce::Graphics& g, juce::Rectangle<float> b)
+    // The mango ramp. Deliberately literals rather than cross-references:
+    // inline variables in a header must not depend on each other's
+    // initialisation order.
+    inline const juce::Colour mangoYellow { 0xfff5c542 };
+    inline const juce::Colour mangoGreen  { 0xff86c232 };
+    inline const juce::Colour mangoRed    { 0xffe8483c };
+
+    /** The ramp at `t`: 0 = yellow, 0.5 = green, 1 = red. The single source
+        of the colour code — anything spreading across the identity (the
+        separation line, the eight config slots) samples this. */
+    inline juce::Colour mangoAt (float t) noexcept
     {
-        // Dark violet, the global accent's tint (see globalAccent below).
-        const auto base = juce::Colour::fromFloatRGBA (0.175f, 0.14f, 0.27f, 1.0f);
-        juce::ColourGradient grad (base.darker().darker().darker(), b.getBottomLeft(),
-                                   base, b.getTopRight(), false);
+        t = juce::jlimit (0.0f, 1.0f, t);
+        return t < 0.5f ? mangoYellow.interpolatedWith (mangoGreen, t * 2.0f)
+                        : mangoGreen.interpolatedWith (mangoRed, (t - 0.5f) * 2.0f);
+    }
+
+    /** Fills `b` with the ramp running left to right — the 2 px line under
+        the top bar, and anything else that wants the full identity. */
+    inline void paintMangoRamp (juce::Graphics& g, juce::Rectangle<float> b)
+    {
+        juce::ColourGradient grad (mangoYellow, b.getTopLeft(),
+                                   mangoRed,    b.getTopRight(), false);
+        grad.addColour (0.5, mangoGreen);
         g.setGradientFill (grad);
         g.fillRect (b);
     }
 
-    inline const juce::Colour panel     { 0xff23202c };
-    inline const juce::Colour panelLine { 0xff403a4c };
-    inline const juce::Colour text      { 0xffd8d8e0 };
-    inline const juce::Colour dimText   { 0xff9a9aa8 };
+    inline void paintBackground (juce::Graphics& g, juce::Rectangle<float> b)
+    {
+        // The same ramp taken to near-black: red in the bottom-left corner
+        // through green to a warm amber top-right. Saturation is pulled well
+        // down — at these brightnesses full saturation reads as coloured
+        // noise rather than as a tint.
+        auto backdrop = [] (juce::Colour c, float brightness)
+        {
+            return c.withMultipliedSaturation (0.45f).withBrightness (brightness);
+        };
 
-    inline const juce::Colour accent    { 0xffe0784a };   // coral
-    inline const juce::Colour topBarBg  { 0xff14101a };   // near-black header
+        juce::ColourGradient grad (backdrop (mangoRed, 0.085f), b.getBottomLeft(),
+                                   backdrop (mangoYellow, 0.155f), b.getTopRight(), false);
+        grad.addColour (0.5, backdrop (mangoGreen, 0.105f));
+        g.setGradientFill (grad);
+        g.fillRect (b);
+    }
 
-    // One accent for every global control (dry/wet, seed, grid, lanes, bus
-    // mode): violet — it also tints the backdrop and draws the separation
-    // line under the top bar.
-    inline const juce::Colour globalAccent { 0xff9a72f0 };
+    inline const juce::Colour panel     { 0xff262320 };   // warm neutral dark
+    inline const juce::Colour panelLine { 0xff453f36 };
+    inline const juce::Colour text      { 0xffe0dcd4 };
+    inline const juce::Colour dimText   { 0xffa39d92 };
+
+    inline const juce::Colour topBarBg  { 0xff17140f };   // near-black header
 
     // One accent per effect bus (0..3): a lane's strip, header and control
     // panel are coloured by the bus it currently belongs to (which follows
     // the display order and the per-lane bus-start switches).
+    //
+    // These stay off the mango ramp on purpose: they identify *content*,
+    // and four hues sampled from a three-colour ramp would neither tell
+    // each other apart nor separate from the chrome around them.
     inline juce::Colour busColour (int busIndex) noexcept
     {
         static const juce::Colour colours[numBuses] = {

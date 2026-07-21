@@ -26,13 +26,13 @@ MangoAudioProcessorEditor::MangoAudioProcessorEditor (MangoAudioProcessor& p)
 
     // Presets: compact strip + toggle hosted by the top bar; the full
     // browser sits (hidden) over the right column until toggled.
-    presetBar.setAccentColour (theme::globalAccent);
+    presetBar.setAccentColour (theme::mangoYellow);
     presetToggle.setClickingTogglesState (true);
     presetToggle.setMouseClickGrabsKeyboardFocus (false);
     presetToggle.setColour (juce::TextButton::buttonColourId,  juce::Colours::black.withAlpha (0.4f));
     presetToggle.setColour (juce::TextButton::buttonOnColourId, juce::Colours::black.withAlpha (0.4f));
-    presetToggle.setColour (juce::TextButton::textColourOffId, theme::globalAccent.brighter (0.3f));
-    presetToggle.setColour (juce::TextButton::textColourOnId,  theme::globalAccent.brighter (0.6f));
+    presetToggle.setColour (juce::TextButton::textColourOffId, theme::mangoYellow.brighter (0.3f));
+    presetToggle.setColour (juce::TextButton::textColourOnId,  theme::mangoYellow.brighter (0.6f));
     presetToggle.setTooltip ("Show / hide the preset browser");
     presetToggle.setButtonText (juce::String::fromUTF8 ("\xe2\x96\xbe"));   // down triangle
     topBar.setRightControls (&presetBar, 230, &presetToggle, 30);
@@ -54,29 +54,29 @@ MangoAudioProcessorEditor::MangoAudioProcessorEditor (MangoAudioProcessor& p)
 
     // ---- config bank ---------------------------------------------------------
     configToggle.setButtonText ("Configs");
-    configToggle.setAccent (theme::globalAccent, theme::globalAccent.brighter (0.3f));
+    configToggle.setAccent (theme::mangoRed, theme::mangoRed.brighter (0.3f));
     configToggle.setTooltip ("Store / recall sequencer configurations");
     configToggle.onClick = [this] { showConfigs (configToggle.getToggleState()); };
     addAndMakeVisible (configToggle);
     addChildComponent (configPanel);
 
     // ---- globals -------------------------------------------------------------
-    theme::styleKnob (drywetKnob, "Dry/Wet", theme::globalAccent);
+    theme::styleKnob (drywetKnob, "Dry/Wet", theme::mangoYellow);
     addAndMakeVisible (drywetKnob);
     drywetAtt = std::make_unique<SliderAttachment> (processor.apvts, pid::drywet, drywetKnob);
 
-    theme::styleKnob (seedKnob, "Seed", theme::globalAccent);
+    theme::styleKnob (seedKnob, "Seed", theme::mangoYellow);
     addAndMakeVisible (seedKnob);
     seedAtt = std::make_unique<SliderAttachment> (processor.apvts, pid::seed, seedKnob);
 
-    theme::styleKnob (stepsKnob, "Steps", theme::globalAccent);
+    theme::styleKnob (stepsKnob, "Steps", theme::mangoGreen);
     addAndMakeVisible (stepsKnob);
     stepsAtt = std::make_unique<SliderAttachment> (processor.apvts, pid::numsteps, stepsKnob);
 
     if (auto* choice = dynamic_cast<juce::AudioParameterChoice*> (
             processor.apvts.getParameter (pid::stepsize)))
         stepSizeBox.addItemList (choice->choices, 1);
-    theme::styleCombo (stepSizeBox, theme::globalAccent);
+    theme::styleCombo (stepSizeBox, theme::mangoGreen);
     addAndMakeVisible (stepSizeBox);
     stepSizeAtt = std::make_unique<ComboBoxAttachment> (processor.apvts, pid::stepsize, stepSizeBox);
 
@@ -138,9 +138,10 @@ void MangoAudioProcessorEditor::paint (juce::Graphics& g)
 {
     theme::paintBackground (g, getLocalBounds().toFloat());
 
-    // Separation line between the top bar and the plugin controls.
-    g.setColour (theme::globalAccent);
-    g.fillRect (0, topBar.getBottom(), getWidth(), 2);
+    // Separation line between the top bar and the plugin controls: the
+    // whole identity ramp, yellow through green to red.
+    theme::paintMangoRamp (g, juce::Rectangle<float> (0.0f, (float) topBar.getBottom(),
+                                                      (float) getWidth(), 2.0f));
 }
 
 void MangoAudioProcessorEditor::resized()
@@ -160,9 +161,9 @@ void MangoAudioProcessorEditor::resized()
     // Globals: three knobs + the step-size box.
     auto knobRow = right.removeFromTop (96);
     const int kw = knobRow.getWidth() / 3;
-    drywetKnob.setBounds (knobRow.removeFromLeft (kw).reduced (2, 0));
+    stepsKnob.setBounds (knobRow.removeFromLeft (kw).reduced (2, 0));
     seedKnob.setBounds (knobRow.removeFromLeft (kw).reduced (2, 0));
-    stepsKnob.setBounds (knobRow.reduced (2, 0));
+    drywetKnob.setBounds (knobRow.reduced (2, 0));
 
     auto sizeRow = right.removeFromTop (26);
     stepSizeLabel.setBounds (sizeRow.removeFromLeft (40));

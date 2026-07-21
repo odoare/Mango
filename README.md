@@ -82,6 +82,12 @@ v0=a v1=u               formant glide from A to U
 
 ## Global controls
 
+The colour code is the fruit: a yellow → green → red ramp. It runs as a
+gradient under the top bar and across the eight config slots, and splits the
+global controls by role — **yellow** for dry/wet, seed and the presets,
+**green** for the grid and bus routing, **red** for the config bank. Lane
+colours stay off that ramp: they mark which bus a lane is in, not chrome.
+
 Dry/Wet, Seed (0–99999), the shared grid (step size 1/16…1/1, 1–64 steps),
 and the lane count (1–8, default 4 — hidden lanes keep their blocks and
 settings and simply stop processing).

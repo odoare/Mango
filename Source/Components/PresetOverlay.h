@@ -27,7 +27,7 @@ public:
     explicit PresetOverlay (fxme::PresetManager& manager)
     {
         preset = std::make_unique<fxme::PresetComponent> (manager);
-        preset->setAccentColour (theme::globalAccent);
+        preset->setAccentColour (theme::mangoYellow);
         addAndMakeVisible (*preset);
     }
 
@@ -36,7 +36,7 @@ public:
         auto b = getLocalBounds().toFloat().reduced (0.5f);
         g.setColour (theme::panel);
         g.fillRoundedRectangle (b, 6.0f);
-        g.setColour (theme::globalAccent.withAlpha (0.6f));
+        g.setColour (theme::mangoYellow.withAlpha (0.6f));
         g.drawRoundedRectangle (b, 6.0f, 1.2f);
     }
 

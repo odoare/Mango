@@ -7,6 +7,10 @@
     from" and "store config to" — plus the store options (include effect
     parameters, undo) and the recall timing.
 
+    Each slot carries its own point on the identity ramp (slot 1 yellow
+    through to slot 8 red), so the row reads as the colour code and a slot
+    number has a colour you can learn.
+
     Slot appearance carries the state: filled = the active config, outlined =
     stored, dim = empty; an underline marks a config stored *with* the effect
     parameters (recalling it changes the sound, not just the pattern), a dot
@@ -41,13 +45,19 @@ public:
     {
         for (int i = 0; i < numConfigs; ++i)
         {
+            // The eight slots spread the identity ramp, so a slot number is
+            // also a position on the colour code.
+            const auto slotColour = theme::mangoAt ((float) i / (float) (numConfigs - 1));
+
             auto& load = loadSlots[(size_t) i];
+            load.slotAccent = slotColour;
             load.setButtonText (juce::String (i + 1));
             load.setMouseClickGrabsKeyboardFocus (false);
             load.onClick = [this, i] { processor.requestConfigRecall (i); refresh(); };
             addAndMakeVisible (load);
 
             auto& store = storeSlots[(size_t) i];
+            store.slotAccent = slotColour;
             store.setButtonText (juce::String (i + 1));
             store.setMouseClickGrabsKeyboardFocus (false);
             store.isStoreSlot = true;
@@ -63,7 +73,7 @@ public:
         }
 
         includeParamsButton.setButtonText ("Include effect parameters");
-        includeParamsButton.setAccent (theme::globalAccent, theme::text);
+        includeParamsButton.setAccent (theme::mangoRed, theme::text);
         includeParamsButton.onClick = [this]
         {
             processor.setConfigIncludeParams (includeParamsButton.getToggleState());
@@ -80,7 +90,7 @@ public:
         if (auto* choice = dynamic_cast<juce::AudioParameterChoice*> (
                 processor.apvts.getParameter (pid::configsync)))
             syncBox.addItemList (choice->choices, 1);
-        theme::styleCombo (syncBox, theme::globalAccent);
+        theme::styleCombo (syncBox, theme::mangoRed);
         addAndMakeVisible (syncBox);
         syncAtt = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment> (
             processor.apvts, pid::configsync, syncBox);
@@ -99,7 +109,7 @@ public:
         auto r = getLocalBounds();
         g.setColour (theme::panel);
         g.fillRoundedRectangle (r.toFloat(), 6.0f);
-        g.setColour (theme::globalAccent.withAlpha (0.6f));
+        g.setColour (theme::mangoRed.withAlpha (0.6f));
         g.drawRoundedRectangle (r.toFloat().reduced (0.5f), 6.0f, 1.0f);
 
         g.setColour (theme::text);
@@ -153,11 +163,12 @@ private:
         bool stored = false, active = false, armed = false, modified = false;
         bool hasParams = false;   // stored with the effect parameters
         bool isStoreSlot = false;
+        juce::Colour slotAccent { theme::mangoYellow };   // its point on the ramp
 
         void paintButton (juce::Graphics& g, bool highlighted, bool) override
         {
             auto b = getLocalBounds().toFloat().reduced (1.0f);
-            const auto accent = theme::globalAccent;
+            const auto accent = slotAccent;
 
             if (active && ! isStoreSlot)
             {

@@ -40,7 +40,7 @@ public:
         {
             b->setMouseClickGrabsKeyboardFocus (false);
             b->setColour (juce::TextButton::buttonColourId, juce::Colour (0xff2b2b2b));
-            b->setColour (juce::TextButton::textColourOffId, theme::globalAccent.brighter (0.4f));
+            b->setColour (juce::TextButton::textColourOffId, theme::mangoGreen.brighter (0.4f));
             addAndMakeVisible (*b);
         }
         lanesMinus.onClick = [this] { adjustLaneCount (-1); };
@@ -48,7 +48,7 @@ public:
 
         modeButton.setMouseClickGrabsKeyboardFocus (false);
         modeButton.setColour (juce::TextButton::buttonColourId, juce::Colour (0xff2b2b2b));
-        modeButton.setColour (juce::TextButton::textColourOffId, theme::globalAccent.brighter (0.4f));
+        modeButton.setColour (juce::TextButton::textColourOffId, theme::mangoGreen.brighter (0.4f));
         modeButton.onClick = [this]
         {
             if (auto* param = processor.apvts.getParameter (pid::busmode))

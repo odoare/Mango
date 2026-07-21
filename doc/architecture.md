@@ -264,10 +264,26 @@ message thread).
 
 ## 7. GUI (fixed 1050×650; right column 320, bus bar under the rack)
 
-All global controls share the violet `theme::globalAccent` (dry/wet, seed
-and grid knobs in the top right, the lanes −/+ and routing-mode buttons in
-the bus bar); the same violet tints the backdrop gradient and draws the
-2 px separation line between the top bar and the controls.
+**Colour code** (Theme.h): the identity is the fruit — a yellow → green →
+red ramp, `theme::mangoAt(t)` being its single source. It appears as a
+gradient where something spans the whole identity (the 2 px separation line
+under the top bar via `paintMangoRamp`; the config bank's eight slots, slot
+*n* sampling `mangoAt(n/7)`), and as three discrete accents that divide the
+global controls by role rather than by position:
+
+  - **yellow** (`mangoYellow`) — the mix side: dry/wet, seed, and the preset
+    bar / toggle / browser.
+  - **green** (`mangoGreen`) — the structure: steps knob, step-size box, and
+    the bus bar's lane −/+ and routing-mode buttons.
+  - **red** (`mangoRed`) — the config bank: the Configs button, the panel
+    frame, its sync box and include-parameters toggle.
+
+`paintBackground` runs the same ramp at near-black (saturation ×0.45,
+brightness 0.085–0.155) diagonally: red bottom-left, green through the
+middle, warm amber top-right. `theme::busColour` deliberately stays *off*
+the ramp — bus colours identify content, and four hues drawn from a
+three-colour ramp would separate neither from each other nor from the
+chrome.
 
 **Sequencer config bank** (8 slots): a config is a *snapshot*, stored in the
 state tree (`MangoBank` child of `apvts.state`), **not** in parameters — the
