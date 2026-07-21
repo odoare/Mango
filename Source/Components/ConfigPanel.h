@@ -8,10 +8,12 @@
     parameters, undo) and the recall timing.
 
     Slot appearance carries the state: filled = the active config, outlined =
-    stored, dim = empty; a dot marks the active config as edited since it was
-    loaded/stored, and an armed slot (waiting for a bar/pattern boundary)
-    pulses in the accent colour. Alt-click a store slot to clear it — the same
-    gesture that deletes a sequencer block.
+    stored, dim = empty; an underline marks a config stored *with* the effect
+    parameters (recalling it changes the sound, not just the pattern), a dot
+    marks the active config as edited since it was loaded/stored, and an armed
+    slot (waiting for a bar/pattern boundary) takes a thicker outline.
+    Alt-click a store slot to clear it — the same gesture that deletes a
+    sequencer block.
 
     All bank logic lives in the processor (state tree, not parameters); this
     panel only drives it and polls for the indicators.
@@ -111,9 +113,10 @@ public:
         g.drawText ("Store config to", storeCaptionArea, juce::Justification::centredLeft);
 
         g.setFont (juce::Font (juce::FontOptions (10.5f)));
-        g.drawFittedText ("Configs hold the blocks, grid, lane setup and seed."
+        g.drawFittedText ("Configs hold the blocks, grid, lane setup, routing and seed."
+                          "  An underlined slot also carries the effect parameters."
                           "  Alt-click a store slot to clear it.",
-                          hintArea, juce::Justification::topLeft, 3);
+                          hintArea, juce::Justification::topLeft, 4);
     }
 
     void resized() override
@@ -148,6 +151,7 @@ private:
     struct SlotButton : juce::TextButton
     {
         bool stored = false, active = false, armed = false, modified = false;
+        bool hasParams = false;   // stored with the effect parameters
         bool isStoreSlot = false;
 
         void paintButton (juce::Graphics& g, bool highlighted, bool) override
@@ -177,6 +181,16 @@ private:
             g.setFont (juce::Font (juce::FontOptions (12.0f, juce::Font::bold)));
             g.drawText (getButtonText(), getLocalBounds(), juce::Justification::centred);
 
+            // Underline: this config also carries the effect parameters, so
+            // recalling it changes the sound, not just the pattern.
+            if (stored && hasParams)
+            {
+                g.setColour (active && ! isStoreSlot ? juce::Colours::black.withAlpha (0.55f)
+                                                     : accent.withAlpha (0.9f));
+                g.fillRoundedRectangle (b.getX() + 3.0f, b.getBottom() - 3.5f,
+                                        b.getWidth() - 6.0f, 2.0f, 1.0f);
+            }
+
             // Edited-since-load dot on the active load slot.
             if (modified && active && ! isStoreSlot)
             {
@@ -200,17 +214,20 @@ private:
 
         for (int i = 0; i < numConfigs; ++i)
         {
-            const bool stored = processor.configIsStored (i);
+            const bool stored    = processor.configIsStored (i);
+            const bool hasParams = processor.configHasParams (i);
             for (auto* row : { &loadSlots, &storeSlots })
             {
                 auto& s = (*row)[(size_t) i];
                 if (s.stored != stored || s.active != (i == active)
-                    || s.armed != (i == armed) || s.modified != modified)
+                    || s.armed != (i == armed) || s.modified != modified
+                    || s.hasParams != hasParams)
                 {
-                    s.stored   = stored;
-                    s.active   = (i == active);
-                    s.armed    = (i == armed);
-                    s.modified = modified;
+                    s.stored    = stored;
+                    s.active    = (i == active);
+                    s.armed     = (i == armed);
+                    s.modified  = modified;
+                    s.hasParams = hasParams;
                     s.repaint();
                 }
             }

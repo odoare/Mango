@@ -261,15 +261,24 @@ only parameters are the `config` selector (1–8, automatable) and
 ~630 parameters would have meant ~5,000 host-visible parameters; generic
 "lane N param M" slots would have cost the host-facing naming and broken
 every existing session. What a config contains is decided by
-`mng::configParamKind(id)` in ParamIDs.h:
+`mng::configParamKind(id)` in ParamIDs.h, split by what a parameter
+*belongs to* rather than by whether it is a "sound" control:
 
-  - **Always** — grid (`stepsize`/`numsteps`), `numlanes`, lane order, per-lane
-    `type` and `busstart`, `busmode`, `seed`, plus the blocks (a `MangoSeq`
-    child, the same format the session uses). Blocks are meaningless without
-    their grid and seed, hence those being unconditional.
-  - **Optional** (`includeParams` flag on the bank, per stored slot) — the
-    effect parameter sets and the bus wet/pan.
-  - **Never** — mute, solo, global dry/wet, and the selector itself.
+  - **Always — structure**: grid (`stepsize`/`numsteps`), `numlanes`, lane
+    order, per-lane `type` and `busstart`, `busmode`, **`bus<n>_wet` and
+    `bus<n>_pan`**, `seed`, plus the blocks (a `MangoSeq` child, the same
+    format the session uses). Blocks are meaningless without their grid and
+    seed; and a bus's *identity* is defined by the config (`busstart`
+    decides which lanes are in it), so its level and pan must travel with
+    it or a recall leaves you with a routing you never balanced.
+  - **Optional — voicing** (`includeParams` flag on the bank, recorded per
+    stored slot, **default off**): the per-lane effect parameter sets, and
+    only those. Per-block override strings cover the same ground the other
+    way round — typed rather than knob-captured, per block rather than per
+    lane, and already carried inside every config since they live in the
+    blocks.
+  - **Never — performance**: mute, solo, global dry/wet, and the selector
+    itself.
 
 Recall flow: GUI clicks and host automation both go through the `config`
 parameter (one source of truth for the active-slot indicator) →

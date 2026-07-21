@@ -86,13 +86,16 @@ lane-count − / + chooser above the routing-mode button, the routing diagram
 and the per-bus wet/pan knobs (shown for active buses only).
 
 **Sequencer configs**: the **Configs** button swaps the lane panel for a bank
-of 8 configuration slots — one row to load, one to store. A config holds the
-blocks and override strings, the grid, the lane count/order/effect types, the
-bus grouping and the seed; tick *include effect parameters* to store the knob
-values too. Mute, solo and dry/wet are never stored, so a recall can't
-clobber your live mix. Slots show their state (filled = active, outlined =
-stored, dim = empty, dot = edited since loaded); alt-click a store slot to
-clear it, and *undo store* takes back the last overwrite. Recalls can be
+of 8 configuration slots — one row to load, one to store. A config is a
+*pattern*, not a sound: it holds the blocks and their override strings, the
+grid, the lane count/order/effect types, the whole bus routing (grouping,
+mode, per-bus wet and pan) and the seed. Tick *include effect parameters* —
+off by default — to store the effect knob values as well; slots that carry
+them are underlined, so a recall is never a surprise. Mute, solo and the
+global dry/wet are never stored, so a recall can't clobber your live mix.
+Slots show their state (filled = active, outlined = stored, dim = empty,
+dot = edited since loaded); alt-click a store slot to clear it, and *undo
+store* takes back the last overwrite. Recalls can be
 immediate or quantised to the next bar or pattern. Only the slot **selector**
 is a plugin parameter, so the bank is fully automatable from the host without
 multiplying the parameter count.

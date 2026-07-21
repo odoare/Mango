@@ -92,15 +92,25 @@ namespace mng
         }
     }
 
-    /** How a parameter relates to a stored sequencer config:
+    /** How a parameter relates to a stored sequencer config. The split is
+        by what a parameter *belongs to*, not by whether it is a "sound"
+        control:
 
-          Always   — structure the blocks are meaningless without (grid,
-                     lane count/order/types, bus grouping, seed).
-          Optional — the effect parameter sets and the bus wet/pan, stored
-                     only when "include effect parameters" is on.
-          Never    — live performance controls that a recall must not
-                     clobber (mute/solo, global dry/wet) and the config
-                     selector itself. */
+          Always   — **structure**: the shape of the rack. Grid, lane
+                     count/order/types, bus grouping and topology, the
+                     per-bus wet/pan, and the seed. A bus's identity is
+                     defined by the config (`busstart` decides which lanes
+                     are in it), so its level and pan have to travel with
+                     it — exactly like the blocks travelling with the grid
+                     they were drawn on.
+          Optional — **voicing**: how each effect sounds, i.e. the per-lane
+                     effect parameter sets. Stored only when "include
+                     effect parameters" is on; per-block override strings
+                     cover the same ground the other way round (typed, and
+                     already carried inside the blocks).
+          Never    — **performance**: what you touch during a take —
+                     mute, solo, the global dry/wet — plus the config
+                     selector itself. A recall must never clobber these. */
     enum class ConfigParamKind { Never, Always, Optional };
 
     inline ConfigParamKind configParamKind (const juce::String& id)
@@ -109,11 +119,15 @@ namespace mng
             || id.endsWith ("_mute") || id.endsWith ("_solo"))
             return ConfigParamKind::Never;
 
-        if (id == pid::numlanes || id == pid::busmode || id == pid::seed
+        const bool isBusMix = id.startsWith ("bus")
+                              && (id.endsWith ("_wet") || id.endsWith ("_pan"));
+
+        if (isBusMix
+            || id == pid::numlanes || id == pid::busmode || id == pid::seed
             || id == pid::stepsize || id == pid::numsteps
             || id.endsWith ("_type") || id.endsWith ("_busstart"))
             return ConfigParamKind::Always;
 
-        return ConfigParamKind::Optional;   // effect params + bus wet/pan
+        return ConfigParamKind::Optional;   // per-lane effect parameters
     }
 }

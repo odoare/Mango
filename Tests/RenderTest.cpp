@@ -621,6 +621,20 @@ static void testConfigBank()
     setParam (p, "seed", 99.0f);
     CHECK (p.configIsModified());
 
+    // --- bus wet/pan are structure, not voicing: a blocks-only config
+    // restores them (a bus's membership is defined by the config, so its
+    // level and pan have to travel with it).
+    setParam (p, "bus1_wet", 0.5f);
+    setParam (p, "bus1_pan", -0.75f);
+    p.storeConfig (2, false);
+    CHECK (! p.configHasParams (2));
+    setParam (p, "bus1_wet", 1.0f);
+    setParam (p, "bus1_pan", 0.0f);
+    p.requestConfigRecall (2);
+    pump();
+    CHECK (std::abs (getP (p, "bus1_wet") - 0.5f) < 1e-3f);
+    CHECK (std::abs (getP (p, "bus1_pan") + 0.75f) < 1e-3f);
+
     // --- undo restores what a store overwrote.
     p.requestConfigRecall (0);
     pump();

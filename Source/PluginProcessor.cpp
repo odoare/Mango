@@ -411,8 +411,10 @@ void MangoAudioProcessor::storeConfig (int slot, bool includeParams)
 
 bool MangoAudioProcessor::configIncludeParams() const
 {
+    // Off by default: a config is a pattern, not a sound. Structure (grid,
+    // routing, bus levels, seed) travels regardless.
     const auto bank = apvts.state.getChildWithName ("MangoBank");
-    return bank.isValid() ? (bool) bank.getProperty ("includeParams", true) : true;
+    return bank.isValid() ? (bool) bank.getProperty ("includeParams", false) : false;
 }
 
 void MangoAudioProcessor::setConfigIncludeParams (bool shouldInclude)
