@@ -443,7 +443,14 @@ umbrella `FxmeTools/FxmeTools.h` (module v0.0.3):
   string, keeping the blurb clear. Now takes an
   `initializer_list<{Component*, width}>` laid out left to right — Mango
   needs three slots (meter strip, preset bar, toggle) — with the original
-  bar+button overload kept for existing callers.
+  bar+button overload kept for existing callers. It also gained
+  `setDecoration(juce::Image)`: artwork centred in whatever space is left
+  between the blurb and those controls, scaled to the bar height. The blurb
+  is measured and takes only the width it needs, so the gap — and the image
+  centred in it — adapts to the description's length; `onlyReduceInSize`
+  keeps a narrow gap from being overflowed. Mango passes
+  `Assets/Mango.png`, the pixel-art fruit on a yellow -> green -> red
+  waveform — the identity ramp again.
 - `midi/StringSequencer.h` gained `addBlockWithId` (id-stable restore) and
   `moveBlock` (whole-block move with walls).
 - `midi/SequencerEngine.h` gained `setEnterEmptyBlocks`, `relocate()` (always

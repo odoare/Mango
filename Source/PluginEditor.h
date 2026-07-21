@@ -52,7 +52,7 @@ private:
 
     fxme::FxmeLookAndFeel lnf;
 
-    fxme::TopBar topBar { "Mango", "modular sound glitcher/mangler",
+    fxme::TopBar topBar { "Mango", "modular sound mangler",
                           JucePlugin_VersionString,
                           juce::ImageCache::getFromMemory (BinaryData::logo686_png,
                                                            BinaryData::logo686_pngSize) };

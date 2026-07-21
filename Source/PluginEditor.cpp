@@ -20,6 +20,10 @@ MangoAudioProcessorEditor::MangoAudioProcessorEditor (MangoAudioProcessor& p)
 {
     setLookAndFeel (&lnf);
 
+    // The fruit + waveform artwork fills the gap left of the meters (it
+    // carries the same yellow -> green -> red ramp as the rest of the GUI).
+    topBar.setDecoration (juce::ImageCache::getFromMemory (BinaryData::Mango_png,
+                                                           BinaryData::Mango_pngSize));
     addAndMakeVisible (topBar);
     addAndMakeVisible (rack);
     addAndMakeVisible (busBar);
