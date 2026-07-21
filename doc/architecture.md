@@ -47,15 +47,16 @@ patterns), FxmeFX (Tube saturation origin), Gloubiboulga (formant origin).
   | Ring | ring modulator: sine carrier glides exponentially f0→f1 over a drawn tempo-synced ramp, repeating for the block; amount 0–1 blends clean → full ±1 modulation (`x·(1−amp+amp·sin)`); carrier phase restarts at block entry (not on re-enters) so passes reproduce; one carrier feeds all channels | `ring_`: 7 weights, `f0`, `f1` (0.5 Hz–10 kHz), `amp` |
   | Rev | reverser: records drawn-duration slices and plays each backwards (while slice k records, slice k−1 plays reversed; the first slice of a block passes through); `fade` = 0–0.5 slice fraction faded at the seams; slice grid restarts at block entry (not on re-enters) so passes reproduce; pure sample copy, no interpolation | `rev_`: 7 weights, `fade` |
   | Freeze | spectral freeze (`fxme::SpectralFreezeMulti` — Mango's effect is only the APVTS adapter; WDL FFT): captures one 2048-sample window at block entry (passed through while recording, so blocks shorter than ~43 ms stay dry), then random-phase resynthesis of its magnitude spectrum — Hann/75% OLA, one iFFT per 512-sample hop (4 at the capture→wash switch) — sustains a static wash; phases keyed on (seed, lane, block, channel) with the frame counter restarting at entry, so passes reproduce and the two channels decorrelate into a wide image; `frz_width` blends the two wet channels (L' = a·L + b·R, mirrored, a:b = (1/2+w/2):(1/2−w/2) normalised to a²+b²=1 — equal power over the sweep since the washes are incoherent: 1 wide, 0 mono) | `frz_mix`, `frz_width` |
+  | Aux | rhythmic aux send: the gater's draw/envelope/curves verbatim, but the shaped signal is *added* to the plugin's two aux stereo outputs (`aux_send1`/`aux_send2`) instead of being cut, while the main path is scaled by a flat `aux_pass` (1 = transparent, a send on top; 0 = the block leaves the main chain). The tap is the bus signal at the lane's position, before the bus wet/pan. Aux buffers arrive via `EffectBase::setAuxBuffers`, set by the engine once per processBlock; nullptr = that bus is disabled in the host and the send is dropped | `aux_`: 7 weights, `att`, `rel`, `attcurve`, `relcurve`, `send1`, `send2`, `pass` |
 
 - **Per-effect mix**: every effect has a wet/dry `<fx>_mix` parameter
   (default 1, override key `mix`) — except the ring modulator, whose
-  `amp` plays that role. Gater applies it as gain = 1−mix+mix·gate; the
+  `amp` plays that role, and the aux send, whose `pass` does. Gater applies it as gain = 1−mix+mix·gate; the
   delay scales its added delayed signal; the others blend dry/wet.
   Filters/loopers keep running at full level so their state stays
   continuous — mix only blends the output.
 - **Weighted random durations** (gate rate, grain length, filter ramp,
-  ring glide, reverse slice): the
+  ring glide, reverse slice, aux send rate): the
   user weights P(1/4..1/32) × P(straight/triplet/dotted); the actual duration
   is drawn at block entry. **Draws are a pure function of (seed, lane
   identity, blockId, drawIndex)** — never of time or loop pass — so every
@@ -74,8 +75,8 @@ patterns), FxmeFX (Tube saturation origin), Gloubiboulga (formant origin).
   frequency in Hz (1/mididur), same `*N` `/N` `N*` forms. All lane
   parameters are reachable:
   `dur fb damp porta att rel attcurve relcurve q f0 f1 v0 v1 bits down
-  drive bias sag gain mix width model mode fade amp w4 w8 w16 w32 wstr
-  wtrip wdot`.
+  drive bias sag gain mix width model mode fade amp aux1 aux2 pass
+  w4 w8 w16 w32 wstr wtrip wdot`.
 - **Globals**: dry/wet, seed (0–99999), step size, num steps, bus routing
   mode + per-bus wet/pan (see §3 buses), lane count
   (−/+ buttons).
@@ -149,6 +150,19 @@ GUI; a mode needing more buses than exist falls back to parallel):
     present, stays parallel from the plugin input.
   - 2 (needs 4 buses): buses 1–3 parallel feeders → bus 4 processes their
     mix; the output is bus 4 alone.
+
+**Aux outputs**: the processor declares two extra stereo output buses,
+"Aux 1" and "Aux 2", **disabled by default** so a host (or the standalone
+app) wiring only a stereo pair is unaffected; `isBusesLayoutSupported`
+accepts each as disabled-or-stereo. `processBlock` works on
+`getBusBuffer(buffer, false, 0)` — the engine is prepared with
+`getMainBusNumOutputChannels()`, never the total, which would count the aux
+channels and oversize every working buffer — and hands the engine
+non-owning views of the enabled aux buses (`setDataToReferTo`, not
+assignment: copying an `AudioBuffer` allocates). Aux buses are additive
+destinations, so they are cleared every block; the engine passes them to
+each lane's *current* effect via `EffectBase::setAuxBuffers` after the type
+sync, and only `AuxSendEffect` uses them.
 
 `busMapByLane()` / `busCount()` (message thread, lock briefly) feed the
 GUI: every lane is coloured by its bus (`theme::busColour`, 4 colours),
@@ -328,7 +342,8 @@ live outside it until save time).
   around the centre (filled lens per repetition); delay = decaying vertical
   lines spaced by the delay time (uses published bpm); dist = tanh-squashed
   sine; quant = staircase sine; filter = repeating ramp in a distinct dark
-  colour. Painters parse the block's own override string. Override text is
+  colour; aux send = the gate envelope filled (scaled by the larger send)
+  under a dashed line at the passthrough level. Painters parse the block's own override string. Override text is
   drawn at 12.5 px with a dark backing.
 - **Rubber gestures** (fxme::SequencerRubber): drag empty space = create;
   body click = select (click again = deselect, resolved on mouse-up); body
@@ -425,7 +440,9 @@ umbrella `FxmeTools/FxmeTools.h` (module v0.0.3):
   + audio), host-tempo sync via a FakePlayHead (the engines start on the
   first process() for this reason), live weight change mid-block, release
   curve RMS values (0.20/0.41/0.61 analytic match), att/rel proportional
-  sharing (peak at 2/3), mute/solo, pass repeatability (recomputes the
+  sharing (peak at 2/3), mute/solo, aux sends (both aux buses enabled via enableAllBuses: gated
+  send levels vs the flat main passthrough, and the effect degrading to a
+  plain level control when the buses are disabled), pass repeatability (recomputes the
   expected draw), loop-jump re-entry (dotted quarter exposes stale phase).
   `MangoRenderTest <path.png>` instead dumps GUI snapshots (editor + gater +
   filter panels; pumps the message loop so the async grid update applies).

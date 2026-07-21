@@ -16,6 +16,7 @@
 #include "Effects/RingModEffect.h"
 #include "Effects/ReverserEffect.h"
 #include "Effects/FreezeEffect.h"
+#include "Effects/AuxSendEffect.h"
 
 namespace mng
 {
@@ -35,6 +36,7 @@ namespace
             case EffectType::RingMod:    return std::make_unique<RingModEffect>();
             case EffectType::Reverser:   return std::make_unique<ReverserEffect>();
             case EffectType::Freeze:     return std::make_unique<FreezeEffect>();
+            case EffectType::AuxSend:    return std::make_unique<AuxSendEffect>();
         }
         return nullptr;
     }
@@ -53,6 +55,7 @@ namespace
             case EffectType::RingMod:    static_cast<RingModEffect&>    (fx).bindParameters (apvts, prefix); break;
             case EffectType::Reverser:   static_cast<ReverserEffect&>   (fx).bindParameters (apvts, prefix); break;
             case EffectType::Freeze:     static_cast<FreezeEffect&>     (fx).bindParameters (apvts, prefix); break;
+            case EffectType::AuxSend:    static_cast<AuxSendEffect&>    (fx).bindParameters (apvts, prefix); break;
         }
     }
 }
@@ -108,6 +111,7 @@ void MangoEngine::addLaneParameters (std::vector<std::unique_ptr<juce::RangedAud
         RingModEffect::addParameters    (params, prefix, nameP);
         ReverserEffect::addParameters   (params, prefix, nameP);
         FreezeEffect::addParameters     (params, prefix, nameP);
+        AuxSendEffect::addParameters    (params, prefix, nameP);
     }
 }
 
@@ -329,7 +333,9 @@ void MangoEngine::syncEffectType (Lane& lane)
 //==============================================================================
 void MangoEngine::process (juce::AudioBuffer<float>& buffer,
                            const juce::Optional<juce::AudioPlayHead::PositionInfo>& position,
-                           float dryWet)
+                           float dryWet,
+                           juce::AudioBuffer<float>* aux1,
+                           juce::AudioBuffer<float>* aux2)
 {
     const int numSamples  = buffer.getNumSamples();
     const int numChannels = juce::jmin (buffer.getNumChannels(), dryBuffer.getNumChannels());
@@ -384,6 +390,10 @@ void MangoEngine::process (juce::AudioBuffer<float>& buffer,
                 handleBlockEnter (lane, lane.activeBlockId, true);
             }
         }
+
+        // Aux destinations for the lanes that send (types are settled by
+        // now). They live for this process() call only.
+        currentEffect (lane).setAuxBuffers (aux1, aux2);
     }
 
     // Lane count + mute/solo: hidden rows and bypassed lanes still advance

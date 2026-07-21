@@ -19,6 +19,9 @@
                  by the modulation amount
       Reverser   falling ramps, one per drawn slice (time running backwards)
       Freeze     horizontal dashed lines (a spectrum holding still)
+      AuxSend    the gate envelope filled (what leaves for the aux buses)
+                 under a dashed line at the passthrough level (what carries
+                 on down the main path)
 
     Everything is drawn in *beats*: durations drawn from the probability
     weights are in beats, and the block's width maps linearly onto its
@@ -264,6 +267,40 @@ inline void paintRampCurve (juce::Graphics& g, juce::Rectangle<float> r,
     }
     g.setColour (colour);
     g.strokePath (p, juce::PathStrokeType (1.4f));
+}
+
+/** Aux send: the gate envelope filled in (the shaped signal leaving for the
+    aux buses, scaled by the larger of the two send levels) with a dashed
+    line across it at the passthrough level (what stays on the main path).
+    Filled rather than stroked so it never reads as a gater. */
+inline void paintSendEnv (juce::Graphics& g, juce::Rectangle<float> r,
+                          double blockBeats, const EnvShape& shape,
+                          float sendLevel, float passLevel, juce::Colour colour)
+{
+    if (r.getWidth() < 4.0f || blockBeats <= 0.0)
+        return;
+
+    const float top = r.getY() + 2.0f, bottom = r.getBottom() - 2.0f;
+    const float send = juce::jlimit (0.0f, 1.0f, sendLevel);
+    const int   n    = (int) r.getWidth();
+
+    juce::Path p;
+    p.startNewSubPath (r.getX(), bottom);
+    for (int x = 0; x <= n; ++x)
+        p.lineTo (r.getX() + (float) x,
+                  bottom - send * envValue (blockBeats * x / r.getWidth(), shape) * (bottom - top));
+    p.lineTo (r.getX() + (float) n, bottom);
+    p.closeSubPath();
+
+    g.setColour (colour.withMultipliedAlpha (0.4f));
+    g.fillPath (p);
+    g.setColour (colour);
+    g.strokePath (p, juce::PathStrokeType (1.2f));
+
+    const float dashes[] = { 4.0f, 3.0f };
+    const float y = bottom - juce::jlimit (0.0f, 1.0f, passLevel) * (bottom - top);
+    g.setColour (colour.withMultipliedAlpha (0.75f));
+    g.drawDashedLine (juce::Line<float> (r.getX(), y, r.getRight(), y), dashes, 2, 1.2f);
 }
 
 } // namespace mng::blockgfx

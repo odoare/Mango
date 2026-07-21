@@ -20,6 +20,11 @@
     chain is bit-identical to the plain serial chain, and idle parallel
     buses each pass a copy of the dry input.
 
+    Aux: on top of the main output the plugin has two auxiliary stereo
+    outputs. A lane running the AuxSend effect adds its bus's signal into
+    them (rhythmically gated) at the point in the chain where the lane
+    sits, and controls how much of it carries on down the main path.
+
     Locking contract: one CriticalSection (`lock()`) guards the lane
     sequencers, the display order and the parsed-override map. The audio thread
     holds it for the whole DSP section of process(); every message-thread
@@ -127,9 +132,15 @@ public:
             v.fetch_add (1);
     }
 
+    /** `aux1`/`aux2` are the plugin's auxiliary stereo outputs, already
+        cleared by the caller and sharing `buffer`'s sample indices; lanes
+        running an AuxSend effect add into them. Either may be nullptr when
+        the host has that bus disabled. */
     void process (juce::AudioBuffer<float>& buffer,
                   const juce::Optional<juce::AudioPlayHead::PositionInfo>& position,
-                  float dryWet);
+                  float dryWet,
+                  juce::AudioBuffer<float>* aux1 = nullptr,
+                  juce::AudioBuffer<float>* aux2 = nullptr);
 
     // ---- GUI polling (atomics published from the audio thread) ---------------
 

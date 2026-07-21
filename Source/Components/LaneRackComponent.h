@@ -449,6 +449,24 @@ private:
                 blockgfx::paintFreezeLines (g, r, ovOr (OvKey::Mix, param ("frz_mix")),
                                             curveColour);
                 break;
+
+            case EffectType::AuxSend:
+            {
+                const double dur = juce::jmax (1.0e-3, ovDurBeats (drawnBeats ("aux_")));
+                blockgfx::EnvShape s;
+                s.cycleBeats = 2.0 * dur;
+                s.openBeats  = dur;
+                s.attFrac    = ovOr (OvKey::Att, param ("aux_att"));
+                s.relFrac    = ovOr (OvKey::Rel, param ("aux_rel"));
+                normaliseAttackRelease (s.attFrac, s.relFrac);
+                s.attGamma   = attackGammaFor (ovOr (OvKey::AttCurve, param ("aux_attcurve")));
+                s.relGamma   = releaseGammaFor (ovOr (OvKey::RelCurve, param ("aux_relcurve")));
+                const float send = juce::jmax (ovOr (OvKey::Aux1, param ("aux_send1")),
+                                               ovOr (OvKey::Aux2, param ("aux_send2")));
+                blockgfx::paintSendEnv (g, r, blockBeats, s, send,
+                                        ovOr (OvKey::Pass, param ("aux_pass")), curveColour);
+                break;
+            }
         }
     }
 

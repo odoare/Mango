@@ -17,9 +17,15 @@ using namespace mng;
 
 //==============================================================================
 MangoAudioProcessor::MangoAudioProcessor()
+    // The two aux outputs are declared disabled: a host (or the standalone
+    // app) that only wires up a stereo pair keeps working untouched, and
+    // enabling them is a deliberate act. Lanes running the AuxSend effect
+    // feed them.
     : AudioProcessor (BusesProperties()
                       .withInput  ("Input",  juce::AudioChannelSet::stereo(), true)
-                      .withOutput ("Output", juce::AudioChannelSet::stereo(), true))
+                      .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
+                      .withOutput ("Aux 1",  juce::AudioChannelSet::stereo(), false)
+                      .withOutput ("Aux 2",  juce::AudioChannelSet::stereo(), false))
 {
     engine.bindParameters (apvts);
 
@@ -78,7 +84,9 @@ void MangoAudioProcessor::changeProgramName (int, const juce::String&) {}
 //==============================================================================
 void MangoAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    engine.prepare (sampleRate, samplesPerBlock, getTotalNumOutputChannels());
+    // The engine works on the main bus; the aux buses are pure destinations
+    // (getTotalNumOutputChannels would count them and oversize everything).
+    engine.prepare (sampleRate, samplesPerBlock, getMainBusNumOutputChannels());
 }
 
 void MangoAudioProcessor::releaseResources()
@@ -90,17 +98,49 @@ bool MangoAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) co
     const auto in  = layouts.getMainInputChannelSet();
     const auto out = layouts.getMainOutputChannelSet();
 
-    return (in == juce::AudioChannelSet::mono() || in == juce::AudioChannelSet::stereo())
+    if (! ((in == juce::AudioChannelSet::mono() || in == juce::AudioChannelSet::stereo())
         && (out == juce::AudioChannelSet::mono() || out == juce::AudioChannelSet::stereo())
-        && in.size() <= out.size();
+        && in.size() <= out.size()))
+        return false;
+
+    // Each aux output is either off or stereo — the send writes a pair.
+    for (int bus = 1; bus <= 2; ++bus)
+    {
+        const auto aux = layouts.getChannelSet (false, bus);
+        if (! (aux.isDisabled() || aux == juce::AudioChannelSet::stereo()))
+            return false;
+    }
+    return true;
 }
 
 void MangoAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi)
 {
     juce::ScopedNoDenormals noDenormals;
 
-    for (int ch = getTotalNumInputChannels(); ch < getTotalNumOutputChannels(); ++ch)
-        buffer.clear (ch, 0, buffer.getNumSamples());
+    const int numSamples = buffer.getNumSamples();
+
+    auto main = getBusBuffer (buffer, false, 0);
+    for (int ch = getMainBusNumInputChannels(); ch < main.getNumChannels(); ++ch)
+        main.clear (ch, 0, numSamples);
+
+    // The aux buses are additive destinations: whatever the host left in
+    // them is not ours, so they start silent every block.
+    // (setDataToReferTo, not assignment: these are non-owning views onto the
+    // host's buffer — copy-assigning an AudioBuffer would allocate here.)
+    juce::AudioBuffer<float> aux[2];
+    juce::AudioBuffer<float>* auxPtr[2] { nullptr, nullptr };
+    float* auxChannels[2][2] {};
+    for (int bus = 0; bus < 2; ++bus)
+        if (auto* b = getBus (false, bus + 1); b != nullptr && b->isEnabled())
+        {
+            const int base = getChannelIndexInProcessBlockBuffer (false, bus + 1, 0);
+            const int n    = juce::jmin (2, b->getNumberOfChannels());
+            for (int ch = 0; ch < n; ++ch)
+                auxChannels[bus][ch] = buffer.getWritePointer (base + ch);
+            aux[bus].setDataToReferTo (auxChannels[bus], n, numSamples);
+            aux[bus].clear();
+            auxPtr[bus] = &aux[bus];
+        }
 
     // mididur: the period of the last note-on received. MIDI passes through.
     for (const auto metadata : midi)
@@ -111,9 +151,10 @@ void MangoAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::
                 (float) (1.0 / juce::MidiMessage::getMidiNoteInHertz (msg.getNoteNumber())));
     }
 
-    engine.process (buffer, getPlayHead() != nullptr ? getPlayHead()->getPosition()
-                                                     : juce::Optional<juce::AudioPlayHead::PositionInfo>(),
-                    apvts.getRawParameterValue (pid::drywet)->load());
+    engine.process (main, getPlayHead() != nullptr ? getPlayHead()->getPosition()
+                                                   : juce::Optional<juce::AudioPlayHead::PositionInfo>(),
+                    apvts.getRawParameterValue (pid::drywet)->load(),
+                    auxPtr[0], auxPtr[1]);
 }
 
 //==============================================================================

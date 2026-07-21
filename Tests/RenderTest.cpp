@@ -402,6 +402,84 @@ static void testBuses()
 }
 
 //==============================================================================
+/** Aux send: with the two aux output buses enabled, a lane running the
+    AuxSend effect gates its signal into them while leaving the main path at
+    the passthrough level. */
+static void testAuxSend()
+{
+    MangoAudioProcessor p;
+    CHECK (p.enableAllBuses());
+    CHECK (p.getTotalNumOutputChannels() == 6);
+
+    setParam (p, "l0_type", 9.0f);          // Aux send
+    setParam (p, "l0_aux_send1", 1.0f);
+    setParam (p, "l0_aux_send2", 0.5f);
+    setParam (p, "l0_aux_pass", 0.25f);
+    setParam (p, "l0_aux_att", 0.0f);       // hard edges: exact levels to compare
+    setParam (p, "l0_aux_rel", 0.0f);
+    addFullBlock (p, 0);
+
+    // Defaults draw a 1-beat gate = 0.5 s at the 120 bpm free-run: the send
+    // is open on [0, 0.5) and closed on [0.5, 1.0).
+    p.prepareToPlay (kSampleRate, kBlockSize);
+
+    std::vector<float> mainOut, aux1Out, aux2Out;
+    juce::AudioBuffer<float> buffer (6, kBlockSize);
+    juce::MidiBuffer midi;
+
+    double phase = 0.0;
+    const double inc = 2.0 * juce::MathConstants<double>::pi * 440.0 / kSampleRate;
+    const int numBlocks = (int) std::ceil (1.0 * kSampleRate / kBlockSize);
+
+    for (int b = 0; b < numBlocks; ++b)
+    {
+        buffer.clear();
+        for (int i = 0; i < kBlockSize; ++i)
+        {
+            const float s = (float) std::sin (phase);
+            phase += inc;
+            buffer.setSample (0, i, s);
+            buffer.setSample (1, i, s);
+        }
+        p.processBlock (buffer, midi);
+        for (int i = 0; i < kBlockSize; ++i)
+        {
+            mainOut.push_back (buffer.getSample (0, i));
+            aux1Out.push_back (buffer.getSample (2, i));
+            aux2Out.push_back (buffer.getSample (4, i));
+        }
+    }
+
+    const float dryRms = 1.0f / std::sqrt (2.0f);
+
+    // Main path: the flat passthrough level, gate open or closed.
+    CHECK (std::abs (rmsOf (mainOut, 0.05, 0.45) - 0.25f * dryRms) < 0.01f);
+    CHECK (std::abs (rmsOf (mainOut, 0.55, 0.95) - 0.25f * dryRms) < 0.01f);
+
+    // Aux 1 at full send, aux 2 at half — both gated, both silent when shut.
+    CHECK (std::abs (rmsOf (aux1Out, 0.05, 0.45) - dryRms) < 0.01f);
+    CHECK (std::abs (rmsOf (aux2Out, 0.05, 0.45) - 0.5f * dryRms) < 0.01f);
+    CHECK (rmsOf (aux1Out, 0.55, 0.95) < 0.001f);
+    CHECK (rmsOf (aux2Out, 0.55, 0.95) < 0.001f);
+
+    std::printf ("aux send: main %.3f / aux1 %.3f %.4f / aux2 %.3f %.4f\n",
+                 rmsOf (mainOut, 0.05, 0.45),
+                 rmsOf (aux1Out, 0.05, 0.45), rmsOf (aux1Out, 0.55, 0.95),
+                 rmsOf (aux2Out, 0.05, 0.45), rmsOf (aux2Out, 0.55, 0.95));
+
+    // With the aux buses disabled again the effect is just a level control
+    // on the main path — and must not touch anything outside it.
+    {
+        MangoAudioProcessor q;
+        setParam (q, "l0_type", 9.0f);
+        setParam (q, "l0_aux_pass", 0.5f);
+        addFullBlock (q, 0);
+        const auto out = render (q, 0.4);
+        CHECK (std::abs (rmsOf (out, 0.05, 0.35) - 0.5f * dryRms) < 0.01f);
+    }
+}
+
+//==============================================================================
 static void testBusModes()
 {
     auto makeInput = [] (size_t count)
@@ -1055,6 +1133,7 @@ int main (int argc, char* argv[])
     testReverser();
     testFreeze();
     testBuses();
+    testAuxSend();
     testBusModes();
     testEffectMix();
     testConfigBank();

@@ -39,13 +39,15 @@ rel=0.5 acts as att=2/3, rel=1/3. The curves set the edge shapes: 0 slow,
 | Ring    | Ring modulator: a sine carrier glides from a start to an end frequency over a drawn tempo-synced ramp, repeating for the block. Amount 0 = clean, 1 = full ring modulation (low frequencies give tremolo) | start/end freq (0.5 Hz–10 kHz), amount, glide probabilities |
 | Rev     | Reverser: chops the audio into drawn-duration slices and plays each backwards (the first slice of a block passes through — there is nothing to reverse yet) | slice probabilities, seam fade |
 | Freeze  | Spectral freeze (FFT): captures ~43 ms at block start (passed through while recording), then sustains its spectrum as a static, non-periodic wash for the rest of the block. Width sets how similar L and R are (1 = fully decorrelated/wide, 0 = mono; equal-power, so the level stays constant) | mix, width |
+| Aux     | Rhythmic aux send: the gater's envelope, but it *routes* rather than cuts — while the gate is open the shaped signal is added to the two aux outputs at their send levels, and the main path passes at a constant passthrough level (1 = transparent, a send on top; 0 = the block leaves the main chain entirely). Needs the aux outputs enabled in the host | aux 1 / aux 2 send, passthrough, attack/release lengths + curves, duration probabilities |
 
 **Mix**: every effect has a wet/dry mix knob (override key `mix`) — except the
-ring modulator, whose `amount` plays that role. At 0 the lane is transparent;
+ring modulator, whose `amount` plays that role, and the aux send, whose
+`passthrough` does. At 0 the lane is transparent;
 for the delay, mix scales the delayed signal added to the dry.
 
 **Duration probabilities**: effects that need a rhythmic duration (gate rate, grain
-length, filter ramp, ring glide, reverse slice) don't use a fixed value. You weight the probability of
+length, filter ramp, ring glide, reverse slice, aux send rate) don't use a fixed value. You weight the probability of
 1/4, 1/8, 1/16, 1/32 and of straight/triplet/dotted; the actual duration is
 drawn from those weights — e.g. with P(1/4)=1, P(1/8)=0.5, P(1/16)=0.1 the
 chance of an uncut quarter is 1/1.6. The draw is a pure function of
@@ -70,7 +72,7 @@ v0=a v1=u               formant glide from A to U
   eighth) resolved against the host tempo; any expression with `mididur` is a
   time in seconds (`mididur`, `mididur*2`, `mididur/4`, `3*mididur`).
 - Other keys are in the parameter's native unit:
-  `fb damp porta att rel attcurve relcurve q f0 f1 v0 v1 bits down drive bias sag gain mix width model mode fade amp`
+  `fb damp porta att rel attcurve relcurve q f0 f1 v0 v1 bits down drive bias sag gain mix width model mode fade amp aux1 aux2 pass`
   and the duration probability weights `w4 w8 w16 w32 wstr wtrip wdot`
   (each effect reads the keys it understands).
 - **`mididur`** is 1/f of the last MIDI note-on the plugin received, sampled when
@@ -81,7 +83,15 @@ v0=a v1=u               formant glide from A to U
 
 Dry/Wet, Seed (0–99999), the shared grid (step size 1/16…1/1, 1–64 steps),
 and the lane count (1–8, default 4 — hidden lanes keep their blocks and
-settings and simply stop processing). The bus bar under the rack holds the
+settings and simply stop processing).
+
+**Aux outputs**: besides the main stereo pair the plugin offers two extra
+stereo outputs, **Aux 1** and **Aux 2**, declared disabled — enable them in
+the host to use them. Lanes running the Aux effect feed them from wherever
+they sit in the chain (the tap is before the bus wet/pan, so an aux send is
+unaffected by the bus balance).
+
+The bus bar under the rack holds the
 lane-count − / + chooser above the routing-mode button, the routing diagram
 and the per-bus wet/pan knobs (shown for active buses only).
 

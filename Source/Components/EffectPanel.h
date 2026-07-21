@@ -109,6 +109,17 @@ public:
                 addKnob (prefix + "frz_mix", "Mix");
                 addKnob (prefix + "frz_width", "Width");
                 break;
+
+            case EffectType::AuxSend:
+                addKnob (prefix + "aux_send1", "Aux 1");
+                addKnob (prefix + "aux_send2", "Aux 2");
+                addKnob (prefix + "aux_pass", "Pass");
+                addKnob (prefix + "aux_att", "Attack");
+                addKnob (prefix + "aux_rel", "Release");
+                addKnob (prefix + "aux_attcurve", "Att Curve");
+                addKnob (prefix + "aux_relcurve", "Rel Curve");
+                addWeights (prefix + "aux_");
+                break;
         }
     }
 
@@ -209,6 +220,7 @@ private:
             case EffectType::RingMod:    return "dur f0 f1 amp\n" + weights;
             case EffectType::Reverser:   return "dur fade mix\n" + weights;
             case EffectType::Freeze:     return "mix width";
+            case EffectType::AuxSend:    return "dur att rel attcurve relcurve aux1 aux2 pass\n" + weights;
         }
         return {};
     }

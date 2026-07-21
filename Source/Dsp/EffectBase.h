@@ -116,6 +116,15 @@ public:
         called while this lane's block is active. */
     virtual void process (juce::AudioBuffer<float>& buffer,
                           int startSample, int numSamples) = 0;
+
+    /** Destinations for effects that send audio *out* of the lane chain
+        (AuxSend). The engine sets these on each lane's current effect once
+        per processBlock; the buffers share the main buffer's sample
+        indices, so process()'s startSample applies to them unchanged.
+        Either may be nullptr — the host has that aux bus disabled — and an
+        effect that doesn't send simply ignores them. Audio thread. */
+    virtual void setAuxBuffers (juce::AudioBuffer<float>* /*aux1*/,
+                                juce::AudioBuffer<float>* /*aux2*/) {}
 };
 
 } // namespace mng
