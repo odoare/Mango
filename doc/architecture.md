@@ -342,6 +342,16 @@ covering the right column when toggled. Caveat: block edits alone don't
 mark the preset dirty (the dirty tracker watches apvts.state, and blocks
 live outside it until save time).
 
+**Level meters**: four stereo taps — input, main output, aux 1, aux 2 —
+metered with `fxme::VuMeter` (RMS over a 0.1 s window, atomics read by the
+GUI). The processor feeds the input tap *before* `engine.process`, which
+works in place, and the rest after; an aux bus the host has disabled is fed
+a `silence` buffer so its bars fall away rather than freezing at their last
+level. Components/MeterStrip.h lays out eight `fxme::VuMeterComponent` bars
+(−60..0 dBFS, unity mark at −6) with their labels and polls at 20 Hz. All
+bars share one colour: on a meter red means clipping, so aux bars sampling
+the red end of the identity ramp would read as a fault.
+
 - `fxme::TopBar` (54 px, logo from BinaryData) · `fxme::FxmeLookAndFeel` ·
   `fxme::FxmeSlider` knobs (right-click value entry; styleKnob = dark disc +
   per-control accent).
@@ -428,10 +438,12 @@ umbrella `FxmeTools/FxmeTools.h` (module v0.0.3):
   indents leave no room at that size). Mango uses it for the lane
   headers' M/S/B letters, the Configs button and the config panel's
   include-parameters toggle.
-- `components/TopBar.h` gained `setRightControls(bar, w, button, w)`
-  (promoted from AmbiRR2's local TopBar): parks externally-owned controls
-  — the compact preset bar and its toggle — left of the version string,
-  keeping the blurb clear.
+- `components/TopBar.h` gained `setRightControls` (promoted from AmbiRR2's
+  local TopBar): parks externally-owned controls left of the version
+  string, keeping the blurb clear. Now takes an
+  `initializer_list<{Component*, width}>` laid out left to right — Mango
+  needs three slots (meter strip, preset bar, toggle) — with the original
+  bar+button overload kept for existing callers.
 - `midi/StringSequencer.h` gained `addBlockWithId` (id-stable restore) and
   `moveBlock` (whole-block move with walls).
 - `midi/SequencerEngine.h` gained `setEnterEmptyBlocks`, `relocate()` (always

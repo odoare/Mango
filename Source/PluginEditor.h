@@ -25,6 +25,7 @@
 #include "Components/BlockTextPanel.h"
 #include "Components/PresetOverlay.h"
 #include "Components/ConfigPanel.h"
+#include "Components/MeterStrip.h"
 
 //==============================================================================
 class MangoAudioProcessorEditor : public juce::AudioProcessorEditor,
@@ -59,8 +60,9 @@ private:
     mng::LaneRackComponent rack;
     mng::BusBar busBar;
 
-    // Presets: compact strip + toggle in the top bar, full browser over
-    // the right column when toggled.
+    // Top bar, left to right: the level meters, then the compact preset
+    // strip and its toggle (the full browser covers the right column).
+    mng::MeterStrip meters { processor };
     fxme::PresetBarComponent presetBar { processor.getPresetManager() };
     juce::TextButton presetToggle;
     mng::PresetOverlay presetOverlay { processor.getPresetManager() };

@@ -76,6 +76,21 @@ public:
 
     fxme::PresetManager& getPresetManager() noexcept { return presetManager; }
 
+    // ---- level metering (fxme::VuMeter, fed from the audio thread) -----------
+    // Four stereo taps for the top-bar meter strip. The aux ones read the
+    // buses whether or not the host enabled them: a disabled bus is fed
+    // silence so its bars fall away instead of freezing at their last level.
+
+    enum MeterTap { MeterInput = 0, MeterOutput, MeterAux1, MeterAux2, kNumMeterTaps };
+
+    /** RMS level in dBFS of one tap's channel (0 = left). Message thread;
+        reads an atomic published by the audio thread. */
+    float meterLevelDb (int tap, int channel) const
+    {
+        return meters[(size_t) juce::jlimit (0, kNumMeterTaps - 1, tap)]
+                     [(size_t) juce::jlimit (0, 1, channel)].getRMS();
+    }
+
     // ---- message-thread helpers used by the editor ---------------------------
 
     /** Stores a block's override string (under the engine lock) and re-parses
@@ -136,6 +151,16 @@ private:
     void requestConfigRecallSelectorOnly (int slot);
     juce::uint64 configSignature (bool includeParams) const;
     void noteConfigApplied (int slot);
+
+    /** Feeds one stereo tap, mirroring a mono source onto both bars.
+        `numChannels` overrides how many of `source`'s channels really carry
+        signal — a mono input sits in a stereo main buffer whose second
+        channel we cleared, and metering that as silence would be a lie. */
+    void feedMeter (int tap, const juce::AudioBuffer<float>& source, int numSamples,
+                    int numChannels = -1);
+
+    std::array<std::array<fxme::VuMeter, 2>, kNumMeterTaps> meters;
+    juce::AudioBuffer<float> silence;        // fed to taps with nothing to read
 
     std::atomic<int> pendingRecall { -1 };   // slot queued by the config parameter
     int armedSlot = -1;                      // waiting for a bar/pattern boundary

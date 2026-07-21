@@ -87,6 +87,13 @@ void MangoAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     // The engine works on the main bus; the aux buses are pure destinations
     // (getTotalNumOutputChannels would count them and oversize everything).
     engine.prepare (sampleRate, samplesPerBlock, getMainBusNumOutputChannels());
+
+    for (auto& tap : meters)
+        for (auto& m : tap)
+            m.prepare (sampleRate);
+
+    silence.setSize (1, juce::jmax (1, samplesPerBlock));
+    silence.clear();
 }
 
 void MangoAudioProcessor::releaseResources()
@@ -151,10 +158,33 @@ void MangoAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::
                 (float) (1.0 / juce::MidiMessage::getMidiNoteInHertz (msg.getNoteNumber())));
     }
 
+    // Input is metered before the engine runs — it processes `main` in place.
+    feedMeter (MeterInput, main, numSamples, getMainBusNumInputChannels());
+
     engine.process (main, getPlayHead() != nullptr ? getPlayHead()->getPosition()
                                                    : juce::Optional<juce::AudioPlayHead::PositionInfo>(),
                     apvts.getRawParameterValue (pid::drywet)->load(),
                     auxPtr[0], auxPtr[1]);
+
+    feedMeter (MeterOutput, main, numSamples);
+    for (int bus = 0; bus < 2; ++bus)
+        feedMeter (MeterAux1 + bus,
+                   auxPtr[bus] != nullptr ? *auxPtr[bus] : silence, numSamples);
+}
+
+void MangoAudioProcessor::feedMeter (int tap, const juce::AudioBuffer<float>& source,
+                                     int numSamples, int numChannels)
+{
+    const int sourceChannels = juce::jlimit (
+        0, source.getNumChannels(),
+        numChannels < 0 ? source.getNumChannels() : numChannels);
+    if (sourceChannels < 1 || numSamples < 1)
+        return;
+
+    const int n = juce::jmin (numSamples, source.getNumSamples());
+    for (int ch = 0; ch < 2; ++ch)
+        meters[(size_t) tap][(size_t) ch].process (
+            source.getReadPointer (juce::jmin (ch, sourceChannels - 1)), n);
 }
 
 //==============================================================================

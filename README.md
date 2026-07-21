@@ -117,6 +117,10 @@ immediate or quantised to the next bar or pattern. Only the slot **selector**
 is a plugin parameter, so the bank is fully automatable from the host without
 multiplying the parameter count.
 
+**Meters**: the top bar carries four small stereo level meters — input,
+main output, aux 1 and aux 2 — reading RMS over −60..0 dBFS with a mark at
+−6. An aux bus the host hasn't enabled simply reads silence.
+
 **Presets**: the top bar hosts a compact preset strip (previous / name /
 next) and a toggle that expands the full browser over the right column —
 factory presets plus user presets saved as XML under the platform user-data

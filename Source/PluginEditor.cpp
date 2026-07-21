@@ -35,7 +35,9 @@ MangoAudioProcessorEditor::MangoAudioProcessorEditor (MangoAudioProcessor& p)
     presetToggle.setColour (juce::TextButton::textColourOnId,  theme::mangoYellow.brighter (0.6f));
     presetToggle.setTooltip ("Show / hide the preset browser");
     presetToggle.setButtonText (juce::String::fromUTF8 ("\xe2\x96\xbe"));   // down triangle
-    topBar.setRightControls (&presetBar, 230, &presetToggle, 30);
+    topBar.setRightControls ({ { &meters, mng::MeterStrip::kWidth },
+                               { &presetBar, 230 },
+                               { &presetToggle, 30 } });
     addChildComponent (presetOverlay);   // shown on demand, over the right column
 
     // The preset browser covers the whole right column, so the two views are
