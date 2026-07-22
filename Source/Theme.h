@@ -132,6 +132,22 @@ namespace mng::theme
             s.setCentralValue (0.0);
     }
 
+    /** Round "i" help button: accent on the disc, the panel palette on the
+        callout so it matches whatever it sits in. */
+    inline void styleInfo (fxme::InfoButton& b, juce::Colour a)
+    {
+        fxme::InfoButton::Colours c;
+        c.accent    = a;
+        c.text      = text;
+        c.panel     = panel;
+        c.panelLine = panelLine;
+        b.setColours (c);
+    }
+
+    /** Side of the square info buttons, and the gap after a title. */
+    inline constexpr int infoSize = 15;
+    inline constexpr int infoGap  = 6;
+
     inline void styleCombo (juce::ComboBox& c, juce::Colour a)
     {
         c.setColour (juce::ComboBox::backgroundColourId, juce::Colour (0xff2b2b2b));

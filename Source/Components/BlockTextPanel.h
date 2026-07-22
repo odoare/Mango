@@ -28,9 +28,38 @@ public:
     BlockTextPanel()
     {
         heading.setText ("block overrides", juce::dontSendNotification);
-        heading.setColour (juce::Label::textColourId, theme::dimText);
-        heading.setFont (juce::Font (juce::FontOptions (11.0f)));
+        heading.setColour (juce::Label::textColourId, theme::text);
+        heading.setFont (juce::Font (juce::FontOptions (kHeadingFont, juce::Font::bold)));
         addAndMakeVisible (heading);
+
+        theme::styleInfo (info, theme::mangoYellow);
+        info.setInfo ("Block overrides",
+            "Every lane has one set of knobs, but each block can override them "
+            "with a line of text - so one delay lane can play a different time "
+            "in every block without automating anything.\n\n"
+            "Select a block and type key=value pairs separated by spaces:\n\n"
+            "    dur=0.125 fb=0.6\n"
+            "    dur=mididur/2\n"
+            "    v0=a v1=u\n\n"
+            "Each effect reads the keys it knows and ignores the rest; the "
+            "panel above lists the ones the selected lane understands. A key "
+            "you set here overrides that knob for this block only.\n\n"
+            "It is all or nothing: if any part of the line does not make "
+            "sense, none of it is applied and the field turns red. Your text "
+            "is kept so you can fix it.\n\n"
+            "VALUES\n\n"
+            "A plain dur is a fraction of a whole note - 0.25 is a quarter, "
+            "0.125 an eighth - and follows the host tempo.\n\n"
+            "mididur is the length of one cycle of the last MIDI note the "
+            "plugin received, in seconds, and midifreq is that note's pitch in "
+            "Hz. Both can be scaled: mididur*2, mididur/4, midifreq*2. Use "
+            "them to make an effect track what you play - dur=mididur on a "
+            "delay tunes it to the note, f0=midifreq points a filter at it.\n\n"
+            "Any expression using mididur is a time in seconds, so it ignores "
+            "the tempo. Every other key is in the same unit as its knob.\n\n"
+            "Return commits and leaves the field; Ctrl+Return adds a newline "
+            "(the parser treats it as a space); clicking away commits too.");
+        addAndMakeVisible (info);
 
         // Three lines: room for several assignments; newlines are ordinary
         // whitespace to the parser. Return commits and leaves the field;
@@ -73,12 +102,22 @@ public:
     int blockOf() const { return block; }
 
     /** Heading + three text lines. */
-    static constexpr int kHeight = 16 + 58;
+    static constexpr float kHeadingFont   = 13.5f;
+    static constexpr int   kHeadingHeight = 19;
+    static constexpr int   kHeight = kHeadingHeight + 58;
 
     void resized() override
     {
         auto r = getLocalBounds();
-        heading.setBounds (r.removeFromTop (16));
+
+        auto headingRow = r.removeFromTop (kHeadingHeight);
+        const auto font = juce::Font (juce::FontOptions (kHeadingFont, juce::Font::bold));
+        const int textWidth = juce::GlyphArrangement::getStringWidthInt (font, heading.getText());
+        heading.setBounds (headingRow.removeFromLeft (textWidth + 4));
+        headingRow.removeFromLeft (theme::infoGap - 4);
+        info.setBounds (headingRow.removeFromLeft (theme::infoSize)
+                                  .withSizeKeepingCentre (theme::infoSize, theme::infoSize));
+
         edit.setBounds (r.removeFromTop (58));
     }
 
@@ -117,6 +156,7 @@ private:
     }
 
     juce::Label heading;
+    fxme::InfoButton info;
     OverrideEditor edit;
     int lane = -1, block = -1;
 

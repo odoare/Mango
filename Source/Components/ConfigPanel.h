@@ -100,6 +100,38 @@ public:
         syncLabel.setFont (juce::Font (juce::FontOptions (12.0f)));
         addAndMakeVisible (syncLabel);
 
+        theme::styleInfo (info, theme::mangoRed);
+        info.setInfo ("Sequencer configs",
+            "Eight slots holding whole sequencer setups, so you can build "
+            "several arrangements and switch between them while playing.\n\n"
+            "Click a slot in the bottom row to store what you have now; click "
+            "one in the top row to load it back. Slots show their state: "
+            "filled is the one you are on, outlined means something is stored, "
+            "dim means empty, and a dot means you have edited since loading "
+            "it. Alt-click a store slot to clear it, and Undo store takes back "
+            "the last overwrite.\n\n"
+            "WHAT A CONFIG HOLDS\n\n"
+            "A config is a pattern, not a sound. It always carries the blocks "
+            "and their override text, the grid, how many lanes there are and "
+            "in what order, which effect each lane runs, the whole bus wiring "
+            "with each bus's wet and pan, and the seed.\n\n"
+            "It does not carry the effect knob values unless you tick Include "
+            "effect parameters before storing. Slots holding them are "
+            "underlined, so loading one is never a surprise. Leaving it off "
+            "means you can recall an arrangement without losing the sound you "
+            "have been dialling in.\n\n"
+            "Mute, solo and the global Dry/Wet are never stored, so recalling "
+            "cannot trample your live mix.\n\n"
+            "TIMING\n\n"
+            "Recall decides when a load takes effect: immediately, or waiting "
+            "for the next bar or the next pattern so the switch lands in time. "
+            "A slot waiting its turn is outlined more thickly.\n\n"
+            "Loading the slot you are already on reloads it - a way to throw "
+            "away edits and go back to what was stored.\n\n"
+            "The slot number is also a plugin parameter, so your host can "
+            "automate which config is playing.");
+        addAndMakeVisible (info);
+
         refresh();
         startTimerHz (10);
     }
@@ -133,6 +165,17 @@ public:
     {
         auto r = getLocalBounds().reduced (8);
         r.removeFromTop (22);   // title
+
+        // Laid out in the row paint() draws the title in — the *unpadded* top
+        // 22 px — so the button lines up with the text instead of sitting
+        // 8 px below it.
+        auto titleRow = getLocalBounds().removeFromTop (22).reduced (8, 0);
+        const auto titleFont = juce::Font (juce::FontOptions (14.0f, juce::Font::bold));
+        titleRow.removeFromLeft (
+            juce::GlyphArrangement::getStringWidthInt (titleFont, "Sequencer configs")
+            + theme::infoGap);
+        info.setBounds (titleRow.removeFromLeft (theme::infoSize)
+                                .withSizeKeepingCentre (theme::infoSize, theme::infoSize));
 
         loadCaptionArea = r.removeFromTop (16);
         layoutSlots (loadSlots, r.removeFromTop (26));
@@ -268,6 +311,7 @@ private:
 
     MangoAudioProcessor& processor;
 
+    fxme::InfoButton info;
     std::array<SlotButton, numConfigs> loadSlots, storeSlots;
     fxme::AccentToggle includeParamsButton;
     juce::TextButton undoButton;          // momentary, not a latching toggle

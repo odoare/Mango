@@ -415,6 +415,16 @@ also *not* serialised — a reloaded session is a new run and gets its splash.
   neighbours); edge drag = resize; **alt-click = delete** (mouse-only
   alternative to the Delete key, added because hosted Linux windows lose the
   keyboard-focus race); right-click = clear content; Delete key = delete.
+**Help** (`fxme::InfoButton`, `theme::styleInfo` for the shared palette):
+four callouts, each placed immediately after the title it explains rather
+than at a panel edge — so a title's width is measured with
+`GlyphArrangement::getStringWidthInt` and the button laid out after it.
+EffectPanel carries per-effect help (`helpFor(EffectType)`, kept next to the
+control list so the two are edited together, and re-accented with the lane
+in `setAccent`); BusBar's sits bottom-left and covers lanes, order, mute/solo
+and the whole bus system; ConfigPanel's explains the bank; BlockTextPanel's
+explains the override language. New effect types must add a `helpFor` case.
+
 - **Right column**: global knobs + step-size combo / the selected lane's
   EffectPanel (48 pre-built, visibility-switched; weight mini-knobs) /
   BlockTextPanel (3-line multiline field: Return commits and leaves the
@@ -547,7 +557,9 @@ umbrella `FxmeTools/FxmeTools.h` (module v0.0.3):
   `addParameters(params, lanePrefix, nameP)` + `bindParameters`), extend
   `EffectTypes.h`, the factory + bind switch in `MangoEngine.cpp`, a case in
   `EffectPanel`'s constructor, a visual in the rack's `paintEffectVisual`,
-  and (if it draws durations) reuse `DurationWeights`.
+  and (if it draws durations) reuse `DurationWeights`. Also add a `helpFor`
+  case in EffectPanel — the info callout is part of the effect, not an
+  afterthought.
 - Language: new keys extend `OvKey` + `keyNames` (parser is order-matched
   arrays) and are documented in README.
 - GUI reads of sequencer step size / num steps without the lock are accepted

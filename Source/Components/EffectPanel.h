@@ -128,6 +128,10 @@ public:
                 addWeights (prefix + "pan_");
                 break;
         }
+
+        theme::styleInfo (info, accent);
+        info.setInfo (effectTypeNames()[(int) type], helpFor (type));
+        addAndMakeVisible (info);
     }
 
     void paint (juce::Graphics& g) override
@@ -171,6 +175,17 @@ public:
         auto r = getLocalBounds().reduced (8);
         r.removeFromTop (22);   // title
 
+        // The info button belongs to the title text, so it is laid out in the
+        // row paint() actually draws that text in — the *unpadded* top 22 px.
+        // Deriving it from `r` instead would drop it 8 px below the text.
+        auto titleRow = getLocalBounds().removeFromTop (22).reduced (8, 0);
+        const auto titleFont = juce::Font (juce::FontOptions (14.0f, juce::Font::bold));
+        const int titleWidth = juce::GlyphArrangement::getStringWidthInt (titleFont, title);
+        titleRow.removeFromLeft (juce::jmin (titleWidth + theme::infoGap,
+                                             juce::jmax (0, titleRow.getWidth() - theme::infoSize)));
+        info.setBounds (titleRow.removeFromLeft (theme::infoSize)
+                                .withSizeKeepingCentre (theme::infoSize, theme::infoSize));
+
         for (auto& c : combos)
         {
             auto row = r.removeFromTop (22);
@@ -204,6 +219,7 @@ public:
                 theme::styleKnob (*k.slider, k.slider->getName(), accent);
         for (auto& c : combos)
             theme::styleCombo (c.box, accent);
+        theme::styleInfo (info, accent);
         repaint();
     }
 
@@ -229,6 +245,127 @@ private:
             case EffectType::Freeze:     return "mix width";
             case EffectType::AuxSend:    return "dur att rel attcurve relcurve aux1 aux2 pass\n" + weights;
             case EffectType::Panner:     return "dur mode glide mix\n" + weights;
+        }
+        return {};
+    }
+
+    /** What this effect does, for the info button's callout. Kept next to
+        the control list so the two are edited together. */
+    static juce::String helpFor (EffectType t)
+    {
+        static const juce::String drawn (
+            "\n\nThe rate is not a fixed value: you weight how likely each "
+            "note length is (1/4 to 1/32, straight / triplet / dotted) and "
+            "the actual one is drawn at the start of each block. The draw "
+            "depends only on the seed, the lane and the block - so every "
+            "pass through the pattern plays exactly the sequence the block "
+            "picture shows, and changing the seed re-rolls everything.");
+
+        switch (t)
+        {
+            case EffectType::Gater:
+                return "Chops the sound on and off: open, closed, open, ... "
+                       "starting open, at the drawn rate.\n\n"
+                       "Attack and Release are fractions of the open phase, not "
+                       "fixed times, so the shape follows the rate. If they add "
+                       "up to more than 1 they share the phase between them and "
+                       "you get a triangle with no sustain. The curve knobs bend "
+                       "the edges: 0 slow, 0.5 straight, 1 very fast - a fast "
+                       "release sounds like a plucked decay." + drawn;
+
+            case EffectType::Grain:
+                return "Records a short grain when the block starts and loops it "
+                       "for the whole block, so the sound freezes into a stutter.\n\n"
+                       "Attack and Release shape every repetition (not the block), "
+                       "as fractions of one grain. Seams are crossfaded over 15 ms. "
+                       "Short grains give pitched buzzes, long ones give stutters." + drawn;
+
+            case EffectType::Delay:
+                return "A feedback delay whose buffer keeps running between blocks, "
+                       "so repeats carry over from one block to the next.\n\n"
+                       "Damping darkens each repeat, and Porta is how fast the delay "
+                       "time glides when it changes - short for clean pitch slides, "
+                       "long for tape-style warps.\n\n"
+                       "Set the delay time to one period of a MIDI note and push "
+                       "feedback near 1 and it becomes a plucked string tuned by "
+                       "your keyboard: type  dur=mididur fb=0.99  into the block.";
+
+            case EffectType::Distortion:
+                return "Tube-style saturation, in four flavours: Standard, Dynamic, "
+                       "Triode and Class AB.\n\n"
+                       "Drive sets how hard it is pushed, Bias moves the signal off "
+                       "centre for asymmetric, odd-harmonic grit, and Sag imitates a "
+                       "power supply buckling under loud passages.\n\n"
+                       "How loud saturation comes out depends on how loud you feed "
+                       "it, so there is no automatic make-up: Out dB is the manual "
+                       "level trim, applied before the mix.";
+
+            case EffectType::FilterEnv:
+                return "A filter that sweeps from a start to an end frequency and "
+                       "repeats at the drawn rate, so it moves in time with the "
+                       "pattern.\n\n"
+                       "In LP / HP mode Q sets the resonance at the sweep. In Formant "
+                       "mode it glides between two vowels instead (a e i o u), which "
+                       "makes the sound talk." + drawn;
+
+            case EffectType::Quantizer:
+                return "Lo-fi in two independent stages.\n\n"
+                       "Bits throws away amplitude resolution (1 bit is a square "
+                       "wave); Downsmp holds each sample for several samples, which "
+                       "folds high frequencies down into the audible range. The "
+                       "aliasing is the point - it is not filtered away.\n\n"
+                       "Mix blends the crushed signal back with the clean one.";
+
+            case EffectType::RingMod:
+                return "Multiplies the sound by a sine carrier, which replaces its "
+                       "harmonics with sum and difference tones - metallic, "
+                       "bell-like, rarely in key.\n\n"
+                       "The carrier glides from the start to the end frequency over "
+                       "the drawn ramp and repeats for the block. Below about 20 Hz "
+                       "it stops sounding like modulation and becomes tremolo.\n\n"
+                       "Amount is this effect's mix: 0 is clean, 1 is full ring "
+                       "modulation." + drawn;
+
+            case EffectType::Reverser:
+                return "Cuts the incoming audio into slices and plays each one "
+                       "backwards.\n\n"
+                       "A slice has to be recorded before it can be reversed, so it "
+                       "plays one slice behind - and the first slice of a block "
+                       "passes through untouched, because there is nothing recorded "
+                       "yet. Fade softens the joins between slices." + drawn;
+
+            case EffectType::Freeze:
+                return "Captures about 43 ms of sound when the block starts and holds "
+                       "its spectrum as a still, non-repeating wash for the rest of "
+                       "the block.\n\n"
+                       "It is a spectral freeze, not a loop: there is no cycle to "
+                       "hear. Blocks shorter than the capture stay dry, since it is "
+                       "still recording.\n\n"
+                       "Width sets how alike the two channels are - 1 fully "
+                       "decorrelated and wide, 0 mono. The level stays constant "
+                       "across the range.";
+
+            case EffectType::AuxSend:
+                return "The gater's rhythm, but it routes the sound instead of "
+                       "cutting it: while the gate is open the shaped signal is "
+                       "added to the plugin's two aux outputs.\n\n"
+                       "Enable Aux 1 / Aux 2 in your host to hear them - without "
+                       "that, the sends go nowhere.\n\n"
+                       "Pass is how much carries on down the main chain, and it is "
+                       "a steady level, not gated: 1 leaves the lane transparent and "
+                       "sends a copy on top, 0 takes the sound out of the main mix "
+                       "entirely so only the aux outputs hear it." + drawn;
+
+            case EffectType::Panner:
+                return "Steps the sound between three positions - hard left, centre, "
+                       "hard right - one per drawn step.\n\n"
+                       "Mode picks the order: Cycle -> sweeps rightwards, Cycle <- "
+                       "leftwards, Cycle <-> turns round at the edges instead of "
+                       "jumping back across, and Random draws each step from the "
+                       "seed (so it still repeats identically every pass).\n\n"
+                       "Glide is how much of a step is spent travelling to the new "
+                       "position. At 0 the jumps are instant and will click on "
+                       "anything but silence." + drawn;
         }
         return {};
     }
@@ -303,6 +440,7 @@ private:
 
     std::vector<Knob>  knobs, weightKnobs;
     std::deque<Combo>  combos;
+    fxme::InfoButton   info;
     juce::Rectangle<int> weightsLabelArea, keywordsArea;
     juce::String keywords;
 

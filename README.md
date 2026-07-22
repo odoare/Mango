@@ -121,6 +121,10 @@ immediate or quantised to the next bar or pattern. Only the slot **selector**
 is a plugin parameter, so the bank is fully automatable from the host without
 multiplying the parameter count.
 
+**Help**: the round **i** buttons open a short explanation of whatever they
+sit next to — the selected lane's effect, the lanes-and-buses strip at the
+bottom left, the config bank, and the block override language.
+
 **Splash**: the cover art appears for two seconds the first time the editor
 is opened in a run — not on every reopen — and any time you click the
 FX-Mechanics logo or the mango artwork in the top bar. Click it to dismiss

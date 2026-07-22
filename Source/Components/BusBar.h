@@ -72,6 +72,39 @@ public:
             grp.panAtt = std::make_unique<SliderAttachment> (processor.apvts, pid::busPan (b), grp.pan);
         }
 
+        theme::styleInfo (info, theme::mangoGreen);
+        info.setInfo ("Lanes & buses",
+            "Each lane is one effect, and the playhead runs left to right over "
+            "the blocks you draw. While it is inside a block, that lane's "
+            "effect is processing; outside, the lane is silent. Drag on empty "
+            "space to make a block, drag its body to move it, drag an edge to "
+            "resize, alt-click to delete.\n\n"
+            "Lanes are processed top to bottom, so their order is the effect "
+            "chain - the arrows in a lane header move it up or down and change "
+            "the sound. Everything else stays with the lane: its blocks, its "
+            "settings and its random draws follow it as it moves.\n\n"
+            "M mutes a lane and S solos it. Both keep the lane sequencing "
+            "silently, so unmuting drops you back in step rather than "
+            "restarting.\n\n"
+            "BUSES\n\n"
+            "The B switch on a lane header starts a new bus at that row, up to "
+            "four. Lanes inside a bus run one after another, in series; the "
+            "buses themselves run side by side. Lane colours show which bus a "
+            "lane belongs to, getting lighter further down the bus.\n\n"
+            "Each bus has its own Wet and Pan here. Wet blends the bus against "
+            "what it was fed, so 0 makes the bus transparent.\n\n"
+            "The button on the left cycles how the buses are wired, and the "
+            "diagram shows it: all four side by side; bus 3 fed by 1+2; bus 4 "
+            "fed by 1-3; a diamond where bus 1 splits into 2 and 3 and their "
+            "mix feeds 4; or a fan-out where bus 1 feeds all the others. A "
+            "wiring that needs more buses than you have falls back to "
+            "side-by-side.\n\n"
+            "Note that a bus with nothing sounding passes its input through, "
+            "so several idle buses side by side add up to more than you put "
+            "in - the usual behaviour of a parallel rack. Use the bus Wet "
+            "controls or the global Dry/Wet to balance it.");
+        addAndMakeVisible (info);
+
         refresh();
         startTimerHz (10);
     }
@@ -91,6 +124,11 @@ public:
     void resized() override
     {
         auto r = getLocalBounds().reduced (6, 4);
+
+        // Help in the bottom-left corner; everything else shifts right of it.
+        auto infoCol = r.removeFromLeft (theme::infoSize);
+        info.setBounds (infoCol.removeFromBottom (theme::infoSize));
+        r.removeFromLeft (6);
 
         // Left column: lanes chooser above the routing-mode button.
         auto ctrl = r.removeFromLeft (78);
@@ -285,6 +323,7 @@ private:
     static constexpr float kBox = 16.0f, kStep = 26.0f;
 
     MangoAudioProcessor& processor;
+    fxme::InfoButton info;
     juce::TextButton modeButton;
     juce::TextButton lanesMinus { "-" }, lanesPlus { "+" };
     juce::Label lanesCount;
