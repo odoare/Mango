@@ -113,6 +113,18 @@ public:
     ViewState& view() noexcept { return viewState; }
     const ViewState& view() const noexcept { return viewState; }
 
+    /** True the first time it is called on this processor, false ever after.
+        The editor uses it to show the splash once — the flag has to live
+        here, not on the editor, because the editor is destroyed and rebuilt
+        every time the window is closed and reopened. Not serialised: a
+        reloaded session is a new run and gets its splash. */
+    bool claimSplash() noexcept
+    {
+        const bool first = ! splashClaimed;
+        splashClaimed = true;
+        return first;
+    }
+
     // ---- message-thread helpers used by the editor ---------------------------
 
     /** Stores a block's override string (under the engine lock) and re-parses
@@ -173,6 +185,7 @@ private:
     juce::ValueTree viewToTree() const;
     void viewFromTree (const juce::ValueTree& tree);
     ViewState viewState;
+    bool splashClaimed = false;   // runtime only, never saved
 
     juce::ValueTree bankTree();
     juce::ValueTree configTree (int slot) const;

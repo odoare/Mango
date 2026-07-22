@@ -377,6 +377,17 @@ level. Components/MeterStrip.h lays out eight `fxme::VuMeterComponent` bars
 bars share one colour: on a meter red means clipping, so aux bars sampling
 the red end of the identity ramp would read as a fault.
 
+**Splash** (`fxme::SplashOverlay`, covering the whole window): fades in the
+`Assets/Splash.png` artwork over a dimmed backdrop, holds 2 s, fades out;
+a click dismisses it early and it swallows mouse events while up. The
+component holds no policy about when to appear — the editor shows it from
+`fxme::TopBar::onLogoClicked` (the company logo and the decoration artwork
+are the hit areas, recorded as they paint) and once at startup, gated by
+`MangoAudioProcessor::claimSplash()`. That flag lives on the **processor**,
+not the editor: the editor is destroyed and rebuilt on every window
+open/close, so an editor-side flag would replay the splash each time. It is
+also *not* serialised — a reloaded session is a new run and gets its splash.
+
 - `fxme::TopBar` (54 px, logo from BinaryData) · `fxme::FxmeLookAndFeel` ·
   `fxme::FxmeSlider` knobs (right-click value entry; styleKnob = dark disc +
   per-control accent).
@@ -457,6 +468,10 @@ umbrella `FxmeTools/FxmeTools.h` (module v0.0.3):
   tracking suppressed): processors that keep non-parameter data outside
   apvts.state (Mango's MangoSeq) merge it in before a preset save and
   rebuild from it after a preset load.
+- `components/SplashOverlay.h` — cover-the-window splash / about screen:
+  dimmed backdrop, artwork centred (scaled down, never enlarged), timed
+  fade in / hold / fade out, click to dismiss, `onDismissed` callback.
+  Display only; the owner decides when it appears.
 - `components/AccentToggle.h` — the latching on/off button (rounded body
   that lights in its accent colour, bold centred text, legible down to
   ~18 px squares; custom-painted because the stock LookAndFeel's text
@@ -475,7 +490,9 @@ umbrella `FxmeTools/FxmeTools.h` (module v0.0.3):
   centred in it — adapts to the description's length; `onlyReduceInSize`
   keeps a narrow gap from being overflowed. Mango passes
   `Assets/Mango.png`, the pixel-art fruit on a yellow -> green -> red
-  waveform — the identity ramp again.
+  waveform — the identity ramp again. It also gained `onLogoClicked`, fired
+  when either image is clicked (hit areas recorded as they paint, so they
+  follow the layout), with a pointing-hand cursor over them.
 - `midi/StringSequencer.h` gained `addBlockWithId` (id-stable restore) and
   `moveBlock` (whole-block move with walls).
 - `midi/SequencerEngine.h` gained `setEnterEmptyBlocks`, `relocate()` (always

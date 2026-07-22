@@ -121,6 +121,11 @@ immediate or quantised to the next bar or pattern. Only the slot **selector**
 is a plugin parameter, so the bank is fully automatable from the host without
 multiplying the parameter count.
 
+**Splash**: the cover art appears for two seconds the first time the editor
+is opened in a run — not on every reopen — and any time you click the
+FX-Mechanics logo or the mango artwork in the top bar. Click it to dismiss
+it early.
+
 **Meters**: the top bar carries four small stereo level meters — input,
 main output, aux 1 and aux 2 — reading RMS over −60..0 dBFS with a mark at
 −6. An aux bus the host hasn't enabled simply reads silence.

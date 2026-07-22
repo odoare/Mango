@@ -24,7 +24,12 @@ MangoAudioProcessorEditor::MangoAudioProcessorEditor (MangoAudioProcessor& p)
     // carries the same yellow -> green -> red ramp as the rest of the GUI).
     topBar.setDecoration (juce::ImageCache::getFromMemory (BinaryData::Mango_png,
                                                            BinaryData::Mango_pngSize));
+    topBar.onLogoClicked = [this] { splash.show(); };
     addAndMakeVisible (topBar);
+
+    splash.setImage (juce::ImageCache::getFromMemory (BinaryData::Splash_png,
+                                                      BinaryData::Splash_pngSize));
+    addChildComponent (splash);   // hidden until shown, always brought to front
     addAndMakeVisible (rack);
     addAndMakeVisible (busBar);
 
@@ -126,6 +131,11 @@ MangoAudioProcessorEditor::MangoAudioProcessorEditor (MangoAudioProcessor& p)
     // the editor, so this survives closing and reopening the window as well
     // as reloading the session).
     restoreView();
+
+    // First window of this run only — reopening it must not replay the
+    // splash (the flag lives on the processor for exactly that reason).
+    if (processor.claimSplash())
+        splash.show();
 }
 
 MangoAudioProcessorEditor::~MangoAudioProcessorEditor()
@@ -186,6 +196,8 @@ void MangoAudioProcessorEditor::resized()
         for (auto& panel : lanePanels)
             panel->setBounds (panelArea);
     configPanel.setBounds (panelArea);
+
+    splash.setBounds (getLocalBounds());
 }
 
 //==============================================================================

@@ -92,6 +92,10 @@ private:
 
     mng::BlockTextPanel blockText;
 
+    // Covers the whole window; shown once per plugin instance at startup
+    // and whenever the top bar's artwork is clicked.
+    fxme::SplashOverlay splash;
+
     int selectedLane  = -1;   // lane identity
     int selectedBlock = -1;
     int visibleLane = -1, visibleType = -1;
