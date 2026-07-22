@@ -981,6 +981,12 @@ static void testStateRoundTrip()
         a.engine.moveRow (0, +1);   // reorder lanes
         setParam (a, "seed", 7.0f);
         setParam (a, "l0_gate_w8", 0.7f);
+
+        // GUI view: not a parameter, but it rides along in the session.
+        a.view().selectedLane  = 0;
+        a.view().selectedBlock = blockId;
+        a.view().configsShown  = true;
+
         a.getStateInformation (state);
         outA = render (a, 4.0);
     }
@@ -999,10 +1005,26 @@ static void testStateRoundTrip()
     CHECK (order[0] == 1 && order[1] == 0);
     CHECK (std::abs (b.apvts.getRawParameterValue ("l0_gate_w8")->load() - 0.7f) < 1e-4f);
 
+    // The GUI view came back, and points at a block that still exists.
+    CHECK (b.view().selectedLane == 0);
+    CHECK (b.view().selectedBlock >= 0);
+    CHECK (b.view().configsShown);
+    CHECK (! b.view().presetsShown);
+    CHECK (b.blockExists (b.view().selectedLane, b.view().selectedBlock));
+
+    // A fresh processor has no view, and a stale selection is rejected
+    // rather than pointing the editor at a block that is gone.
+    {
+        MangoAudioProcessor c;
+        CHECK (c.view().selectedLane == -1);
+        CHECK (! c.view().configsShown);
+        CHECK (! c.blockExists (0, 12345));
+    }
+
     // And the same audio comes out (block ids seed the draws).
     const auto outB = render (b, 4.0);
     CHECK (outA == outB);
-    std::printf ("state round-trip: identical structure and audio.\n");
+    std::printf ("state round-trip: identical structure, audio and GUI view.\n");
 }
 
 //==============================================================================

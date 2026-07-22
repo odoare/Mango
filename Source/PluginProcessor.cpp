@@ -332,6 +332,43 @@ juce::String MangoAudioProcessor::blockContent (int laneIndex, int blockId) cons
     return {};
 }
 
+bool MangoAudioProcessor::blockExists (int laneIndex, int blockId) const
+{
+    if (laneIndex < 0 || laneIndex >= numLanes || blockId < 0)
+        return false;
+    const juce::ScopedLock sl (engine.lock());
+    return engine.sequencerFor (laneIndex).blockById (blockId) != nullptr;
+}
+
+//==============================================================================
+juce::ValueTree MangoAudioProcessor::viewToTree() const
+{
+    juce::ValueTree tree ("MangoView");
+    tree.setProperty ("selectedLane",  viewState.selectedLane,  nullptr);
+    tree.setProperty ("selectedBlock", viewState.selectedBlock, nullptr);
+    tree.setProperty ("configsShown",  viewState.configsShown,  nullptr);
+    tree.setProperty ("presetsShown",  viewState.presetsShown,  nullptr);
+    return tree;
+}
+
+void MangoAudioProcessor::viewFromTree (const juce::ValueTree& tree)
+{
+    if (! tree.hasType ("MangoView"))
+    {
+        viewState = ViewState{};   // a session from before this existed
+        return;
+    }
+
+    viewState.selectedLane  = (int)  tree.getProperty ("selectedLane",  -1);
+    viewState.selectedBlock = (int)  tree.getProperty ("selectedBlock", -1);
+    viewState.configsShown  = (bool) tree.getProperty ("configsShown",  false);
+    viewState.presetsShown  = (bool) tree.getProperty ("presetsShown",  false);
+
+    // The two panels share the right column, so they can never both be up.
+    if (viewState.presetsShown)
+        viewState.configsShown = false;
+}
+
 //==============================================================================
 juce::ValueTree MangoAudioProcessor::sequencersToTree() const
 {
@@ -641,6 +678,7 @@ void MangoAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 
     state.removeChild (state.getChildWithName ("MangoSeq"), nullptr);
     state.appendChild (sequencersToTree(), nullptr);
+    state.appendChild (viewToTree(), nullptr);
 
     juce::MemoryOutputStream mos (destData, true);
     state.writeToStream (mos);
@@ -652,12 +690,15 @@ void MangoAudioProcessor::setStateInformation (const void* data, int sizeInBytes
     if (! tree.isValid())
         return;
 
-    const auto seqTree = tree.getChildWithName ("MangoSeq");
+    const auto seqTree  = tree.getChildWithName ("MangoSeq");
+    const auto viewTree = tree.getChildWithName ("MangoView");
     tree.removeChild (seqTree, nullptr);
+    tree.removeChild (viewTree, nullptr);
     apvts.replaceState (tree);
 
     applyGridFromParameters();   // grid before blocks, so ranges are right
     sequencersFromTree (seqTree);
+    viewFromTree (viewTree);     // before the editor is told to reload
 
     // As in the preset hook: the restored session's live setup wins over
     // the config the selector happens to point at.

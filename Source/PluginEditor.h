@@ -47,6 +47,11 @@ private:
     void refreshVisiblePanel();
     void refreshBlockText();
     void showConfigs (bool shouldShow);
+    void showPresets (bool shouldShow);
+
+    /** Applies the processor's stored view (panel visibility + selected
+        block), dropping a selection that no longer exists. */
+    void restoreView();
 
     MangoAudioProcessor& processor;
 

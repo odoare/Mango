@@ -46,17 +46,7 @@ MangoAudioProcessorEditor::MangoAudioProcessorEditor (MangoAudioProcessor& p)
 
     // The preset browser covers the whole right column, so the two views are
     // mutually exclusive.
-    presetToggle.onClick = [this]
-    {
-        const bool show = presetToggle.getToggleState();
-        presetToggle.setButtonText (juce::String::fromUTF8 (show ? "\xe2\x96\xb4" : "\xe2\x96\xbe"));
-        presetOverlay.setVisible (show);
-        if (show)
-        {
-            presetOverlay.toFront (false);
-            showConfigs (false);
-        }
-    };
+    presetToggle.onClick = [this] { showPresets (presetToggle.getToggleState()); };
 
     // ---- config bank ---------------------------------------------------------
     configToggle.setButtonText ("Configs");
@@ -131,6 +121,11 @@ MangoAudioProcessorEditor::MangoAudioProcessorEditor (MangoAudioProcessor& p)
     startTimerHz (10);
 
     setSize (1050, 650);
+
+    // Last: put the GUI back the way it was left (the processor outlives
+    // the editor, so this survives closing and reopening the window as well
+    // as reloading the session).
+    restoreView();
 }
 
 MangoAudioProcessorEditor::~MangoAudioProcessorEditor()
@@ -198,8 +193,24 @@ void MangoAudioProcessorEditor::selectBlock (int laneIndex, int blockId)
 {
     selectedLane  = laneIndex;
     selectedBlock = blockId;
+    processor.view().selectedLane  = laneIndex;
+    processor.view().selectedBlock = blockId;
     refreshVisiblePanel();
     refreshBlockText();
+}
+
+void MangoAudioProcessorEditor::showPresets (bool shouldShow)
+{
+    presetToggle.setToggleState (shouldShow, juce::dontSendNotification);
+    presetToggle.setButtonText (juce::String::fromUTF8 (shouldShow ? "\xe2\x96\xb4" : "\xe2\x96\xbe"));
+    presetOverlay.setVisible (shouldShow);
+    processor.view().presetsShown = shouldShow;
+
+    if (shouldShow)
+    {
+        presetOverlay.toFront (false);
+        showConfigs (false);   // the two share the right column
+    }
 }
 
 void MangoAudioProcessorEditor::showConfigs (bool shouldShow)
@@ -208,11 +219,13 @@ void MangoAudioProcessorEditor::showConfigs (bool shouldShow)
         return;
 
     configsShown = shouldShow;
+    processor.view().configsShown = shouldShow;
     configToggle.setToggleState (shouldShow, juce::dontSendNotification);
     configPanel.setVisible (shouldShow);
 
     if (shouldShow)
     {
+        showPresets (false);   // the two share the right column
         configPanel.toFront (false);
         for (auto& lanePanels : panels)
             for (auto& panel : lanePanels)
@@ -275,7 +288,31 @@ void MangoAudioProcessorEditor::timerCallback()
 
 void MangoAudioProcessorEditor::changeListenerCallback (juce::ChangeBroadcaster*)
 {
-    // State load or grid change: everything may have moved.
-    selectBlock (-1, -1);
+    // State load, preset load, config recall or grid change: everything may
+    // have moved, so re-derive the selection from the stored view rather
+    // than dropping it — a session reload keeps the block it was left on.
     rack.refreshOrder();
+    restoreView();
+}
+
+void MangoAudioProcessorEditor::restoreView()
+{
+    const auto v = processor.view();   // by value: the calls below mutate it
+
+    showPresets (v.presetsShown);
+    if (! v.presetsShown)
+        showConfigs (v.configsShown);
+
+    // The stored block may be gone (grid shrink, config recall, a preset
+    // with different blocks): fall back to no selection rather than
+    // pointing the text field at nothing.
+    const bool valid = processor.blockExists (v.selectedLane, v.selectedBlock)
+                    && processor.engine.rowOfLane (v.selectedLane)
+                           < processor.engine.visibleLaneCount();
+
+    const int lane  = valid ? v.selectedLane  : -1;
+    const int block = valid ? v.selectedBlock : -1;
+
+    rack.showSelection (lane, block);
+    selectBlock (lane, block);
 }

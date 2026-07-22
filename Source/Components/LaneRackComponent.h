@@ -102,6 +102,16 @@ public:
                 rows[(size_t) i].rubber->selectBlock (-1);
     }
 
+    /** Shows a selection that came from somewhere other than a click (the
+        restored GUI state). SequencerRubber::selectBlock is silent, so this
+        does not bounce back through onBlockSelected. */
+    void showSelection (int laneIndex, int blockId)
+    {
+        deselectAllExcept (laneIndex);
+        if (laneIndex >= 0 && laneIndex < numLanes)
+            rows[(size_t) laneIndex].rubber->selectBlock (blockId);
+    }
+
     void paint (juce::Graphics& g) override
     {
         // Step ruler, aligned with the rubbers.

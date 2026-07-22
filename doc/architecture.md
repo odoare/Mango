@@ -232,7 +232,8 @@ sampleRate, bpm, mididurSeconds (sampled at entry), `overrides` pointer
   `l<i>_<fx>_<name>`
   (FxmeFX `addParameters(prefix)` pattern — each effect class has static
   `addParameters` + member `bindParameters`).
-- **Not** parameters: block data and the config bank. `getStateInformation`
+- **Not** parameters: block data, the config bank and the editor's view
+  state. `getStateInformation`
   appends a `MangoSeq` child to the APVTS tree (`laneOrder` + per lane
   `<Block id start len text/>`); the `MangoBank` child lives permanently in
   `apvts.state`, so sessions *and* presets carry the whole bank.
@@ -240,6 +241,20 @@ sampleRate, bpm, mididurSeconds (sampled at entry), `overrides` pointer
   **block ids survive sessions** — required because ids seed the draws.
   Grid params are applied before blocks on load. `sendChangeMessage()` tells
   the editor to reload.
+- **Editor view state** (`MangoAudioProcessor::ViewState`): the selected
+  block (lane identity + id) and which right-column panel is open. It lives
+  on the processor as a plain member — *not* in `apvts.state` — and is
+  appended as a `MangoView` child at `getStateInformation` time, exactly
+  like MangoSeq. That placement is the whole point: the processor outlives
+  the editor, so closing and reopening the window restores the view, the
+  session carries it, and presets (which serialise `apvts.state`) never
+  touch it — loading a sound must not rearrange someone's GUI. The editor
+  writes it from `selectBlock` / `showConfigs` / `showPresets` and applies
+  it in `restoreView()` (constructor + every ChangeBroadcaster callback),
+  which drops a selection whose block no longer exists (`blockExists`, plus
+  a visible-row check) after a grid change, config recall or preset load.
+  The two panels are mutually exclusive in both directions, so the stored
+  pair can never disagree.
 
 ## 5. Override mini-language (Source/Dsp/OverrideParser.h)
 

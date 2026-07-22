@@ -91,6 +91,28 @@ public:
                      [(size_t) juce::jlimit (0, 1, channel)].getRMS();
     }
 
+    // ---- editor view state ----------------------------------------------------
+    // What the GUI looked like: the selected block and which right-column
+    // panel was open. Deliberately NOT parameters and NOT part of
+    // apvts.state — it is appended at getStateInformation time, like
+    // MangoSeq, so it rides along in the session while staying out of
+    // presets: loading a sound must not rearrange someone's GUI.
+    //
+    // The editor is free to come and go; this outlives it because the
+    // processor does.
+
+    struct ViewState
+    {
+        int  selectedLane  = -1;      // lane identity; -1 = nothing selected
+        int  selectedBlock = -1;
+        bool configsShown  = false;   // mutually exclusive with presetsShown
+        bool presetsShown  = false;
+    };
+
+    /** Message thread only (the editor owns this). */
+    ViewState& view() noexcept { return viewState; }
+    const ViewState& view() const noexcept { return viewState; }
+
     // ---- message-thread helpers used by the editor ---------------------------
 
     /** Stores a block's override string (under the engine lock) and re-parses
@@ -99,6 +121,10 @@ public:
     bool setBlockContent (int laneIndex, int blockId, const juce::String& text);
 
     juce::String blockContent (int laneIndex, int blockId) const;
+
+    /** True when that lane still holds that block — a restored selection can
+        point at one a grid change or a config recall has since removed. */
+    bool blockExists (int laneIndex, int blockId) const;
 
     // ---- sequencer config bank (message thread) -------------------------------
     // A config is a snapshot of the sequencer setup stored in the state tree
@@ -143,6 +169,10 @@ private:
 
     juce::ValueTree sequencersToTree() const;
     void sequencersFromTree (const juce::ValueTree& tree);
+
+    juce::ValueTree viewToTree() const;
+    void viewFromTree (const juce::ValueTree& tree);
+    ViewState viewState;
 
     juce::ValueTree bankTree();
     juce::ValueTree configTree (int slot) const;
