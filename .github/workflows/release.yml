@@ -1,0 +1,184 @@
+name: Release
+
+# Cut a release by pushing a version tag (e.g. `git tag v0.1.0 && git push --tags`).
+# `workflow_dispatch` lets you run the three platform builds by hand (from the
+# Actions tab) to test them without publishing — the release job is skipped
+# unless the run was triggered by a tag.
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+  workflow_dispatch:
+
+env:
+  JUCE_VERSION: 8.0.12
+
+jobs:
+  # ── Linux x86_64 ──────────────────────────────────────────────────────────
+  build-linux-x86_64:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install system dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y \
+            libasound2-dev libx11-dev libxrandr-dev libxinerama-dev \
+            libxcursor-dev libfreetype-dev libfontconfig1-dev libgl1-mesa-dev \
+            libcurl4-openssl-dev libwebkit2gtk-4.1-dev
+
+      - uses: actions/checkout@v4
+        with:
+          path: Mango
+          submodules: recursive     # FxmeTools, and WDL nested inside it
+
+      - uses: actions/checkout@v4
+        with:
+          repository: juce-framework/JUCE
+          ref: ${{ env.JUCE_VERSION }}
+          path: JUCE                 # CMake expects JUCE as a sibling of Mango
+
+      - name: Configure & Build
+        run: |
+          cmake -B Mango/build -S Mango -DCMAKE_BUILD_TYPE=Release
+          # The embedded image/preset binary-data target links a big blob —
+          # build it alone first to keep peak RAM down, then the rest.
+          cmake --build Mango/build --config Release --target MangoBinaryData --parallel 1
+          cmake --build Mango/build --config Release --parallel 2
+
+      - name: Package
+        run: |
+          ART=Mango/build/Mango_artefacts/Release
+          mkdir -p staging
+          cp -r "$ART/VST3/Mango.vst3" staging/
+          cp -r "$ART/Standalone/Mango" staging/
+          zip -r ${{ github.workspace }}/Mango-Linux-x86_64.zip staging/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-x86_64
+          path: Mango-Linux-x86_64.zip
+
+  # ── Windows x86_64 ────────────────────────────────────────────────────────
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: Mango
+          submodules: recursive
+
+      - uses: actions/checkout@v4
+        with:
+          repository: juce-framework/JUCE
+          ref: ${{ env.JUCE_VERSION }}
+          path: JUCE
+
+      - name: Set up MSVC environment
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Configure & Build
+        run: |
+          cmake -B Mango/build -S Mango -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build Mango/build --target MangoBinaryData --parallel 1
+          cmake --build Mango/build --parallel
+
+      - name: Package
+        shell: bash
+        run: |
+          ART=Mango/build/Mango_artefacts/Release
+          mkdir -p staging
+          cp -r "$ART/VST3/Mango.vst3" staging/
+          cp -r "$ART/Standalone/Mango.exe" staging/
+          7z a Mango-Windows-x86_64.zip ./staging/*
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-x86_64
+          path: Mango-Windows-x86_64.zip
+
+  # ── macOS universal (arm64 + x86_64) ──────────────────────────────────────
+  build-macos:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: Mango
+          submodules: recursive
+
+      - uses: actions/checkout@v4
+        with:
+          repository: juce-framework/JUCE
+          ref: ${{ env.JUCE_VERSION }}
+          path: JUCE
+
+      - name: Configure & Build
+        run: |
+          # CMAKE_OSX_ARCHITECTURES is set to arm64;x86_64 in Mango's CMakeLists,
+          # so both slices are built without passing anything here.
+          cmake -B Mango/build -S Mango -DCMAKE_BUILD_TYPE=Release
+          cmake --build Mango/build --config Release --target MangoBinaryData --parallel 1
+          # Capped at 2: the universal build doubles the compile/link load.
+          cmake --build Mango/build --config Release --parallel 2
+
+      - name: Verify universal binary
+        run: |
+          lipo -info "Mango/build/Mango_artefacts/Release/VST3/Mango.vst3/Contents/MacOS/Mango"
+
+      - name: Build pkg installer
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          [[ "$VERSION" =~ ^[0-9] ]] || VERSION="0.1.0"   # manual runs have no tag
+          ART=Mango/build/Mango_artefacts/Release
+          mkdir -p pkg_root/Library/Audio/Plug-Ins/VST3
+          mkdir -p pkg_root/Library/Audio/Plug-Ins/Components
+          cp -r "$ART/VST3/Mango.vst3" pkg_root/Library/Audio/Plug-Ins/VST3/
+          cp -r "$ART/AU/Mango.component" pkg_root/Library/Audio/Plug-Ins/Components/
+          pkgbuild \
+            --root pkg_root \
+            --identifier com.FXMechanics.Mango \
+            --version "$VERSION" \
+            --install-location / \
+            Mango-macOS.pkg
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-pkg
+          path: Mango-macOS.pkg
+
+      - name: Package VST3, AU and Standalone zips
+        run: |
+          ART=Mango/build/Mango_artefacts/Release
+          mkdir -p staging
+          cp -r "$ART/VST3/Mango.vst3" staging/
+          cp -r "$ART/AU/Mango.component" staging/
+          cp -r "$ART/Standalone/Mango.app" staging/
+          zip -r ${{ github.workspace }}/Mango-macOS-universal.zip staging/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-zip
+          path: Mango-macOS-universal.zip
+
+  # ── Publish GitHub Release (tag pushes only) ──────────────────────────────
+  release:
+    needs: [build-linux-x86_64, build-windows, build-macos]
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all artefacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            artifacts/*.zip
+            artifacts/*.pkg
+          generate_release_notes: true

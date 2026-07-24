@@ -219,6 +219,21 @@ real processor and checks gate timing, host-tempo sync, seed determinism
 (bit-exact), the override language and the state round-trip. Run
 `MangoRenderTest <path.png>` to dump GUI snapshots instead.
 
+### Releases (CI)
+
+`.github/workflows/release.yml` builds the plugin on all three platforms and
+publishes a GitHub release. Push a version tag to trigger it:
+
+```sh
+git tag v0.1.0
+git push --tags
+```
+
+It produces a Linux x86_64 zip (VST3 + Standalone), a Windows x86_64 zip
+(VST3 + Standalone) and a macOS **universal** (arm64 + x86_64) zip and `.pkg`
+installer (VST3 + AU + Standalone). Run it from the Actions tab
+(*workflow_dispatch*) to test the builds without cutting a release.
+
 ## Architecture notes
 
 Full architecture reference (engine, threading, determinism, language, GUI,
