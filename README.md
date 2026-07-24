@@ -3,39 +3,66 @@
 **FX-Mechanics modular sound glitcher / mangler** — a JUCE audio effect (VST3 / AU /
 Standalone) with MIDI input.
 
-Mango is a rubber step sequencer of up to eight lanes (default 4) where every
-lane drives one effect. While
-the playhead is inside a block on a lane, that lane's effect processes the audio;
-lane order (top to bottom) is the processing order and can be changed with the
-arrows on the left. Lanes group into up to **four buses**: the **B** switch on
-a lane header starts a new bus at that row (row 1 always starts bus 1). Each
-bus runs its lanes in series and has its own **volume** and **pan** controls in
-the bus bar under the rack, which also shows the routing diagram and cycles
-between five **routing modes**: all buses parallel (each processes its own
-copy of the input, outputs summed); bus 3 processing the mixed outputs of
-buses 1+2 (bus 4 parallel); bus 4 processing the mixed outputs of buses
-1–3; a **diamond**, where bus 1 splits into buses 2 and 3 and their mix
-feeds bus 4; and a **fan-out**, where bus 1 is a common front end feeding
-every remaining bus in parallel. A mode that needs more buses than exist
-falls back to parallel — except the fan-out, which simply fans out to
-however many buses there are. Lane
-colours show the bus a lane belongs to; within a bus, each following lane is
-shaded a little lighter. All randomness is seeded and reproducible: the same
-session with the same seed always glitches the same way, in real time and
-offline bounces alike.
+![Mango](doc/screenshot.png)
+
+Mango is a **rubber step sequencer** of up to eight lanes, each driving one
+effect. You draw blocks on a lane's strip; while the playhead is inside a
+block, that lane's effect is processing — outside it, the lane is silent. So
+you paint *when* each effect happens, in time with the host, and the lanes
+stack into a chain from top to bottom.
+
+The character is **seeded randomness**. Effects that need a rhythmic rate
+don't take a fixed value — you weight how likely each note length is, and the
+actual rate is drawn per block. Every draw is a pure function of the seed, the
+lane and the block, so a pattern always plays back identically (in real time
+and in an offline bounce alike), and changing the seed re-rolls everything at
+once.
+
+## Getting started
+
+1. Insert Mango on a track that already has sound going through it (it is an
+   effect, not an instrument).
+2. **Drag across empty space** on a lane's strip to draw a block, then press
+   play — the lane's effect fires while the playhead is inside it.
+3. **Click the block to select it** (highlighted): the right column shows that
+   lane's effect knobs, and the *block overrides* field at the bottom lets you
+   retune this one block with a line of text (see below).
+4. Change a lane's effect with the **dropdown** in its header; reorder lanes
+   with the **▲▼ arrows** (order is the processing chain); use **M**/**S** to
+   mute/solo.
+5. Turn the **Seed** knob to re-roll every random choice at once; set **Steps**
+   and the **step size** to size the grid.
+
+### The sequencer
+
+Every lane shares one grid — a step size (1/16…1/1) and a step count (1–64) —
+set once, top-right. Blocks are edited directly on the strips:
+
+| Gesture | Action |
+|---------|--------|
+| Drag empty space | Create a block |
+| Click a block | Select it (click again to deselect) |
+| Drag a block's body | Move it (it walls against its neighbours) |
+| Drag a block's edge | Resize it |
+| Alt-click, or Delete key | Delete the selected block |
+| Right-click | Clear the block's override text |
+
+Lanes have fixed identities: reordering only changes the display/processing
+order, so a lane's blocks, settings and random draws follow it as it moves.
+The **−/+ chooser** (bottom-left) sets how many lanes are shown; hidden lanes
+keep sequencing silently, so bringing one back drops you straight back in step.
 
 ## Effects (selectable per lane)
+
+Every effect has a wet/dry **mix** knob (override key `mix`; at 0 the lane is
+transparent) — except the ring modulator, whose **amount** plays that role,
+and the aux send, whose **passthrough** does. For the delay, mix scales the
+added repeats rather than crossfading.
 
 | Effect  | What it does | Lane parameters |
 |---------|--------------|-----------------|
 | Gater   | Cuts the sound rhythmically: open(dur), closed(dur), ... starting open | duration probabilities, attack/release lengths + curves |
 | Grain   | Records a grain at block start, loops it for the whole block (fixed 15 ms seam crossfade) | duration probabilities, per-repetition attack/release lengths + curves |
-
-Attack/release lengths are fractions (0–1) of the shaped duration (the gate's
-open phase, or one grain repetition — never the whole block). If their sum
-exceeds 1 they share the duration proportionally to their values: att=1,
-rel=0.5 acts as att=2/3, rel=1/3. The curves set the edge shapes: 0 slow,
-0.5 linear, 1 very fast (a fast release ≈ exponential decay).
 | Delay   | Feedback delay (buffer persists across blocks); damping mellows the repeats, portamento sets the time-glide (1–50 ms). With `dur=mididur fb=0.99` it is a Karplus-Strong style resonator tuned by MIDI | time, feedback, damping, portamento |
 | Dist    | Tube-style saturation (Standard / Dynamic / Triode / Class AB). Saturation loudness depends on the input level, so the output gain (±24 dB, on the saturated signal) is the manual makeup | model, drive, bias, sag, out gain, mix |
 | Filter  | LP / HP sweep from start to end frequency, or a formant vowel glide, repeating at a drawn rhythmic rate | mode, Q, start/end freq, start/end vowel, ramp probabilities |
@@ -46,18 +73,44 @@ rel=0.5 acts as att=2/3, rel=1/3. The curves set the edge shapes: 0 slow,
 | Aux     | Rhythmic aux send: the gater's envelope, but it *routes* rather than cuts — while the gate is open the shaped signal is added to the two aux outputs at their send levels, and the main path passes at a constant passthrough level (1 = transparent, a send on top; 0 = the block leaves the main chain entirely). Needs the aux outputs enabled in the host | aux 1 / aux 2 send, passthrough, attack/release lengths + curves, duration probabilities |
 | Pan     | Rhythmic panner: the gater's clock, but each step lands on one of three positions — hard left, centre, hard right — cycling rightwards (`->`), leftwards (`<-`), back and forth (`<->`, which turns round at the edges instead of jumping), or drawn per step from the seed. Glide sets how much of a step is spent travelling to the new position (0 clicks) | mode, glide, mix, duration probabilities |
 
-**Mix**: every effect has a wet/dry mix knob (override key `mix`) — except the
-ring modulator, whose `amount` plays that role, and the aux send, whose
-`passthrough` does. At 0 the lane is transparent;
-for the delay, mix scales the delayed signal added to the dry.
-
-**Duration probabilities**: effects that need a rhythmic duration (gate rate, grain
-length, filter ramp, ring glide, reverse slice, aux send rate, pan step) don't use a fixed value. You weight the probability of
-1/4, 1/8, 1/16, 1/32 and of straight/triplet/dotted; the actual duration is
+**Duration probabilities** (gate rate, grain length, filter ramp, ring glide,
+reverse slice, aux send rate, pan step): rather than a fixed rate you weight
+1/4, 1/8, 1/16, 1/32 and straight / triplet / dotted; the actual duration is
 drawn from those weights — e.g. with P(1/4)=1, P(1/8)=0.5, P(1/16)=0.1 the
-chance of an uncut quarter is 1/1.6. The draw is a pure function of
-(seed, lane, block): every pattern pass plays exactly the sequence the block
-visuals display, and changing the seed re-rolls every block.
+chance of an uncut quarter is 1/1.6. The draw depends only on the seed, the
+lane and the block, so the block picture always shows exactly what you'll hear.
+
+**Attack / release** (gater open phase; each grain repetition — never the
+whole block): lengths are fractions (0–1) of the shaped duration, so they
+scale with the rate. If they sum past 1 they share the duration proportionally
+(att=1, rel=0.5 acts as 2/3 + 1/3, a triangle with no sustain). The curve
+knobs bend the edges: 0 slow, 0.5 straight, 1 very fast (a fast release ≈ an
+exponential decay).
+
+## Buses & routing
+
+The **B** switch on a lane header starts a new bus at that row (row 1 always
+starts bus 1), up to **four buses**. Lanes inside a bus run in series; the
+buses run alongside each other. Lane colours show which bus a lane is in, each
+one further down the bus shaded a little lighter. Every bus has its own
+**volume** (0 mutes it) and **pan**, in the bus bar under the rack.
+
+The button on the left of the bus bar cycles five **routing modes**, drawn as
+a diagram of numbered boxes:
+
+| Mode | Wiring |
+|------|--------|
+| Parallel | All buses process the input side by side; outputs summed |
+| 3 ← 1+2  | Bus 3 processes the mix of buses 1+2; bus 4 (if any) stays parallel |
+| 4 ← 1–3  | Bus 4 processes the mix of buses 1–3 |
+| Diamond  | Bus 1 splits into buses 2 and 3, whose mix feeds bus 4 |
+| Fan-out  | Bus 1 is a common front end feeding every remaining bus |
+
+A mode that needs more buses than you have falls back to parallel — except the
+fan-out, which simply fans out to however many buses there are. Note that a
+bus with nothing sounding passes its input through, so several idle buses
+side by side sum to more than unity (the usual parallel-rack behaviour); turn
+an unused bus's volume down, or use the global dry/wet, to balance it.
 
 ## Per-block override language
 
@@ -102,10 +155,6 @@ the host to use them. Lanes running the Aux effect feed them from wherever
 they sit in the chain (the tap is before the bus volume/pan, so an aux send
 is unaffected by the bus level or balance).
 
-The bus bar under the rack holds the
-lane-count − / + chooser above the routing-mode button, the routing diagram
-and the per-bus volume/pan knobs (shown for active buses only).
-
 **Sequencer configs**: the **Configs** button swaps the lane panel for a bank
 of 8 configuration slots — one row to load, one to store. A config is a
 *pattern*, not a sound: it holds the blocks and their override strings, the
@@ -139,11 +188,6 @@ next) and a toggle that expands the full browser over the right column —
 factory presets plus user presets saved as XML under the platform user-data
 folder (`.../Mango/Presets`). Presets carry the complete state, sequencer
 blocks and override strings included.
-Each lane header also has **M**ute and **S**olo toggles (muted / non-soloed
-lanes keep sequencing — draws stay deterministic — but stop processing audio)
-and the **B**us-start switch. Note that an idle bus passes its copy of the dry
-input, so several buses with no sounding blocks sum to more than unity — the
-usual parallel-rack behaviour; use the dry/wet or your lanes' gating to taste.
 
 Parameter changes apply to the sounding blocks immediately: the active block
 is refreshed in place (same random draw, new values), keeping the gate/ramp
