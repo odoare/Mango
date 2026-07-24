@@ -47,7 +47,7 @@ patterns), FxmeFX (Tube saturation origin), Gloubiboulga (formant origin).
   | Ring | ring modulator: sine carrier glides exponentially f0→f1 over a drawn tempo-synced ramp, repeating for the block; amount 0–1 blends clean → full ±1 modulation (`x·(1−amp+amp·sin)`); carrier phase restarts at block entry (not on re-enters) so passes reproduce; one carrier feeds all channels | `ring_`: 7 weights, `f0`, `f1` (0.5 Hz–10 kHz), `amp` |
   | Rev | reverser: records drawn-duration slices and plays each backwards (while slice k records, slice k−1 plays reversed; the first slice of a block passes through); `fade` = 0–0.5 slice fraction faded at the seams; slice grid restarts at block entry (not on re-enters) so passes reproduce; pure sample copy, no interpolation | `rev_`: 7 weights, `fade` |
   | Freeze | spectral freeze (`fxme::SpectralFreezeMulti` — Mango's effect is only the APVTS adapter; WDL FFT): captures one 2048-sample window at block entry (passed through while recording, so blocks shorter than ~43 ms stay dry), then random-phase resynthesis of its magnitude spectrum — Hann/75% OLA, one iFFT per 512-sample hop (4 at the capture→wash switch) — sustains a static wash; phases keyed on (seed, lane, block, channel) with the frame counter restarting at entry, so passes reproduce and the two channels decorrelate into a wide image; `frz_width` blends the two wet channels (L' = a·L + b·R, mirrored, a:b = (1/2+w/2):(1/2−w/2) normalised to a²+b²=1 — equal power over the sweep since the washes are incoherent: 1 wide, 0 mono) | `frz_mix`, `frz_width` |
-  | Aux | rhythmic aux send: the gater's draw/envelope/curves verbatim, but the shaped signal is *added* to the plugin's two aux stereo outputs (`aux_send1`/`aux_send2`) instead of being cut, while the main path is scaled by a flat `aux_pass` (1 = transparent, a send on top; 0 = the block leaves the main chain). The tap is the bus signal at the lane's position, before the bus wet/pan. Aux buffers arrive via `EffectBase::setAuxBuffers`, set by the engine once per processBlock; nullptr = that bus is disabled in the host and the send is dropped | `aux_`: 7 weights, `att`, `rel`, `attcurve`, `relcurve`, `send1`, `send2`, `pass` |
+  | Aux | rhythmic aux send: the gater's draw/envelope/curves verbatim, but the shaped signal is *added* to the plugin's two aux stereo outputs (`aux_send1`/`aux_send2`) instead of being cut, while the main path is scaled by a flat `aux_pass` (1 = transparent, a send on top; 0 = the block leaves the main chain). The tap is the bus signal at the lane's position, before the bus volume/pan. Aux buffers arrive via `EffectBase::setAuxBuffers`, set by the engine once per processBlock; nullptr = that bus is disabled in the host and the send is dropped | `aux_`: 7 weights, `att`, `rel`, `attcurve`, `relcurve`, `send1`, `send2`, `pass` |
   | Pan | rhythmic panner: the gater's clock (same weighted draw), but each step lands on one of three positions -1/0/+1 rather than alternating two gains. `pan_mode` picks the sequence — `Cycle ->` (left, centre, right, period 3), `Cycle <-` (its mirror), `Cycle <->` (left, centre, right, centre: period 4, turning round rather than jumping across the image) or `Random` (drawn per step; the `1` coordinate keeps that stream clear of the block's duration draw at 0). `pan_glide` is the fraction of a step spent travelling to the new position, `pan_mix` the usual dry/wet as per-channel gain 1−mix+mix·g. Balance law, as the buses use; a mono main bus passes through untouched. `panStateAt()` in PannerEffect.h is shared with the block visual | `pan_`: 7 weights, `mode`, `glide`, `mix` |
 
 - **Per-effect mix**: every effect has a wet/dry `<fx>_mix` parameter
@@ -79,7 +79,7 @@ patterns), FxmeFX (Tube saturation origin), Gloubiboulga (formant origin).
   drive bias sag gain mix width model mode fade amp aux1 aux2 pass
   glide w4 w8 w16 w32 wstr wtrip wdot`.
 - **Globals**: dry/wet, seed (0–99999), step size, num steps, bus routing
-  mode + per-bus wet/pan (see §3 buses), lane count
+  mode + per-bus volume/pan (see §3 buses), lane count
   (−/+ buttons).
 - **Live updates**: any parameter change refreshes the sounding block in
   place immediately (same draw, new values, phase preserved) — no transport
@@ -135,9 +135,10 @@ The core. Owns:
 buses in display order — row 0 always starts bus 0, and every row whose
 `l<i>_busstart` switch is on opens the next bus (switches beyond the
 fourth bus, and switches on hidden rows, are ignored). Each bus runs its
-rows serially, then applies its own dry/wet (`bus<n>_wet`, blended against
-the bus's input) and pan (`bus<n>_pan`, −1..1 balance law, stereo only) —
-both bit-transparent at defaults. `busmode` picks the topology
+rows serially, then applies its own output volume (`bus<n>_vol`, a plain
+linear gain — 0 mutes the bus, it does **not** fall back to its input) and
+pan (`bus<n>_pan`, −1..1 balance law, stereo only) — both bit-transparent at
+defaults (vol 1, pan 0). `busmode` picks the topology
 (`effectiveBusMode(mode, busCount)` in ParamIDs.h — shared by engine and
 GUI; a mode needing more buses than exist falls back to parallel):
 
@@ -183,7 +184,7 @@ the map or the shading depths change (rack timer → `refreshBusCache` →
 `onBusMapChanged`). The **BusBar** (Components/BusBar.h, under the rack)
 draws the active buses as numbered coloured boxes with feed lines per the
 effective mode, cycles `busmode` with a button, and holds the per-bus
-wet/pan knob pairs (visible for active buses only).
+volume/pan knob pairs (visible for active buses only).
 
 **processBlock flow** (`process()`): read transport → publish bpm → on first
 call after `prepare()` start the engines (deferred so the first draws use the
@@ -227,7 +228,7 @@ sampleRate, bpm, mididurSeconds (sampled at entry), `overrides` pointer
 ## 4. Parameters & state
 
 - ~630 APVTS parameters, all pre-declared (IDs frozen): 16 globals
-  (incl. `busmode`, `bus<n>_wet/pan`, `config`, `configsync`) + per lane
+  (incl. `busmode`, `bus<n>_vol/pan`, `config`, `configsync`) + per lane
   `type`, `mute`, `solo`, `busstart` + every effect type's set, ids
   `l<i>_<fx>_<name>`
   (FxmeFX `addParameters(prefix)` pattern — each effect class has static
@@ -321,7 +322,7 @@ every existing session. What a config contains is decided by
 *belongs to* rather than by whether it is a "sound" control:
 
   - **Always — structure**: grid (`stepsize`/`numsteps`), `numlanes`, lane
-    order, per-lane `type` and `busstart`, `busmode`, **`bus<n>_wet` and
+    order, per-lane `type` and `busstart`, `busmode`, **`bus<n>_vol` and
     `bus<n>_pan`**, `seed`, plus the blocks (a `MangoSeq` child, the same
     format the session uses). Blocks are meaningless without their grid and
     seed; and a bus's *identity* is defined by the config (`busstart`

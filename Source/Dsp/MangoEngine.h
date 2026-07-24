@@ -12,13 +12,14 @@
 
     Routing: the visible rows group into up to four buses (row 0 starts
     bus 0; every row whose `busstart` switch is on opens the next bus).
-    Each bus runs its rows serially and has its own dry/wet and pan
-    (balance); `busmode` picks the topology (see effectiveBusMode):
+    Each bus runs its rows serially and has its own output volume (0 =
+    muted) and pan (balance); `busmode` picks the topology (see
+    effectiveBusMode):
     all-parallel; bus 3 fed by the mix of buses 1+2 (bus 4 parallel);
     bus 4 fed by the mix of buses 1-3; a diamond (bus 1 into buses 2 and 3
     in parallel, their mix into bus 4); or a fan-out (bus 1 into every
     remaining bus in parallel). Parallel bus outputs are summed
-    before the global dry/wet — with a single bus at default wet/pan the
+    before the global dry/wet — with a single bus at default vol/pan the
     chain is bit-identical to the plain serial chain, and idle parallel
     buses each pass a copy of the dry input.
 
@@ -197,7 +198,7 @@ private:
     std::atomic<float>* seedParam     = nullptr;
     std::atomic<float>* numLanesParam = nullptr;
     std::atomic<float>* busModeParam  = nullptr;
-    std::array<std::atomic<float>*, numBuses> busWetParam {};
+    std::array<std::atomic<float>*, numBuses> busVolParam {};
     std::array<std::atomic<float>*, numBuses> busPanParam {};
 
     juce::AudioBuffer<float> dryBuffer;

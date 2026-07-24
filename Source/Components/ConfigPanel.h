@@ -114,7 +114,7 @@ public:
             "A config is a pattern, not a sound. It always carries the blocks "
             "and their override text, the grid, how many lanes there are and "
             "in what order, which effect each lane runs, the whole bus wiring "
-            "with each bus's wet and pan, and the seed.\n\n"
+            "with each bus's volume and pan, and the seed.\n\n"
             "It does not carry the effect knob values unless you tick Include "
             "effect parameters before storing. Slots holding them are "
             "underlined, so loading one is never a surprise. Leaving it off "

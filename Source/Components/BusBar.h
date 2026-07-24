@@ -6,7 +6,7 @@
     stacked above a button cycling the `busmode` configurations, a
     small diagram of the active buses in the current routing (numbered
     boxes in the bus colours, with feed lines in the serial modes), and a
-    wet + pan knob pair per active bus. The diagram shows the *effective*
+    volume + pan knob pair per active bus. The diagram shows the *effective*
     routing — a mode that needs more buses than currently exist falls back
     to parallel, exactly like the engine (mng::effectiveBusMode).
 
@@ -64,11 +64,11 @@ public:
         for (int b = 0; b < numBuses; ++b)
         {
             auto& grp = groups[(size_t) b];
-            theme::styleKnob (grp.wet, "Wet", theme::busColour (b));
+            theme::styleKnob (grp.vol, "Vol", theme::busColour (b));
             theme::styleKnob (grp.pan, "Pan", theme::busColour (b), true);
-            addAndMakeVisible (grp.wet);
+            addAndMakeVisible (grp.vol);
             addAndMakeVisible (grp.pan);
-            grp.wetAtt = std::make_unique<SliderAttachment> (processor.apvts, pid::busWet (b), grp.wet);
+            grp.volAtt = std::make_unique<SliderAttachment> (processor.apvts, pid::busVol (b), grp.vol);
             grp.panAtt = std::make_unique<SliderAttachment> (processor.apvts, pid::busPan (b), grp.pan);
         }
 
@@ -91,8 +91,8 @@ public:
             "four. Lanes inside a bus run one after another, in series; the "
             "buses themselves run side by side. Lane colours show which bus a "
             "lane belongs to, getting lighter further down the bus.\n\n"
-            "Each bus has its own Wet and Pan here. Wet blends the bus against "
-            "what it was fed, so 0 makes the bus transparent.\n\n"
+            "Each bus has its own Volume and Pan here. Volume is the bus "
+            "output level, so 0 mutes the bus entirely.\n\n"
             "The button on the left cycles how the buses are wired, and the "
             "diagram shows it: all four side by side; bus 3 fed by 1+2; bus 4 "
             "fed by 1-3; a diamond where bus 1 splits into 2 and 3 and their "
@@ -101,8 +101,8 @@ public:
             "side-by-side.\n\n"
             "Note that a bus with nothing sounding passes its input through, "
             "so several idle buses side by side add up to more than you put "
-            "in - the usual behaviour of a parallel rack. Use the bus Wet "
-            "controls or the global Dry/Wet to balance it.");
+            "in - the usual behaviour of a parallel rack. Turn an unused "
+            "bus's Volume down, or use the global Dry/Wet, to balance it.");
         addAndMakeVisible (info);
 
         refresh();
@@ -147,7 +147,7 @@ public:
         for (auto& grp : groups)
         {
             auto slot = r.removeFromLeft (108);
-            grp.wet.setBounds (slot.removeFromLeft (52));
+            grp.vol.setBounds (slot.removeFromLeft (52));
             grp.pan.setBounds (slot.removeFromLeft (52));
             r.removeFromLeft (4);
         }
@@ -192,7 +192,7 @@ private:
         modeButton.setButtonText (names[juce::jlimit (0, numBusModes - 1, chosenMode)]);
         for (int b = 0; b < numBuses; ++b)
         {
-            groups[(size_t) b].wet.setVisible (b < busCount);
+            groups[(size_t) b].vol.setVisible (b < busCount);
             groups[(size_t) b].pan.setVisible (b < busCount);
         }
         repaint();
@@ -316,8 +316,8 @@ private:
 
     struct Group
     {
-        fxme::FxmeSlider wet, pan;
-        std::unique_ptr<SliderAttachment> wetAtt, panAtt;
+        fxme::FxmeSlider vol, pan;
+        std::unique_ptr<SliderAttachment> volAtt, panAtt;
     };
 
     static constexpr float kBox = 16.0f, kStep = 26.0f;

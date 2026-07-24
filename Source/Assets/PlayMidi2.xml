@@ -631,13 +631,13 @@
   <PARAM id="l6_dist_gain"/>
   <PARAM id="l7_dist_gain"/>
   <PARAM id="bus1_pan" value="0.2300000190734863"/>
-  <PARAM id="bus1_wet"/>
+  <PARAM id="bus1_vol"/>
   <PARAM id="bus2_pan" value="-0.300000011920929"/>
-  <PARAM id="bus2_wet" value="1.0"/>
+  <PARAM id="bus2_vol" value="1.0"/>
   <PARAM id="bus3_pan"/>
-  <PARAM id="bus3_wet"/>
+  <PARAM id="bus3_vol"/>
   <PARAM id="bus4_pan"/>
-  <PARAM id="bus4_wet"/>
+  <PARAM id="bus4_vol"/>
   <PARAM id="busmode" value="0.0"/>
   <PARAM id="config"/>
   <PARAM id="configsync"/>

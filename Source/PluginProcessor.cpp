@@ -225,7 +225,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout MangoAudioProcessor::createP
     {
         const auto nameP = "Bus " + juce::String (b + 1) + " ";
         params.push_back (std::make_unique<juce::AudioParameterFloat> (
-            pid::busWet (b), nameP + "Wet",
+            pid::busVol (b), nameP + "Volume",
             juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 1.0f));
         params.push_back (std::make_unique<juce::AudioParameterFloat> (
             pid::busPan (b), nameP + "Pan",

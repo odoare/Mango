@@ -2,13 +2,13 @@
 
 <Parameters presetName="Waveguide" presetIsFactory="0">
   <PARAM id="bus1_pan" value="0.0"/>
-  <PARAM id="bus1_wet" value="1.0"/>
+  <PARAM id="bus1_vol" value="1.0"/>
   <PARAM id="bus2_pan" value="0.0"/>
-  <PARAM id="bus2_wet" value="1.0"/>
+  <PARAM id="bus2_vol" value="1.0"/>
   <PARAM id="bus3_pan" value="0.0"/>
-  <PARAM id="bus3_wet" value="1.0"/>
+  <PARAM id="bus3_vol" value="1.0"/>
   <PARAM id="bus4_pan" value="0.0"/>
-  <PARAM id="bus4_wet" value="1.0"/>
+  <PARAM id="bus4_vol" value="1.0"/>
   <PARAM id="busmode" value="0.0"/>
   <PARAM id="config" value="1.0"/>
   <PARAM id="configsync" value="0.0"/>

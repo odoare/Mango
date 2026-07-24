@@ -26,9 +26,9 @@ namespace mng
     /** Maximum parallel effect buses. Rows group into contiguous buses in
         display order: row 0 always starts bus 0, and every visible row
         whose "bus start" switch is on opens the next bus (extra switches
-        beyond the fourth bus are ignored). Each bus has a dry/wet and a
-        pan; the `busmode` parameter picks the routing (see
-        effectiveBusMode). */
+        beyond the fourth bus are ignored). Each bus has an output level
+        (volume, 0 = muted) and a pan; the `busmode` parameter picks the
+        routing (see effectiveBusMode). */
     inline constexpr int numBuses = 4;
 
     /** Bus routing modes (`busmode`):
@@ -75,10 +75,12 @@ namespace mng
         inline constexpr const char* config     = "config";      // 1..numConfigs selector
         inline constexpr const char* configsync = "configsync";  // recall timing
 
-        /** Per-bus dry/wet, e.g. "bus2_wet" (busIndex 0-based). */
-        inline juce::String busWet (int busIndex)
+        /** Per-bus output level (linear gain 0..1, 0 = the bus is muted),
+            e.g. "bus2_vol" (busIndex 0-based). Not a dry/wet: at 0 the bus
+            is silent, it does not pass its input through. */
+        inline juce::String busVol (int busIndex)
         {
-            return "bus" + juce::String (busIndex + 1) + "_wet";
+            return "bus" + juce::String (busIndex + 1) + "_vol";
         }
 
         /** Per-bus pan (-1..1 balance), e.g. "bus2_pan". */
@@ -112,7 +114,7 @@ namespace mng
 
           Always   — **structure**: the shape of the rack. Grid, lane
                      count/order/types, bus grouping and topology, the
-                     per-bus wet/pan, and the seed. A bus's identity is
+                     per-bus volume/pan, and the seed. A bus's identity is
                      defined by the config (`busstart` decides which lanes
                      are in it), so its level and pan have to travel with
                      it — exactly like the blocks travelling with the grid
@@ -134,7 +136,7 @@ namespace mng
             return ConfigParamKind::Never;
 
         const bool isBusMix = id.startsWith ("bus")
-                              && (id.endsWith ("_wet") || id.endsWith ("_pan"));
+                              && (id.endsWith ("_vol") || id.endsWith ("_pan"));
 
         if (isBusMix
             || id == pid::numlanes || id == pid::busmode || id == pid::seed

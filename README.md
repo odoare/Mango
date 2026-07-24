@@ -9,7 +9,7 @@ the playhead is inside a block on a lane, that lane's effect processes the audio
 lane order (top to bottom) is the processing order and can be changed with the
 arrows on the left. Lanes group into up to **four buses**: the **B** switch on
 a lane header starts a new bus at that row (row 1 always starts bus 1). Each
-bus runs its lanes in series and has its own **wet** and **pan** controls in
+bus runs its lanes in series and has its own **volume** and **pan** controls in
 the bus bar under the rack, which also shows the routing diagram and cycles
 between five **routing modes**: all buses parallel (each processes its own
 copy of the input, outputs summed); bus 3 processing the mixed outputs of
@@ -99,18 +99,18 @@ settings and simply stop processing).
 **Aux outputs**: besides the main stereo pair the plugin offers two extra
 stereo outputs, **Aux 1** and **Aux 2**, declared disabled — enable them in
 the host to use them. Lanes running the Aux effect feed them from wherever
-they sit in the chain (the tap is before the bus wet/pan, so an aux send is
-unaffected by the bus balance).
+they sit in the chain (the tap is before the bus volume/pan, so an aux send
+is unaffected by the bus level or balance).
 
 The bus bar under the rack holds the
 lane-count − / + chooser above the routing-mode button, the routing diagram
-and the per-bus wet/pan knobs (shown for active buses only).
+and the per-bus volume/pan knobs (shown for active buses only).
 
 **Sequencer configs**: the **Configs** button swaps the lane panel for a bank
 of 8 configuration slots — one row to load, one to store. A config is a
 *pattern*, not a sound: it holds the blocks and their override strings, the
 grid, the lane count/order/effect types, the whole bus routing (grouping,
-mode, per-bus wet and pan) and the seed. Tick *include effect parameters* —
+mode, per-bus volume and pan) and the seed. Tick *include effect parameters* —
 off by default — to store the effect knob values as well; slots that carry
 them are underlined, so a recall is never a surprise. Mute, solo and the
 global dry/wet are never stored, so a recall can't clobber your live mix.

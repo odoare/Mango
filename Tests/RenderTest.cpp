@@ -781,18 +781,30 @@ static void testBusModes()
         CHECK (maxDiff < 1e-6f);
     }
 
-    // Per-bus wet at 0 bypasses everything the bus does...
+    // Per-bus volume is a plain output gain: at 0 the bus is silent, it does
+    // NOT fall back to passing its input through.
     {
         MangoAudioProcessor p;
         setParam (p, "l0_type", 5.0f);
         setParam (p, "l0_qnt_bits", 1.0f);
-        setParam (p, "bus1_wet", 0.0f);
+        setParam (p, "bus1_vol", 0.0f);
         addFullBlock (p, 0);
+        const auto out = render (p, 0.2);
+        float peak = 0.0f;
+        for (size_t i = 0; i < out.size(); ++i)
+            peak = std::max (peak, std::abs (out[i]));
+        CHECK (peak < 1e-6f);        // muted, not dry-through
+    }
+
+    // Half volume halves the output; a single bus at vol 1 is bit-transparent.
+    {
+        MangoAudioProcessor p;
+        setParam (p, "bus1_vol", 0.5f);
         const auto out = render (p, 0.2);
         const auto in  = makeInput (out.size());
         float maxDiff = 0.0f;
         for (size_t i = 0; i < out.size(); ++i)
-            maxDiff = std::max (maxDiff, std::abs (out[i] - in[i]));
+            maxDiff = std::max (maxDiff, std::abs (out[i] - 0.5f * in[i]));
         CHECK (maxDiff < 1e-6f);
     }
 
@@ -827,7 +839,7 @@ static void testBusModes()
         CHECK (maxRDiff < 1e-6f);
     }
 
-    std::printf ("bus modes: serial feeds, wet bypass and pan verified\n");
+    std::printf ("bus modes: serial feeds, volume mute and pan verified\n");
 }
 
 //==============================================================================
@@ -936,18 +948,18 @@ static void testConfigBank()
     setParam (p, "seed", 99.0f);
     CHECK (p.configIsModified());
 
-    // --- bus wet/pan are structure, not voicing: a blocks-only config
+    // --- bus volume/pan are structure, not voicing: a blocks-only config
     // restores them (a bus's membership is defined by the config, so its
     // level and pan have to travel with it).
-    setParam (p, "bus1_wet", 0.5f);
+    setParam (p, "bus1_vol", 0.5f);
     setParam (p, "bus1_pan", -0.75f);
     p.storeConfig (2, false);
     CHECK (! p.configHasParams (2));
-    setParam (p, "bus1_wet", 1.0f);
+    setParam (p, "bus1_vol", 1.0f);
     setParam (p, "bus1_pan", 0.0f);
     p.requestConfigRecall (2);
     pump();
-    CHECK (std::abs (getP (p, "bus1_wet") - 0.5f) < 1e-3f);
+    CHECK (std::abs (getP (p, "bus1_vol") - 0.5f) < 1e-3f);
     CHECK (std::abs (getP (p, "bus1_pan") + 0.75f) < 1e-3f);
 
     // --- undo restores what a store overwrote.

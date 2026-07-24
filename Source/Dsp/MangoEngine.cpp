@@ -126,7 +126,7 @@ void MangoEngine::bindParameters (juce::AudioProcessorValueTreeState& apvts)
     busModeParam  = apvts.getRawParameterValue (pid::busmode);
     for (int b = 0; b < numBuses; ++b)
     {
-        busWetParam[(size_t) b] = apvts.getRawParameterValue (pid::busWet (b));
+        busVolParam[(size_t) b] = apvts.getRawParameterValue (pid::busVol (b));
         busPanParam[(size_t) b] = apvts.getRawParameterValue (pid::busPan (b));
     }
 
@@ -428,8 +428,8 @@ void MangoEngine::process (juce::AudioBuffer<float>& buffer,
         busModeParam != nullptr ? (int) busModeParam->load() : 0, busCount);
 
     // One bus, into busBuffer: copy its input, run its rows serially, then
-    // the per-bus dry/wet (against the bus input) and pan (balance; only
-    // touched when not neutral, so defaults stay bit-transparent).
+    // the per-bus volume (linear gain, 0 = muted) and pan (balance; both
+    // touched only when not neutral, so defaults stay bit-transparent).
     auto processBus = [&] (int bus, const juce::AudioBuffer<float>& input, int offset, int n)
     {
         for (int ch = 0; ch < numChannels; ++ch)
@@ -447,16 +447,13 @@ void MangoEngine::process (juce::AudioBuffer<float>& buffer,
                 currentEffect (lane).process (busBuffer, offset, n);
         }
 
-        const float wet = busWetParam[(size_t) bus] != nullptr
-                        ? juce::jlimit (0.0f, 1.0f, busWetParam[(size_t) bus]->load()) : 1.0f;
-        if (wet < 1.0f)
+        // Volume is a plain output gain, not a dry/wet: at 0 the bus is
+        // silent (it does not fall back to its input).
+        const float vol = busVolParam[(size_t) bus] != nullptr
+                        ? juce::jlimit (0.0f, 1.0f, busVolParam[(size_t) bus]->load()) : 1.0f;
+        if (vol != 1.0f)
             for (int ch = 0; ch < numChannels; ++ch)
-            {
-                const float* in = input.getReadPointer (ch) + offset;
-                float*       bb = busBuffer.getWritePointer (ch) + offset;
-                for (int i = 0; i < n; ++i)
-                    bb[i] = in[i] + wet * (bb[i] - in[i]);
-            }
+                busBuffer.applyGain (ch, offset, n, vol);
 
         const float pan = busPanParam[(size_t) bus] != nullptr
                         ? juce::jlimit (-1.0f, 1.0f, busPanParam[(size_t) bus]->load()) : 0.0f;
