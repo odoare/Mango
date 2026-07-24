@@ -59,9 +59,13 @@ file(GLOB MANGO_INCLUDE_DIRS LIST_DIRECTORIES true
 list(FILTER MANGO_INCLUDE_DIRS EXCLUDE REGEX "\\.(c|cc|cpp|cxx|h|hpp|hxx|mm)$")
 target_include_directories(Mango PRIVATE ${MANGO_INCLUDE_DIRS})
 
-# Image assets (logo, etc.)
+# Image assets (logo, artwork, splash) + factory preset XML. The presets are
+# APVTS-state XML saved by the plugin; PresetManager keeps every embedded
+# "*_xml" resource whose root tag matches the APVTS state type ("Parameters")
+# and ignores the rest, so images and presets can share one binary-data blob.
 file(GLOB MANGO_ASSETS ${CMAKE_CURRENT_SOURCE_DIR}/Source/Assets/*.png
-                       ${CMAKE_CURRENT_SOURCE_DIR}/Source/Assets/*.jpg)
+                       ${CMAKE_CURRENT_SOURCE_DIR}/Source/Assets/*.jpg
+                       ${CMAKE_CURRENT_SOURCE_DIR}/Source/Assets/*.xml)
 if(MANGO_ASSETS)
     juce_add_binary_data(MangoBinaryData SOURCES ${MANGO_ASSETS})
     set_target_properties(MangoBinaryData PROPERTIES

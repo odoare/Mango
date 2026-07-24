@@ -1,0 +1,887 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<Parameters presetName="PlayMidi3" presetIsFactory="0">
+  <PARAM id="drywet" value="1.0"/>
+  <PARAM id="l0_dist_bias" value="0.0"/>
+  <PARAM id="l0_dist_drive" value="12.0"/>
+  <PARAM id="l0_dist_mix" value="1.0"/>
+  <PARAM id="l0_dist_model" value="0.0"/>
+  <PARAM id="l0_dist_sag" value="0.2999999821186066"/>
+  <PARAM id="l0_dly_dur" value="0.25"/>
+  <PARAM id="l0_dly_fb" value="0.5"/>
+  <PARAM id="l0_flt_f0" value="200.0"/>
+  <PARAM id="l0_flt_f1" value="4000.0"/>
+  <PARAM id="l0_flt_mode" value="0.0"/>
+  <PARAM id="l0_flt_q" value="0.8999999761581421"/>
+  <PARAM id="l0_flt_v0" value="0.0"/>
+  <PARAM id="l0_flt_v1" value="4.0"/>
+  <PARAM id="l0_flt_w16" value="0.0"/>
+  <PARAM id="l0_flt_w32" value="0.0"/>
+  <PARAM id="l0_flt_w4" value="1.0"/>
+  <PARAM id="l0_flt_w8" value="0.0"/>
+  <PARAM id="l0_flt_wdot" value="0.0"/>
+  <PARAM id="l0_flt_wstr" value="1.0"/>
+  <PARAM id="l0_flt_wtrip" value="0.0"/>
+  <PARAM id="l0_gate_att" value="0.03600000217556953"/>
+  <PARAM id="l0_gate_attcurve" value="0.5"/>
+  <PARAM id="l0_gate_rel" value="1.0"/>
+  <PARAM id="l0_gate_relcurve" value="1.0"/>
+  <PARAM id="l0_gate_w16" value="0.0"/>
+  <PARAM id="l0_gate_w32" value="0.75"/>
+  <PARAM id="l0_gate_w4" value="0.0"/>
+  <PARAM id="l0_gate_w8" value="0.0"/>
+  <PARAM id="l0_gate_wdot" value="0.0"/>
+  <PARAM id="l0_gate_wstr" value="1.0"/>
+  <PARAM id="l0_gate_wtrip" value="0.0"/>
+  <PARAM id="l0_grain_att" value="0.04999999701976776"/>
+  <PARAM id="l0_grain_attcurve" value="0.0"/>
+  <PARAM id="l0_grain_fade" value="0.001000000047497451"/>
+  <PARAM id="l0_grain_rel" value="1.0"/>
+  <PARAM id="l0_grain_relcurve" value="0.7099999785423279"/>
+  <PARAM id="l0_grain_w16" value="0.9199999570846558"/>
+  <PARAM id="l0_grain_w32" value="0.0"/>
+  <PARAM id="l0_grain_w4" value="0.5600000023841858"/>
+  <PARAM id="l0_grain_w8" value="0.6399999856948853"/>
+  <PARAM id="l0_grain_wdot" value="0.0"/>
+  <PARAM id="l0_grain_wstr" value="1.0"/>
+  <PARAM id="l0_grain_wtrip" value="1.0"/>
+  <PARAM id="l0_mute" value="0.0"/>
+  <PARAM id="l0_qnt_bits" value="7.999999523162842"/>
+  <PARAM id="l0_solo" value="0.0"/>
+  <PARAM id="l0_type" value="1.0"/>
+  <PARAM id="l1_dist_bias" value="0.0"/>
+  <PARAM id="l1_dist_drive" value="12.0"/>
+  <PARAM id="l1_dist_mix" value="1.0"/>
+  <PARAM id="l1_dist_model" value="0.0"/>
+  <PARAM id="l1_dist_sag" value="0.2999999821186066"/>
+  <PARAM id="l1_dly_dur" value="0.25"/>
+  <PARAM id="l1_dly_fb" value="0.5"/>
+  <PARAM id="l1_flt_f0" value="200.0"/>
+  <PARAM id="l1_flt_f1" value="4000.0"/>
+  <PARAM id="l1_flt_mode" value="0.0"/>
+  <PARAM id="l1_flt_q" value="0.8999999761581421"/>
+  <PARAM id="l1_flt_v0" value="0.0"/>
+  <PARAM id="l1_flt_v1" value="4.0"/>
+  <PARAM id="l1_flt_w16" value="0.0"/>
+  <PARAM id="l1_flt_w32" value="0.0"/>
+  <PARAM id="l1_flt_w4" value="1.0"/>
+  <PARAM id="l1_flt_w8" value="0.0"/>
+  <PARAM id="l1_flt_wdot" value="0.0"/>
+  <PARAM id="l1_flt_wstr" value="1.0"/>
+  <PARAM id="l1_flt_wtrip" value="0.0"/>
+  <PARAM id="l1_gate_att" value="0.02000000141561031"/>
+  <PARAM id="l1_gate_attcurve" value="0.5"/>
+  <PARAM id="l1_gate_rel" value="0.02000000141561031"/>
+  <PARAM id="l1_gate_relcurve" value="0.5"/>
+  <PARAM id="l1_gate_w16" value="0.0"/>
+  <PARAM id="l1_gate_w32" value="0.0"/>
+  <PARAM id="l1_gate_w4" value="1.0"/>
+  <PARAM id="l1_gate_w8" value="0.0"/>
+  <PARAM id="l1_gate_wdot" value="0.0"/>
+  <PARAM id="l1_gate_wstr" value="1.0"/>
+  <PARAM id="l1_gate_wtrip" value="0.0"/>
+  <PARAM id="l1_grain_att" value="0.009999999776482582"/>
+  <PARAM id="l1_grain_attcurve" value="0.5"/>
+  <PARAM id="l1_grain_fade" value="0.001099999994039536"/>
+  <PARAM id="l1_grain_rel" value="0.3100000023841858"/>
+  <PARAM id="l1_grain_relcurve" value="1.0"/>
+  <PARAM id="l1_grain_w16" value="0.4199999868869781"/>
+  <PARAM id="l1_grain_w32" value="0.0"/>
+  <PARAM id="l1_grain_w4" value="0.0"/>
+  <PARAM id="l1_grain_w8" value="0.0"/>
+  <PARAM id="l1_grain_wdot" value="0.0"/>
+  <PARAM id="l1_grain_wstr" value="1.0"/>
+  <PARAM id="l1_grain_wtrip" value="0.0"/>
+  <PARAM id="l1_mute" value="0.0"/>
+  <PARAM id="l1_qnt_bits" value="7.999999523162842"/>
+  <PARAM id="l1_solo" value="0.0"/>
+  <PARAM id="l1_type" value="3.0"/>
+  <PARAM id="l2_dist_bias" value="0.3560000061988831"/>
+  <PARAM id="l2_dist_drive" value="7.900000095367432"/>
+  <PARAM id="l2_dist_mix" value="1.0"/>
+  <PARAM id="l2_dist_model" value="2.0"/>
+  <PARAM id="l2_dist_sag" value="0.6299999952316284"/>
+  <PARAM id="l2_dly_dur" value="0.5"/>
+  <PARAM id="l2_dly_fb" value="0.8700000047683716"/>
+  <PARAM id="l2_flt_f0" value="200.0"/>
+  <PARAM id="l2_flt_f1" value="4000.0"/>
+  <PARAM id="l2_flt_mode" value="0.0"/>
+  <PARAM id="l2_flt_q" value="0.8999999761581421"/>
+  <PARAM id="l2_flt_v0" value="0.0"/>
+  <PARAM id="l2_flt_v1" value="4.0"/>
+  <PARAM id="l2_flt_w16" value="0.0"/>
+  <PARAM id="l2_flt_w32" value="0.0"/>
+  <PARAM id="l2_flt_w4" value="1.0"/>
+  <PARAM id="l2_flt_w8" value="0.0"/>
+  <PARAM id="l2_flt_wdot" value="0.0"/>
+  <PARAM id="l2_flt_wstr" value="1.0"/>
+  <PARAM id="l2_flt_wtrip" value="0.0"/>
+  <PARAM id="l2_gate_att" value="0.0"/>
+  <PARAM id="l2_gate_attcurve" value="0.0"/>
+  <PARAM id="l2_gate_rel" value="1.0"/>
+  <PARAM id="l2_gate_relcurve" value="0.5399999618530273"/>
+  <PARAM id="l2_gate_w16" value="0.4199999868869781"/>
+  <PARAM id="l2_gate_w32" value="1.0"/>
+  <PARAM id="l2_gate_w4" value="0.0"/>
+  <PARAM id="l2_gate_w8" value="0.0"/>
+  <PARAM id="l2_gate_wdot" value="0.0"/>
+  <PARAM id="l2_gate_wstr" value="0.7199999690055847"/>
+  <PARAM id="l2_gate_wtrip" value="1.0"/>
+  <PARAM id="l2_grain_att" value="0.0"/>
+  <PARAM id="l2_grain_attcurve" value="0.5"/>
+  <PARAM id="l2_grain_fade" value="0.01499999966472387"/>
+  <PARAM id="l2_grain_rel" value="0.0"/>
+  <PARAM id="l2_grain_relcurve" value="0.5"/>
+  <PARAM id="l2_grain_w16" value="0.0"/>
+  <PARAM id="l2_grain_w32" value="0.0"/>
+  <PARAM id="l2_grain_w4" value="1.0"/>
+  <PARAM id="l2_grain_w8" value="0.0"/>
+  <PARAM id="l2_grain_wdot" value="0.0"/>
+  <PARAM id="l2_grain_wstr" value="1.0"/>
+  <PARAM id="l2_grain_wtrip" value="0.0"/>
+  <PARAM id="l2_mute" value="0.0"/>
+  <PARAM id="l2_qnt_bits" value="7.999999523162842"/>
+  <PARAM id="l2_solo" value="0.0"/>
+  <PARAM id="l2_type" value="3.0"/>
+  <PARAM id="l3_dist_bias" value="0.0"/>
+  <PARAM id="l3_dist_drive" value="12.60000038146973"/>
+  <PARAM id="l3_dist_mix" value="1.0"/>
+  <PARAM id="l3_dist_model" value="0.0"/>
+  <PARAM id="l3_dist_sag" value="0.2999999821186066"/>
+  <PARAM id="l3_dly_dur" value="0.25"/>
+  <PARAM id="l3_dly_fb" value="0.7990000247955322"/>
+  <PARAM id="l3_flt_f0" value="200.0"/>
+  <PARAM id="l3_flt_f1" value="4000.0"/>
+  <PARAM id="l3_flt_mode" value="0.0"/>
+  <PARAM id="l3_flt_q" value="0.8999999761581421"/>
+  <PARAM id="l3_flt_v0" value="0.0"/>
+  <PARAM id="l3_flt_v1" value="4.0"/>
+  <PARAM id="l3_flt_w16" value="0.0"/>
+  <PARAM id="l3_flt_w32" value="0.0"/>
+  <PARAM id="l3_flt_w4" value="1.0"/>
+  <PARAM id="l3_flt_w8" value="0.0"/>
+  <PARAM id="l3_flt_wdot" value="0.0"/>
+  <PARAM id="l3_flt_wstr" value="1.0"/>
+  <PARAM id="l3_flt_wtrip" value="0.0"/>
+  <PARAM id="l3_gate_att" value="0.06800000369548798"/>
+  <PARAM id="l3_gate_attcurve" value="0.0"/>
+  <PARAM id="l3_gate_rel" value="0.1960000097751617"/>
+  <PARAM id="l3_gate_relcurve" value="1.0"/>
+  <PARAM id="l3_gate_w16" value="0.7199999690055847"/>
+  <PARAM id="l3_gate_w32" value="1.0"/>
+  <PARAM id="l3_gate_w4" value="0.0"/>
+  <PARAM id="l3_gate_w8" value="0.009999999776482582"/>
+  <PARAM id="l3_gate_wdot" value="0.0"/>
+  <PARAM id="l3_gate_wstr" value="1.0"/>
+  <PARAM id="l3_gate_wtrip" value="0.0"/>
+  <PARAM id="l3_grain_att" value="0.0"/>
+  <PARAM id="l3_grain_attcurve" value="0.5"/>
+  <PARAM id="l3_grain_fade" value="0.01499999966472387"/>
+  <PARAM id="l3_grain_rel" value="0.0"/>
+  <PARAM id="l3_grain_relcurve" value="0.5"/>
+  <PARAM id="l3_grain_w16" value="0.0"/>
+  <PARAM id="l3_grain_w32" value="0.0"/>
+  <PARAM id="l3_grain_w4" value="1.0"/>
+  <PARAM id="l3_grain_w8" value="0.0"/>
+  <PARAM id="l3_grain_wdot" value="0.0"/>
+  <PARAM id="l3_grain_wstr" value="1.0"/>
+  <PARAM id="l3_grain_wtrip" value="0.0"/>
+  <PARAM id="l3_mute" value="0.0"/>
+  <PARAM id="l3_qnt_bits" value="7.999999523162842"/>
+  <PARAM id="l3_solo" value="0.0"/>
+  <PARAM id="l3_type" value="0.0"/>
+  <PARAM id="l4_dist_bias" value="0.0"/>
+  <PARAM id="l4_dist_drive" value="12.0"/>
+  <PARAM id="l4_dist_mix" value="1.0"/>
+  <PARAM id="l4_dist_model" value="0.0"/>
+  <PARAM id="l4_dist_sag" value="0.2999999821186066"/>
+  <PARAM id="l4_dly_dur" value="0.25"/>
+  <PARAM id="l4_dly_fb" value="0.7800000309944153"/>
+  <PARAM id="l4_flt_f0" value="2723.0"/>
+  <PARAM id="l4_flt_f1" value="368.0"/>
+  <PARAM id="l4_flt_mode" value="2.0"/>
+  <PARAM id="l4_flt_q" value="3.549999952316284"/>
+  <PARAM id="l4_flt_v0" value="2.0"/>
+  <PARAM id="l4_flt_v1" value="3.0"/>
+  <PARAM id="l4_flt_w16" value="0.0"/>
+  <PARAM id="l4_flt_w32" value="0.0"/>
+  <PARAM id="l4_flt_w4" value="0.0"/>
+  <PARAM id="l4_flt_w8" value="0.0"/>
+  <PARAM id="l4_flt_wdot" value="0.0"/>
+  <PARAM id="l4_flt_wstr" value="1.0"/>
+  <PARAM id="l4_flt_wtrip" value="0.7199999690055847"/>
+  <PARAM id="l4_gate_att" value="0.02000000141561031"/>
+  <PARAM id="l4_gate_attcurve" value="0.5"/>
+  <PARAM id="l4_gate_rel" value="0.02000000141561031"/>
+  <PARAM id="l4_gate_relcurve" value="0.5"/>
+  <PARAM id="l4_gate_w16" value="0.0"/>
+  <PARAM id="l4_gate_w32" value="0.0"/>
+  <PARAM id="l4_gate_w4" value="1.0"/>
+  <PARAM id="l4_gate_w8" value="0.0"/>
+  <PARAM id="l4_gate_wdot" value="0.0"/>
+  <PARAM id="l4_gate_wstr" value="1.0"/>
+  <PARAM id="l4_gate_wtrip" value="0.0"/>
+  <PARAM id="l4_grain_att" value="0.0"/>
+  <PARAM id="l4_grain_attcurve" value="0.5"/>
+  <PARAM id="l4_grain_fade" value="0.01499999966472387"/>
+  <PARAM id="l4_grain_rel" value="0.0"/>
+  <PARAM id="l4_grain_relcurve" value="0.5"/>
+  <PARAM id="l4_grain_w16" value="0.0"/>
+  <PARAM id="l4_grain_w32" value="0.0"/>
+  <PARAM id="l4_grain_w4" value="1.0"/>
+  <PARAM id="l4_grain_w8" value="0.0"/>
+  <PARAM id="l4_grain_wdot" value="0.0"/>
+  <PARAM id="l4_grain_wstr" value="1.0"/>
+  <PARAM id="l4_grain_wtrip" value="0.0"/>
+  <PARAM id="l4_mute" value="0.0"/>
+  <PARAM id="l4_qnt_bits" value="7.999999523162842"/>
+  <PARAM id="l4_solo" value="0.0"/>
+  <PARAM id="l4_type" value="4.0"/>
+  <PARAM id="l5_dist_bias" value="0.0"/>
+  <PARAM id="l5_dist_drive" value="12.0"/>
+  <PARAM id="l5_dist_mix" value="1.0"/>
+  <PARAM id="l5_dist_model" value="0.0"/>
+  <PARAM id="l5_dist_sag" value="0.2999999821186066"/>
+  <PARAM id="l5_dly_dur" value="0.06800000369548798"/>
+  <PARAM id="l5_dly_fb" value="0.5"/>
+  <PARAM id="l5_flt_f0" value="200.0"/>
+  <PARAM id="l5_flt_f1" value="4000.0"/>
+  <PARAM id="l5_flt_mode" value="0.0"/>
+  <PARAM id="l5_flt_q" value="0.8999999761581421"/>
+  <PARAM id="l5_flt_v0" value="0.0"/>
+  <PARAM id="l5_flt_v1" value="4.0"/>
+  <PARAM id="l5_flt_w16" value="0.0"/>
+  <PARAM id="l5_flt_w32" value="0.0"/>
+  <PARAM id="l5_flt_w4" value="1.0"/>
+  <PARAM id="l5_flt_w8" value="0.0"/>
+  <PARAM id="l5_flt_wdot" value="0.0"/>
+  <PARAM id="l5_flt_wstr" value="1.0"/>
+  <PARAM id="l5_flt_wtrip" value="0.0"/>
+  <PARAM id="l5_gate_att" value="0.02000000141561031"/>
+  <PARAM id="l5_gate_attcurve" value="0.5"/>
+  <PARAM id="l5_gate_rel" value="0.02000000141561031"/>
+  <PARAM id="l5_gate_relcurve" value="0.5"/>
+  <PARAM id="l5_gate_w16" value="0.0"/>
+  <PARAM id="l5_gate_w32" value="0.0"/>
+  <PARAM id="l5_gate_w4" value="1.0"/>
+  <PARAM id="l5_gate_w8" value="0.0"/>
+  <PARAM id="l5_gate_wdot" value="0.0"/>
+  <PARAM id="l5_gate_wstr" value="1.0"/>
+  <PARAM id="l5_gate_wtrip" value="0.0"/>
+  <PARAM id="l5_grain_att" value="0.0"/>
+  <PARAM id="l5_grain_attcurve" value="0.5"/>
+  <PARAM id="l5_grain_fade" value="0.01499999966472387"/>
+  <PARAM id="l5_grain_rel" value="0.0"/>
+  <PARAM id="l5_grain_relcurve" value="0.5"/>
+  <PARAM id="l5_grain_w16" value="0.0"/>
+  <PARAM id="l5_grain_w32" value="0.0"/>
+  <PARAM id="l5_grain_w4" value="1.0"/>
+  <PARAM id="l5_grain_w8" value="0.0"/>
+  <PARAM id="l5_grain_wdot" value="0.0"/>
+  <PARAM id="l5_grain_wstr" value="1.0"/>
+  <PARAM id="l5_grain_wtrip" value="0.0"/>
+  <PARAM id="l5_mute" value="0.0"/>
+  <PARAM id="l5_qnt_bits" value="3.400000095367432"/>
+  <PARAM id="l5_solo" value="0.0"/>
+  <PARAM id="l5_type" value="8.0"/>
+  <PARAM id="numsteps" value="16.0"/>
+  <PARAM id="seed" value="0.0"/>
+  <PARAM id="stepsize" value="0.0"/>
+  <PARAM id="numlanes" value="6.0"/>
+  <PARAM id="l0_dly_damp"/>
+  <PARAM id="l0_dly_porta"/>
+  <PARAM id="l1_dly_damp"/>
+  <PARAM id="l1_dly_porta"/>
+  <PARAM id="l2_dly_damp"/>
+  <PARAM id="l2_dly_porta"/>
+  <PARAM id="l3_dly_damp"/>
+  <PARAM id="l3_dly_porta" value="7.5"/>
+  <PARAM id="l4_dly_damp" value="0.2099999934434891"/>
+  <PARAM id="l4_dly_porta" value="10.60000038146973"/>
+  <PARAM id="l5_dly_damp"/>
+  <PARAM id="l5_dly_porta"/>
+  <PARAM id="l6_dist_bias"/>
+  <PARAM id="l6_dist_drive"/>
+  <PARAM id="l6_dist_mix"/>
+  <PARAM id="l6_dist_model"/>
+  <PARAM id="l6_dist_sag"/>
+  <PARAM id="l6_dly_damp" value="0.429999977350235"/>
+  <PARAM id="l6_dly_dur" value="0.125"/>
+  <PARAM id="l6_dly_fb" value="0.9350000619888306"/>
+  <PARAM id="l6_dly_porta" value="8.800000190734863"/>
+  <PARAM id="l6_flt_f0"/>
+  <PARAM id="l6_flt_f1"/>
+  <PARAM id="l6_flt_mode"/>
+  <PARAM id="l6_flt_q"/>
+  <PARAM id="l6_flt_v0"/>
+  <PARAM id="l6_flt_v1"/>
+  <PARAM id="l6_flt_w16"/>
+  <PARAM id="l6_flt_w32"/>
+  <PARAM id="l6_flt_w4"/>
+  <PARAM id="l6_flt_w8"/>
+  <PARAM id="l6_flt_wdot"/>
+  <PARAM id="l6_flt_wstr"/>
+  <PARAM id="l6_flt_wtrip"/>
+  <PARAM id="l6_gate_att"/>
+  <PARAM id="l6_gate_attcurve"/>
+  <PARAM id="l6_gate_rel"/>
+  <PARAM id="l6_gate_relcurve"/>
+  <PARAM id="l6_gate_w16"/>
+  <PARAM id="l6_gate_w32"/>
+  <PARAM id="l6_gate_w4"/>
+  <PARAM id="l6_gate_w8"/>
+  <PARAM id="l6_gate_wdot"/>
+  <PARAM id="l6_gate_wstr"/>
+  <PARAM id="l6_gate_wtrip"/>
+  <PARAM id="l6_grain_att"/>
+  <PARAM id="l6_grain_attcurve"/>
+  <PARAM id="l6_grain_fade"/>
+  <PARAM id="l6_grain_rel"/>
+  <PARAM id="l6_grain_relcurve"/>
+  <PARAM id="l6_grain_w16"/>
+  <PARAM id="l6_grain_w32"/>
+  <PARAM id="l6_grain_w4"/>
+  <PARAM id="l6_grain_w8"/>
+  <PARAM id="l6_grain_wdot"/>
+  <PARAM id="l6_grain_wstr"/>
+  <PARAM id="l6_grain_wtrip"/>
+  <PARAM id="l6_mute" value="0.0"/>
+  <PARAM id="l6_qnt_bits"/>
+  <PARAM id="l6_solo" value="0.0"/>
+  <PARAM id="l6_type" value="2.0"/>
+  <PARAM id="l7_dist_bias"/>
+  <PARAM id="l7_dist_drive"/>
+  <PARAM id="l7_dist_mix"/>
+  <PARAM id="l7_dist_model"/>
+  <PARAM id="l7_dist_sag"/>
+  <PARAM id="l7_dly_damp"/>
+  <PARAM id="l7_dly_dur"/>
+  <PARAM id="l7_dly_fb"/>
+  <PARAM id="l7_dly_porta"/>
+  <PARAM id="l7_flt_f0"/>
+  <PARAM id="l7_flt_f1"/>
+  <PARAM id="l7_flt_mode"/>
+  <PARAM id="l7_flt_q"/>
+  <PARAM id="l7_flt_v0"/>
+  <PARAM id="l7_flt_v1"/>
+  <PARAM id="l7_flt_w16"/>
+  <PARAM id="l7_flt_w32"/>
+  <PARAM id="l7_flt_w4"/>
+  <PARAM id="l7_flt_w8"/>
+  <PARAM id="l7_flt_wdot"/>
+  <PARAM id="l7_flt_wstr"/>
+  <PARAM id="l7_flt_wtrip"/>
+  <PARAM id="l7_gate_att" value="0.1280000060796738"/>
+  <PARAM id="l7_gate_attcurve"/>
+  <PARAM id="l7_gate_rel" value="0.3920000195503235"/>
+  <PARAM id="l7_gate_relcurve" value="0.0"/>
+  <PARAM id="l7_gate_w16" value="0.8299999833106995"/>
+  <PARAM id="l7_gate_w32" value="0.9899999499320984"/>
+  <PARAM id="l7_gate_w4" value="0.0"/>
+  <PARAM id="l7_gate_w8" value="0.0"/>
+  <PARAM id="l7_gate_wdot"/>
+  <PARAM id="l7_gate_wstr"/>
+  <PARAM id="l7_gate_wtrip"/>
+  <PARAM id="l7_grain_att"/>
+  <PARAM id="l7_grain_attcurve"/>
+  <PARAM id="l7_grain_fade"/>
+  <PARAM id="l7_grain_rel"/>
+  <PARAM id="l7_grain_relcurve"/>
+  <PARAM id="l7_grain_w16"/>
+  <PARAM id="l7_grain_w32"/>
+  <PARAM id="l7_grain_w4"/>
+  <PARAM id="l7_grain_w8"/>
+  <PARAM id="l7_grain_wdot"/>
+  <PARAM id="l7_grain_wstr"/>
+  <PARAM id="l7_grain_wtrip"/>
+  <PARAM id="l7_mute" value="0.0"/>
+  <PARAM id="l7_qnt_bits"/>
+  <PARAM id="l7_solo" value="0.0"/>
+  <PARAM id="l7_type" value="0.0"/>
+  <PARAM id="l0_qnt_down"/>
+  <PARAM id="l0_qnt_mix"/>
+  <PARAM id="l1_qnt_down"/>
+  <PARAM id="l1_qnt_mix"/>
+  <PARAM id="l2_qnt_down"/>
+  <PARAM id="l2_qnt_mix"/>
+  <PARAM id="l3_qnt_down"/>
+  <PARAM id="l3_qnt_mix"/>
+  <PARAM id="l4_qnt_down"/>
+  <PARAM id="l4_qnt_mix"/>
+  <PARAM id="l5_qnt_down"/>
+  <PARAM id="l5_qnt_mix"/>
+  <PARAM id="l6_qnt_down"/>
+  <PARAM id="l6_qnt_mix"/>
+  <PARAM id="l7_qnt_down"/>
+  <PARAM id="l7_qnt_mix"/>
+  <PARAM id="l0_ring_amp" value="0.4799999892711639"/>
+  <PARAM id="l0_ring_f0" value="198.0699920654297"/>
+  <PARAM id="l0_ring_f1" value="2204.329833984375"/>
+  <PARAM id="l0_ring_w16" value="1.0"/>
+  <PARAM id="l0_ring_w32" value="1.0"/>
+  <PARAM id="l0_ring_w4" value="0.8299999833106995"/>
+  <PARAM id="l0_ring_w8" value="0.0"/>
+  <PARAM id="l0_ring_wdot"/>
+  <PARAM id="l0_ring_wstr"/>
+  <PARAM id="l0_ring_wtrip" value="0.0"/>
+  <PARAM id="l1_ring_amp"/>
+  <PARAM id="l1_ring_f0"/>
+  <PARAM id="l1_ring_f1"/>
+  <PARAM id="l1_ring_w16"/>
+  <PARAM id="l1_ring_w32"/>
+  <PARAM id="l1_ring_w4"/>
+  <PARAM id="l1_ring_w8"/>
+  <PARAM id="l1_ring_wdot"/>
+  <PARAM id="l1_ring_wstr"/>
+  <PARAM id="l1_ring_wtrip"/>
+  <PARAM id="l2_ring_amp"/>
+  <PARAM id="l2_ring_f0"/>
+  <PARAM id="l2_ring_f1"/>
+  <PARAM id="l2_ring_w16"/>
+  <PARAM id="l2_ring_w32"/>
+  <PARAM id="l2_ring_w4"/>
+  <PARAM id="l2_ring_w8"/>
+  <PARAM id="l2_ring_wdot"/>
+  <PARAM id="l2_ring_wstr"/>
+  <PARAM id="l2_ring_wtrip"/>
+  <PARAM id="l3_ring_amp"/>
+  <PARAM id="l3_ring_f0"/>
+  <PARAM id="l3_ring_f1"/>
+  <PARAM id="l3_ring_w16"/>
+  <PARAM id="l3_ring_w32"/>
+  <PARAM id="l3_ring_w4"/>
+  <PARAM id="l3_ring_w8"/>
+  <PARAM id="l3_ring_wdot"/>
+  <PARAM id="l3_ring_wstr"/>
+  <PARAM id="l3_ring_wtrip"/>
+  <PARAM id="l4_ring_amp"/>
+  <PARAM id="l4_ring_f0"/>
+  <PARAM id="l4_ring_f1"/>
+  <PARAM id="l4_ring_w16"/>
+  <PARAM id="l4_ring_w32"/>
+  <PARAM id="l4_ring_w4"/>
+  <PARAM id="l4_ring_w8"/>
+  <PARAM id="l4_ring_wdot"/>
+  <PARAM id="l4_ring_wstr"/>
+  <PARAM id="l4_ring_wtrip"/>
+  <PARAM id="l5_ring_amp"/>
+  <PARAM id="l5_ring_f0"/>
+  <PARAM id="l5_ring_f1"/>
+  <PARAM id="l5_ring_w16"/>
+  <PARAM id="l5_ring_w32"/>
+  <PARAM id="l5_ring_w4"/>
+  <PARAM id="l5_ring_w8"/>
+  <PARAM id="l5_ring_wdot"/>
+  <PARAM id="l5_ring_wstr"/>
+  <PARAM id="l5_ring_wtrip"/>
+  <PARAM id="l6_ring_amp"/>
+  <PARAM id="l6_ring_f0" value="1886.949951171875"/>
+  <PARAM id="l6_ring_f1" value="5112.919921875"/>
+  <PARAM id="l6_ring_w16" value="0.3799999952316284"/>
+  <PARAM id="l6_ring_w32"/>
+  <PARAM id="l6_ring_w4"/>
+  <PARAM id="l6_ring_w8" value="0.5399999618530273"/>
+  <PARAM id="l6_ring_wdot"/>
+  <PARAM id="l6_ring_wstr"/>
+  <PARAM id="l6_ring_wtrip"/>
+  <PARAM id="l7_ring_amp"/>
+  <PARAM id="l7_ring_f0"/>
+  <PARAM id="l7_ring_f1"/>
+  <PARAM id="l7_ring_w16"/>
+  <PARAM id="l7_ring_w32"/>
+  <PARAM id="l7_ring_w4"/>
+  <PARAM id="l7_ring_w8"/>
+  <PARAM id="l7_ring_wdot"/>
+  <PARAM id="l7_ring_wstr"/>
+  <PARAM id="l7_ring_wtrip"/>
+  <PARAM id="l0_rev_fade"/>
+  <PARAM id="l0_rev_w16"/>
+  <PARAM id="l0_rev_w32"/>
+  <PARAM id="l0_rev_w4"/>
+  <PARAM id="l0_rev_w8"/>
+  <PARAM id="l0_rev_wdot"/>
+  <PARAM id="l0_rev_wstr"/>
+  <PARAM id="l0_rev_wtrip"/>
+  <PARAM id="l1_rev_fade"/>
+  <PARAM id="l1_rev_w16"/>
+  <PARAM id="l1_rev_w32"/>
+  <PARAM id="l1_rev_w4"/>
+  <PARAM id="l1_rev_w8"/>
+  <PARAM id="l1_rev_wdot"/>
+  <PARAM id="l1_rev_wstr"/>
+  <PARAM id="l1_rev_wtrip"/>
+  <PARAM id="l2_rev_fade"/>
+  <PARAM id="l2_rev_w16"/>
+  <PARAM id="l2_rev_w32"/>
+  <PARAM id="l2_rev_w4"/>
+  <PARAM id="l2_rev_w8"/>
+  <PARAM id="l2_rev_wdot"/>
+  <PARAM id="l2_rev_wstr"/>
+  <PARAM id="l2_rev_wtrip"/>
+  <PARAM id="l3_rev_fade"/>
+  <PARAM id="l3_rev_w16"/>
+  <PARAM id="l3_rev_w32"/>
+  <PARAM id="l3_rev_w4"/>
+  <PARAM id="l3_rev_w8"/>
+  <PARAM id="l3_rev_wdot"/>
+  <PARAM id="l3_rev_wstr"/>
+  <PARAM id="l3_rev_wtrip"/>
+  <PARAM id="l4_rev_fade"/>
+  <PARAM id="l4_rev_w16" value="0.0"/>
+  <PARAM id="l4_rev_w32"/>
+  <PARAM id="l4_rev_w4" value="0.0"/>
+  <PARAM id="l4_rev_w8" value="0.6599999666213989"/>
+  <PARAM id="l4_rev_wdot"/>
+  <PARAM id="l4_rev_wstr" value="0.6800000071525574"/>
+  <PARAM id="l4_rev_wtrip" value="0.5"/>
+  <PARAM id="l5_rev_fade"/>
+  <PARAM id="l5_rev_w16"/>
+  <PARAM id="l5_rev_w32"/>
+  <PARAM id="l5_rev_w4"/>
+  <PARAM id="l5_rev_w8"/>
+  <PARAM id="l5_rev_wdot"/>
+  <PARAM id="l5_rev_wstr"/>
+  <PARAM id="l5_rev_wtrip"/>
+  <PARAM id="l6_rev_fade"/>
+  <PARAM id="l6_rev_w16"/>
+  <PARAM id="l6_rev_w32"/>
+  <PARAM id="l6_rev_w4"/>
+  <PARAM id="l6_rev_w8"/>
+  <PARAM id="l6_rev_wdot"/>
+  <PARAM id="l6_rev_wstr"/>
+  <PARAM id="l6_rev_wtrip"/>
+  <PARAM id="l7_rev_fade"/>
+  <PARAM id="l7_rev_w16"/>
+  <PARAM id="l7_rev_w32"/>
+  <PARAM id="l7_rev_w4"/>
+  <PARAM id="l7_rev_w8"/>
+  <PARAM id="l7_rev_wdot"/>
+  <PARAM id="l7_rev_wstr"/>
+  <PARAM id="l7_rev_wtrip"/>
+  <PARAM id="l0_frz_mix"/>
+  <PARAM id="l1_frz_mix"/>
+  <PARAM id="l2_frz_mix"/>
+  <PARAM id="l3_frz_mix"/>
+  <PARAM id="l4_frz_mix"/>
+  <PARAM id="l5_frz_mix" value="1.0"/>
+  <PARAM id="l6_frz_mix"/>
+  <PARAM id="l7_frz_mix"/>
+  <PARAM id="l0_busstart" value="1.0"/>
+  <PARAM id="l0_dly_mix"/>
+  <PARAM id="l0_flt_mix"/>
+  <PARAM id="l0_gate_mix"/>
+  <PARAM id="l0_grain_mix"/>
+  <PARAM id="l0_rev_mix"/>
+  <PARAM id="l1_busstart" value="1.0"/>
+  <PARAM id="l1_dly_mix"/>
+  <PARAM id="l1_flt_mix"/>
+  <PARAM id="l1_gate_mix"/>
+  <PARAM id="l1_grain_mix"/>
+  <PARAM id="l1_rev_mix"/>
+  <PARAM id="l2_busstart"/>
+  <PARAM id="l2_dly_mix"/>
+  <PARAM id="l2_flt_mix"/>
+  <PARAM id="l2_gate_mix"/>
+  <PARAM id="l2_grain_mix"/>
+  <PARAM id="l2_rev_mix"/>
+  <PARAM id="l3_busstart" value="0.0"/>
+  <PARAM id="l3_dly_mix"/>
+  <PARAM id="l3_flt_mix"/>
+  <PARAM id="l3_gate_mix" value="0.6200000047683716"/>
+  <PARAM id="l3_grain_mix"/>
+  <PARAM id="l3_rev_mix"/>
+  <PARAM id="l4_busstart" value="0.0"/>
+  <PARAM id="l4_dly_mix"/>
+  <PARAM id="l4_flt_mix" value="1.0"/>
+  <PARAM id="l4_gate_mix"/>
+  <PARAM id="l4_grain_mix"/>
+  <PARAM id="l4_rev_mix"/>
+  <PARAM id="l5_busstart" value="0.0"/>
+  <PARAM id="l5_dly_mix"/>
+  <PARAM id="l5_flt_mix"/>
+  <PARAM id="l5_gate_mix"/>
+  <PARAM id="l5_grain_mix"/>
+  <PARAM id="l5_rev_mix"/>
+  <PARAM id="l6_busstart" value="1.0"/>
+  <PARAM id="l6_dly_mix"/>
+  <PARAM id="l6_flt_mix"/>
+  <PARAM id="l6_gate_mix"/>
+  <PARAM id="l6_grain_mix"/>
+  <PARAM id="l6_rev_mix"/>
+  <PARAM id="l7_busstart"/>
+  <PARAM id="l7_dly_mix"/>
+  <PARAM id="l7_flt_mix"/>
+  <PARAM id="l7_gate_mix"/>
+  <PARAM id="l7_grain_mix"/>
+  <PARAM id="l7_rev_mix"/>
+  <PARAM id="l0_frz_width"/>
+  <PARAM id="l1_frz_width"/>
+  <PARAM id="l2_frz_width"/>
+  <PARAM id="l3_frz_width"/>
+  <PARAM id="l4_frz_width"/>
+  <PARAM id="l5_frz_width" value="1.0"/>
+  <PARAM id="l6_frz_width"/>
+  <PARAM id="l7_frz_width"/>
+  <PARAM id="l0_dist_gain"/>
+  <PARAM id="l1_dist_gain" value="-0.7999992370605469"/>
+  <PARAM id="l2_dist_gain"/>
+  <PARAM id="l3_dist_gain"/>
+  <PARAM id="l4_dist_gain"/>
+  <PARAM id="l5_dist_gain"/>
+  <PARAM id="l6_dist_gain"/>
+  <PARAM id="l7_dist_gain"/>
+  <PARAM id="bus1_pan" value="0.2300000190734863"/>
+  <PARAM id="bus1_wet"/>
+  <PARAM id="bus2_pan" value="-0.300000011920929"/>
+  <PARAM id="bus2_wet" value="1.0"/>
+  <PARAM id="bus3_pan"/>
+  <PARAM id="bus3_wet"/>
+  <PARAM id="bus4_pan"/>
+  <PARAM id="bus4_wet"/>
+  <PARAM id="busmode" value="2.0"/>
+  <PARAM id="config"/>
+  <PARAM id="configsync"/>
+  <PARAM id="l0_aux_att"/>
+  <PARAM id="l0_aux_attcurve"/>
+  <PARAM id="l0_aux_pass"/>
+  <PARAM id="l0_aux_rel"/>
+  <PARAM id="l0_aux_relcurve"/>
+  <PARAM id="l0_aux_send1"/>
+  <PARAM id="l0_aux_send2"/>
+  <PARAM id="l0_aux_w16"/>
+  <PARAM id="l0_aux_w32"/>
+  <PARAM id="l0_aux_w4"/>
+  <PARAM id="l0_aux_w8"/>
+  <PARAM id="l0_aux_wdot"/>
+  <PARAM id="l0_aux_wstr"/>
+  <PARAM id="l0_aux_wtrip"/>
+  <PARAM id="l0_pan_glide"/>
+  <PARAM id="l0_pan_mix"/>
+  <PARAM id="l0_pan_mode"/>
+  <PARAM id="l0_pan_w16"/>
+  <PARAM id="l0_pan_w32"/>
+  <PARAM id="l0_pan_w4"/>
+  <PARAM id="l0_pan_w8"/>
+  <PARAM id="l0_pan_wdot"/>
+  <PARAM id="l0_pan_wstr"/>
+  <PARAM id="l0_pan_wtrip"/>
+  <PARAM id="l1_aux_att"/>
+  <PARAM id="l1_aux_attcurve"/>
+  <PARAM id="l1_aux_pass"/>
+  <PARAM id="l1_aux_rel"/>
+  <PARAM id="l1_aux_relcurve"/>
+  <PARAM id="l1_aux_send1"/>
+  <PARAM id="l1_aux_send2"/>
+  <PARAM id="l1_aux_w16"/>
+  <PARAM id="l1_aux_w32"/>
+  <PARAM id="l1_aux_w4"/>
+  <PARAM id="l1_aux_w8"/>
+  <PARAM id="l1_aux_wdot"/>
+  <PARAM id="l1_aux_wstr"/>
+  <PARAM id="l1_aux_wtrip"/>
+  <PARAM id="l1_pan_glide"/>
+  <PARAM id="l1_pan_mix"/>
+  <PARAM id="l1_pan_mode"/>
+  <PARAM id="l1_pan_w16"/>
+  <PARAM id="l1_pan_w32"/>
+  <PARAM id="l1_pan_w4"/>
+  <PARAM id="l1_pan_w8"/>
+  <PARAM id="l1_pan_wdot"/>
+  <PARAM id="l1_pan_wstr"/>
+  <PARAM id="l1_pan_wtrip"/>
+  <PARAM id="l2_aux_att"/>
+  <PARAM id="l2_aux_attcurve"/>
+  <PARAM id="l2_aux_pass"/>
+  <PARAM id="l2_aux_rel"/>
+  <PARAM id="l2_aux_relcurve"/>
+  <PARAM id="l2_aux_send1"/>
+  <PARAM id="l2_aux_send2"/>
+  <PARAM id="l2_aux_w16"/>
+  <PARAM id="l2_aux_w32"/>
+  <PARAM id="l2_aux_w4"/>
+  <PARAM id="l2_aux_w8"/>
+  <PARAM id="l2_aux_wdot"/>
+  <PARAM id="l2_aux_wstr"/>
+  <PARAM id="l2_aux_wtrip"/>
+  <PARAM id="l2_pan_glide"/>
+  <PARAM id="l2_pan_mix"/>
+  <PARAM id="l2_pan_mode"/>
+  <PARAM id="l2_pan_w16"/>
+  <PARAM id="l2_pan_w32"/>
+  <PARAM id="l2_pan_w4"/>
+  <PARAM id="l2_pan_w8"/>
+  <PARAM id="l2_pan_wdot"/>
+  <PARAM id="l2_pan_wstr"/>
+  <PARAM id="l2_pan_wtrip"/>
+  <PARAM id="l3_aux_att"/>
+  <PARAM id="l3_aux_attcurve"/>
+  <PARAM id="l3_aux_pass"/>
+  <PARAM id="l3_aux_rel"/>
+  <PARAM id="l3_aux_relcurve"/>
+  <PARAM id="l3_aux_send1"/>
+  <PARAM id="l3_aux_send2"/>
+  <PARAM id="l3_aux_w16"/>
+  <PARAM id="l3_aux_w32"/>
+  <PARAM id="l3_aux_w4"/>
+  <PARAM id="l3_aux_w8"/>
+  <PARAM id="l3_aux_wdot"/>
+  <PARAM id="l3_aux_wstr"/>
+  <PARAM id="l3_aux_wtrip"/>
+  <PARAM id="l3_pan_glide"/>
+  <PARAM id="l3_pan_mix"/>
+  <PARAM id="l3_pan_mode"/>
+  <PARAM id="l3_pan_w16"/>
+  <PARAM id="l3_pan_w32"/>
+  <PARAM id="l3_pan_w4"/>
+  <PARAM id="l3_pan_w8"/>
+  <PARAM id="l3_pan_wdot"/>
+  <PARAM id="l3_pan_wstr"/>
+  <PARAM id="l3_pan_wtrip"/>
+  <PARAM id="l4_aux_att"/>
+  <PARAM id="l4_aux_attcurve"/>
+  <PARAM id="l4_aux_pass"/>
+  <PARAM id="l4_aux_rel"/>
+  <PARAM id="l4_aux_relcurve"/>
+  <PARAM id="l4_aux_send1"/>
+  <PARAM id="l4_aux_send2"/>
+  <PARAM id="l4_aux_w16"/>
+  <PARAM id="l4_aux_w32"/>
+  <PARAM id="l4_aux_w4"/>
+  <PARAM id="l4_aux_w8"/>
+  <PARAM id="l4_aux_wdot"/>
+  <PARAM id="l4_aux_wstr"/>
+  <PARAM id="l4_aux_wtrip"/>
+  <PARAM id="l4_pan_glide"/>
+  <PARAM id="l4_pan_mix"/>
+  <PARAM id="l4_pan_mode"/>
+  <PARAM id="l4_pan_w16"/>
+  <PARAM id="l4_pan_w32"/>
+  <PARAM id="l4_pan_w4"/>
+  <PARAM id="l4_pan_w8"/>
+  <PARAM id="l4_pan_wdot"/>
+  <PARAM id="l4_pan_wstr"/>
+  <PARAM id="l4_pan_wtrip"/>
+  <PARAM id="l5_aux_att"/>
+  <PARAM id="l5_aux_attcurve"/>
+  <PARAM id="l5_aux_pass"/>
+  <PARAM id="l5_aux_rel"/>
+  <PARAM id="l5_aux_relcurve"/>
+  <PARAM id="l5_aux_send1"/>
+  <PARAM id="l5_aux_send2"/>
+  <PARAM id="l5_aux_w16"/>
+  <PARAM id="l5_aux_w32"/>
+  <PARAM id="l5_aux_w4"/>
+  <PARAM id="l5_aux_w8"/>
+  <PARAM id="l5_aux_wdot"/>
+  <PARAM id="l5_aux_wstr"/>
+  <PARAM id="l5_aux_wtrip"/>
+  <PARAM id="l5_pan_glide"/>
+  <PARAM id="l5_pan_mix"/>
+  <PARAM id="l5_pan_mode"/>
+  <PARAM id="l5_pan_w16"/>
+  <PARAM id="l5_pan_w32"/>
+  <PARAM id="l5_pan_w4"/>
+  <PARAM id="l5_pan_w8"/>
+  <PARAM id="l5_pan_wdot"/>
+  <PARAM id="l5_pan_wstr"/>
+  <PARAM id="l5_pan_wtrip"/>
+  <PARAM id="l6_aux_att"/>
+  <PARAM id="l6_aux_attcurve"/>
+  <PARAM id="l6_aux_pass"/>
+  <PARAM id="l6_aux_rel"/>
+  <PARAM id="l6_aux_relcurve"/>
+  <PARAM id="l6_aux_send1"/>
+  <PARAM id="l6_aux_send2"/>
+  <PARAM id="l6_aux_w16"/>
+  <PARAM id="l6_aux_w32"/>
+  <PARAM id="l6_aux_w4"/>
+  <PARAM id="l6_aux_w8"/>
+  <PARAM id="l6_aux_wdot"/>
+  <PARAM id="l6_aux_wstr"/>
+  <PARAM id="l6_aux_wtrip"/>
+  <PARAM id="l6_pan_glide"/>
+  <PARAM id="l6_pan_mix"/>
+  <PARAM id="l6_pan_mode"/>
+  <PARAM id="l6_pan_w16"/>
+  <PARAM id="l6_pan_w32"/>
+  <PARAM id="l6_pan_w4"/>
+  <PARAM id="l6_pan_w8"/>
+  <PARAM id="l6_pan_wdot"/>
+  <PARAM id="l6_pan_wstr"/>
+  <PARAM id="l6_pan_wtrip"/>
+  <PARAM id="l7_aux_att"/>
+  <PARAM id="l7_aux_attcurve"/>
+  <PARAM id="l7_aux_pass"/>
+  <PARAM id="l7_aux_rel"/>
+  <PARAM id="l7_aux_relcurve"/>
+  <PARAM id="l7_aux_send1"/>
+  <PARAM id="l7_aux_send2"/>
+  <PARAM id="l7_aux_w16"/>
+  <PARAM id="l7_aux_w32"/>
+  <PARAM id="l7_aux_w4"/>
+  <PARAM id="l7_aux_w8"/>
+  <PARAM id="l7_aux_wdot"/>
+  <PARAM id="l7_aux_wstr"/>
+  <PARAM id="l7_aux_wtrip"/>
+  <PARAM id="l7_pan_glide"/>
+  <PARAM id="l7_pan_mix"/>
+  <PARAM id="l7_pan_mode"/>
+  <PARAM id="l7_pan_w16"/>
+  <PARAM id="l7_pan_w32"/>
+  <PARAM id="l7_pan_w4"/>
+  <PARAM id="l7_pan_w8"/>
+  <PARAM id="l7_pan_wdot"/>
+  <PARAM id="l7_pan_wstr"/>
+  <PARAM id="l7_pan_wtrip"/>
+  <MangoSeq laneOrder="5 3 0 6 1 4 2 7">
+    <Lane index="0">
+      <Block id="9" start="0" len="4" text=""/>
+      <Block id="11" start="4" len="4" text="att=1"/>
+      <Block id="10" start="8" len="4" text=""/>
+      <Block id="12" start="12" len="4" text=""/>
+    </Lane>
+    <Lane index="1">
+      <Block id="10" start="2" len="2" text=""/>
+      <Block id="11" start="6" len="2" text=""/>
+      <Block id="12" start="10" len="2" text=""/>
+      <Block id="13" start="14" len="2" text=""/>
+    </Lane>
+    <Lane index="2">
+      <Block id="15" start="3" len="5" text=""/>
+    </Lane>
+    <Lane index="3">
+      <Block id="8" start="0" len="2" text=""/>
+      <Block id="15" start="2" len="2" text=""/>
+      <Block id="16" start="4" len="2" text=""/>
+      <Block id="17" start="6" len="2" text=""/>
+      <Block id="18" start="8" len="2" text=""/>
+      <Block id="19" start="10" len="2" text=""/>
+      <Block id="20" start="12" len="2" text=""/>
+      <Block id="21" start="14" len="2" text=""/>
+    </Lane>
+    <Lane index="4">
+      <Block id="12" start="0" len="8" text="mode=1"/>
+      <Block id="11" start="8" len="4" text="w16=1 mode=0"/>
+      <Block id="13" start="12" len="4" text=""/>
+    </Lane>
+    <Lane index="5">
+      <Block id="7" start="0" len="1" text="width=0"/>
+      <Block id="33" start="1" len="6" text=""/>
+      <Block id="34" start="7" len="3" text=""/>
+      <Block id="35" start="10" len="2" text=""/>
+      <Block id="37" start="12" len="1" text=""/>
+      <Block id="36" start="13" len="2" text=""/>
+      <Block id="38" start="15" len="1" text=""/>
+    </Lane>
+    <Lane index="6">
+      <Block id="1" start="0" len="4" text="dur=mididur*2"/>
+      <Block id="7" start="4" len="4" text=""/>
+      <Block id="8" start="8" len="4" text="dur=mididur"/>
+      <Block id="9" start="12" len="4" text=""/>
+    </Lane>
+    <Lane index="7">
+      <Block id="0" start="0" len="1" text=""/>
+      <Block id="5" start="5" len="11" text=""/>
+    </Lane>
+  </MangoSeq>
+</Parameters>

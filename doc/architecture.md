@@ -355,7 +355,10 @@ exclusive with the preset overlay).
 
 **Presets** (`fxme::PresetManager`, AmbiRR2 pattern): the processor owns
 the manager (user dir `.../Mango/Presets`, factory bank = BinaryData
-`*_xml` resources — none shipped yet). Because presets are the plain
+`*_xml` resources — the `Source/Assets/*.xml` files, embedded by the CMake
+asset glob alongside the images; the manager keeps only those whose root
+tag is the APVTS state type `Parameters`, so images in the same blob are
+ignored). Because presets are the plain
 APVTS state and Mango's blocks are side state, the processor sets the
 manager's `onBeforeSave` / `onAfterLoad` hooks (a Mango-driven FxmeTools
 addition) to merge `MangoSeq` in before saving and rebuild the sequencers
@@ -553,13 +556,20 @@ umbrella `FxmeTools/FxmeTools.h` (module v0.0.3):
 - The block visuals and the DSP must share helpers (`normaliseAttackRelease`,
   `attackGammaFor/releaseGammaFor`, `resolveTable`, the u01 call shape) so
   the picture can never drift from the sound.
+- **Choice parameters are append-only.** The `EffectType` enum /
+  `effectTypeNames()` and every `AudioParameterChoice` (`busmode`, `pan_mode`,
+  `flt_mode`, `dist_model`, `configsync`, …) may gain entries **only at the
+  end**; never reorder or remove. APVTS serialises a choice as its raw index,
+  so reordering silently reinterprets every saved value — a preset's
+  `l<i>_type=2` stops meaning Delay. This is the invariant that keeps old
+  presets loading (see §12.3 for the full argument).
 - New effect type checklist: subclass `EffectBase` (+ static
   `addParameters(params, lanePrefix, nameP)` + `bindParameters`), extend
-  `EffectTypes.h`, the factory + bind switch in `MangoEngine.cpp`, a case in
-  `EffectPanel`'s constructor, a visual in the rack's `paintEffectVisual`,
-  and (if it draws durations) reuse `DurationWeights`. Also add a `helpFor`
-  case in EffectPanel — the info callout is part of the effect, not an
-  afterthought.
+  `EffectTypes.h` (**append**), the factory + bind switch in
+  `MangoEngine.cpp`, a case in `EffectPanel`'s constructor, a visual in the
+  rack's `paintEffectVisual`, and (if it draws durations) reuse
+  `DurationWeights`. Also add a `helpFor` case in EffectPanel — the info
+  callout is part of the effect, not an afterthought.
 - Language: new keys extend `OvKey` + `keyNames` (parser is order-matched
   arrays) and are documented in README.
 - GUI reads of sequencer step size / num steps without the lock are accepted
@@ -580,3 +590,108 @@ umbrella `FxmeTools/FxmeTools.h` (module v0.0.3):
 - If keyboard input still dies in a specific DAW after the focus-fixer
   battles, it's host keyboard routing (REAPER: "Send all keyboard input to
   plugin").
+
+## 12. Planned: the Player lane (design + forward-compatibility)
+
+*Not implemented. This section is the design agreed for a future version and,
+above all, a record that the **current** release can accept it without
+breaking presets/sessions saved before it. Read §12.3 before touching state
+code — it lists the invariants the release must keep so this stays true.*
+
+### 12.1 Feature
+
+A tenth-plus effect type, **Player**, plays audio from a shared **loop pool**
+instead of processing the incoming signal. The pool is a small set of audio
+loops the user drops in; each loop has **markers** on its waveform that name
+onsets to start playback from. Markers are set/moved by hand or placed
+automatically by transient detection.
+
+- **New pane** (like the Configs / Presets panes): a waveform plot of the
+  selected loop with its markers, add/move/delete of markers by hand, a
+  "detect transients" button, and loop import. Opens from a button in the
+  **gap between the step-size box and the Configs button** in the top-right
+  controls (room is already there). Mutually exclusive with the config and
+  preset panes, and stored in `ViewState` alongside them.
+- **Per-lane (Player) parameters**, drawn/retriggered exactly like the other
+  rhythmic effects: which **marker** to start from, the **playback rate**,
+  and the 7 duration-probability weights (1/4…1/32 × straight/triplet/dotted)
+  that set the **retrigger** rate inside each block. Each is overridable in
+  the mini-language (new `OvKey`s, e.g. `marker`, `rate`, reusing the
+  existing weight keys `w4…wdot`).
+
+### 12.2 Where each piece lives
+
+- **The audio pool is side state, not parameters** — same category as
+  `MangoSeq` and `MangoBank`. A new `MangoPool` child of `apvts.state` holds
+  the marker lists (and per-loop metadata); the audio bytes go through
+  **`fxme::EmbeddedAudio`** (FLAC + Base64 under the state's `EmbeddedAudio`
+  child, keyed by a slot id per loop). Because `EmbeddedAudio` and the state
+  tree round-trip through both `get/setStateInformation` **and**
+  `PresetManager`, **presets embed the audio automatically** — exactly what
+  the user asked for, and the same mechanism other FX-Mechanics plugins use
+  for impulse responses. No file paths are stored, so a preset is
+  self-contained across machines.
+- **Marker onsets and rate are lane parameters** (`l<i>_player_*`), so they
+  automate and sit in configs like every other lane parameter. The *pool
+  itself* (loops + markers) is shared across lanes and lives in `MangoPool`;
+  a lane parameter only indexes into it.
+- **Config bank**: `configParamKind` must classify the new `l<i>_player_*`
+  ids (marker/rate → voicing/Optional; the weights → voicing/Optional, as the
+  other effects' do). The pool is structure-ish but, like the blocks, is
+  better carried whole: a config already carries a `MangoSeq`, so it can carry
+  a `MangoPool` copy the same way if configs should recall loops. (Decide at
+  implementation time; not carrying it — configs share the live pool — is
+  also defensible and simpler.)
+- **Realtime**: playback is a per-lane voice reading a shared, immutable
+  decoded buffer. The decode (message thread) publishes an immutable
+  `shared_ptr<const AudioBuffer>` the audio thread reads without locking —
+  the pool is swapped, never mutated in place, so the seqLock is not extended
+  to cover sample data.
+
+### 12.3 Forward-compatibility verdict — **the current release is safe**
+
+Verified against the code as it ships. Adding the Player later will load
+every preset/session saved by the release **provided the rules below hold**.
+
+**Why it works — APVTS stores the *denormalised* value.** The load-bearing
+fact (checked in JUCE `AudioProcessorValueTreeState.cpp`: state writes
+`unnormalisedValue`, restore calls `setDenormalisedValue`): the `l<i>_type`
+choice is saved as its raw **index** (`value="2"`), not as a normalised
+0–1 fraction. So appending `Player` as a new enum value **does not remap**
+existing types — a stored `2` is still Delay whether the enum has 11 entries
+or 12. (Contrast VST3 *automation*, which is normalised: an automated
+`l<i>_type` lane in a DAW arrangement *would* remap. That is automation, not
+preset/session state, and is called out as the one caveat.)
+
+**Why new parameters are safe.** APVTS matches parameters by string id, so
+`l<i>_player_*` ids simply don't exist in an old preset and load at their
+defaults; their position in `createParameters()` is irrelevant. New side-state
+children (`MangoPool`, more `EmbeddedAudio` entries) are absent in old
+presets, and every reader here already tolerates an absent child
+(`viewFromTree`, `sequencersFromTree`, the `MangoBank` lookups all no-op on a
+missing/invalid tree).
+
+**Rules the release — and the Player patch — must keep for this to hold:**
+
+1. **The effect enum is append-only.** Add `Player` (and any future type) at
+   the **end** of `EffectType` / `effectTypeNames()`; never reorder or remove.
+   Reordering silently reinterprets every stored `l<i>_type`. This is now the
+   single most important state invariant and belongs in §10.
+2. **Never renumber existing choice parameters** (`busmode`, `pan_mode`,
+   `flt_mode`, `dist_model`, `configsync`, …) for the same reason — append
+   only. `busmode` already grew 3 → 5 this way safely.
+3. **Absent state children stay optional.** Keep reading them defensively; a
+   new `MangoPool` reader must no-op when the child is missing.
+4. **Embed audio, never reference paths** — use `fxme::EmbeddedAudio` so
+   presets stay self-contained.
+5. A **new `OvKey` is appended** to the enum + `keyNames` (already the
+   documented rule); old blocks simply never use it.
+
+**No state-version tag is needed** and none exists: the format is additive and
+tolerant (unknown/extra ignored, absent defaulted). A version tag would only
+be worth adding if a future change had to *reinterpret* existing data (e.g.
+the `gate_att` range change in §11) — appending the Player does not.
+
+**One-line answer to the release question:** yes — as long as the effect enum
+and every choice parameter stay append-only, the shipping architecture will
+take the Player lane and still load presets/sessions made before it.
