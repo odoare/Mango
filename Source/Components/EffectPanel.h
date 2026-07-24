@@ -108,6 +108,7 @@ public:
             case EffectType::Freeze:
                 addKnob (prefix + "frz_mix", "Mix");
                 addKnob (prefix + "frz_width", "Width");
+                addWeights (prefix + "frz_");   // retrigger grid
                 break;
 
             case EffectType::AuxSend:
@@ -242,7 +243,7 @@ private:
             case EffectType::Quantizer:  return "bits down mix";
             case EffectType::RingMod:    return "dur f0 f1 amp\n" + weights;
             case EffectType::Reverser:   return "dur fade mix\n" + weights;
-            case EffectType::Freeze:     return "mix width";
+            case EffectType::Freeze:     return "mix width\n" + weights;
             case EffectType::AuxSend:    return "dur att rel attcurve relcurve aux1 aux2 pass\n" + weights;
             case EffectType::Panner:     return "dur mode glide mix\n" + weights;
         }
@@ -336,12 +337,16 @@ private:
 
             case EffectType::Freeze:
                 return "Captures about 43 ms of sound when the block starts and holds "
-                       "its spectrum as a still, non-repeating wash for the rest of "
-                       "the block.\n\n"
+                       "its spectrum as a still, non-repeating wash.\n\n"
                        "It is a spectral freeze, not a loop: there is no cycle to "
                        "hear. Blocks shorter than the capture stay dry, since it is "
                        "still recording.\n\n"
-                       "Width sets how alike the two channels are - 1 fully "
+                       "The duration weights set a rhythmic retrigger: the wash is "
+                       "re-captured from the live sound on that grid (drawn like "
+                       "every other rate here), seamlessly, so it tracks a changing "
+                       "input in time. The default is a straight 1/4; a block no "
+                       "longer than one step is captured just once." + drawn +
+                       "\n\nWidth sets how alike the two channels are - 1 fully "
                        "decorrelated and wide, 0 mono. The level stays constant "
                        "across the range.";
 

@@ -301,6 +301,14 @@ void MangoEngine::handleBlockEnter (Lane& lane, int blockId, bool isReEnter)
     ctx.mididurSeconds = mididurSeconds.load();
     ctx.isReEnter      = isReEnter;
 
+    // Block length in samples at the current tempo, for effects that fade at
+    // the edge or clock inside the block (freeze). 0 if the block is gone.
+    if (const auto* b = lane.seq.blockById (blockId))
+    {
+        const double beats = (b->endStep - b->startStep) * lane.seq.getStepSizeBeats();
+        ctx.blockLengthSamples = (int) std::lround (beats * 60.0 / currentBpm * sampleRate);
+    }
+
     const auto it = overrides.find (overrideKey (lane.laneIndex, blockId));
     ctx.overrides = it != overrides.end() ? &it->second : nullptr;
 

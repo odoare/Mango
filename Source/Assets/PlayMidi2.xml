@@ -620,6 +620,13 @@
   <PARAM id="l3_frz_width"/>
   <PARAM id="l4_frz_width"/>
   <PARAM id="l5_frz_width" value="1.0"/>
+  <PARAM id="l5_frz_w4" value="1.0"/>
+  <PARAM id="l5_frz_w8" value="0.0"/>
+  <PARAM id="l5_frz_w16" value="0.0"/>
+  <PARAM id="l5_frz_w32" value="0.0"/>
+  <PARAM id="l5_frz_wstr" value="0.0"/>
+  <PARAM id="l5_frz_wtrip" value="0.0"/>
+  <PARAM id="l5_frz_wdot" value="1.0"/>
   <PARAM id="l6_frz_width"/>
   <PARAM id="l7_frz_width"/>
   <PARAM id="l0_dist_gain"/>

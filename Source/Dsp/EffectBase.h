@@ -39,6 +39,9 @@ struct BlockContext
     double   sampleRate = 44100.0;
     double   bpm        = 120.0;
     float    mididurSeconds = 1.0f / 440.0f;
+    int      blockLengthSamples = 0;   // the block's span in samples at this tempo
+                                       // (0 if unknown); effects that fade at
+                                       // the block edge or clock inside it use it
     const ParsedOverrides* overrides = nullptr;   // nullptr: none / parse error
 
     /** True when this is a parameter-change refresh of an already-sounding

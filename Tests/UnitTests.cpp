@@ -228,6 +228,64 @@ static int testSpectralFreeze()
 }
 
 //==============================================================================
+static int testSpectralFreezeRetrigger()
+{
+    using SF = fxme::SpectralFreeze;
+    const int N = SF::kSize;
+    const double w = 2.0 * 3.14159265358979 * 440.0 / 48000.0;
+
+    SF a, b;
+    a.prepare(); b.prepare();
+    a.setIdentity (5, 9); b.setIdentity (5, 9);
+    a.startCapture(); b.startCapture();
+
+    auto feed = [&] (int count, float amp, int phase0)
+    {
+        for (int i = 0; i < count; ++i)
+        {
+            const float x = amp * (float) std::sin (w * (phase0 + i));
+            a.processSample (x);
+            b.processSample (x);
+        }
+    };
+
+    // Capture a QUIET window, then keep feeding a LOUD sine: the wash keeps
+    // playing the quiet capture (the freeze ignores live input) while the
+    // rolling history fills with the loud signal.
+    feed (N, 0.25f, 0);
+    feed (2 * N, 1.0f, 0);
+
+    double accBefore = 0.0; int cntB = 0;
+    for (int i = 0; i < N; ++i)
+    {
+        const float ya = a.processSample ((float) std::sin (w * i));
+        b.processSample ((float) std::sin (w * i));
+        accBefore += (double) ya * ya; ++cntB;
+    }
+    const double rmsBefore = std::sqrt (accBefore / (double) cntB);
+
+    // Retrigger: re-capture from the loud history, without a dry gap.
+    a.retrigger();
+    b.retrigger();
+
+    feed (N, 1.0f, 0);   // skip the spectrum crossfade
+    double accAfter = 0.0; int cntA = 0; float md = 0.0f;
+    for (int i = 0; i < 2 * N; ++i)
+    {
+        const float ya = a.processSample ((float) std::sin (w * i));
+        const float yb = b.processSample ((float) std::sin (w * i));
+        md = std::max (md, std::fabs (ya - yb));
+        accAfter += (double) ya * ya; ++cntA;
+    }
+    const double rmsAfter = std::sqrt (accAfter / (double) cntA);
+
+    CHECK (rmsBefore > 0.05);            // the wash was sounding (no dry gap)
+    CHECK (rmsAfter > 1.8 * rmsBefore);  // re-captured the ~4x louder input
+    CHECK (md == 0.0f);                  // still bit-deterministic across retrigger
+    return 0;
+}
+
+//==============================================================================
 static int testSpectralFreezeMulti()
 {
     const int N = fxme::SpectralFreeze::kSize;
@@ -679,6 +737,7 @@ int main()
     if (testBitCrusher())               return 1;
     if (testDownsampler())              return 1;
     if (testSpectralFreeze())           return 1;
+    if (testSpectralFreezeRetrigger())  return 1;
     if (testSpectralFreezeMulti())      return 1;
     if (testDelayLine())                return 1;
     if (testSaturator())                return 1;

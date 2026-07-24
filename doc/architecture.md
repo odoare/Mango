@@ -46,7 +46,7 @@ patterns), FxmeFX (Tube saturation origin), Gloubiboulga (formant origin).
   | Quant | lo-fi: bit crusher (`fxme::BitCrusher`) + sample & hold decimator (`fxme::Downsampler`/channel, hold phase restarts at block entry — but not on live-tweak re-enters — so passes reproduce) + wet/dry mix | `qnt_bits` (1–24), `qnt_down` (÷1–64), `qnt_mix` |
   | Ring | ring modulator: sine carrier glides exponentially f0→f1 over a drawn tempo-synced ramp, repeating for the block; amount 0–1 blends clean → full ±1 modulation (`x·(1−amp+amp·sin)`); carrier phase restarts at block entry (not on re-enters) so passes reproduce; one carrier feeds all channels | `ring_`: 7 weights, `f0`, `f1` (0.5 Hz–10 kHz), `amp` |
   | Rev | reverser: records drawn-duration slices and plays each backwards (while slice k records, slice k−1 plays reversed; the first slice of a block passes through); `fade` = 0–0.5 slice fraction faded at the seams; slice grid restarts at block entry (not on re-enters) so passes reproduce; pure sample copy, no interpolation | `rev_`: 7 weights, `fade` |
-  | Freeze | spectral freeze (`fxme::SpectralFreezeMulti` — Mango's effect is only the APVTS adapter; WDL FFT): captures one 2048-sample window at block entry (passed through while recording, so blocks shorter than ~43 ms stay dry), then random-phase resynthesis of its magnitude spectrum — Hann/75% OLA, one iFFT per 512-sample hop (4 at the capture→wash switch) — sustains a static wash; phases keyed on (seed, lane, block, channel) with the frame counter restarting at entry, so passes reproduce and the two channels decorrelate into a wide image; `frz_width` blends the two wet channels (L' = a·L + b·R, mirrored, a:b = (1/2+w/2):(1/2−w/2) normalised to a²+b²=1 — equal power over the sweep since the washes are incoherent: 1 wide, 0 mono) | `frz_mix`, `frz_width` |
+  | Freeze | spectral freeze (`fxme::SpectralFreezeMulti` — Mango's effect is only the APVTS adapter; WDL FFT): captures one 2048-sample window at block entry (passed through while recording, so blocks shorter than ~43 ms stay dry), then random-phase resynthesis of its magnitude spectrum — Hann/75% OLA, one iFFT per 512-sample hop (4 at the capture→wash switch) — sustains a static wash; phases keyed on (seed, lane, block, channel), the frame counter running across retriggers, so passes reproduce and the two channels decorrelate into a wide image. **Retrigger**: `frz_` weights (default straight 1/4) draw a grid on which the wash is re-captured from a rolling input history (seamless — `SpectralFreeze::retrigger` keeps the wash playing and swaps the spectrum, the OLA crossfading it); a boundary at/after the block end never fires, so a block ≤ the interval is a single capture (old sessions unchanged). The wash's mix fades to 0 over the block's last ~10 ms (`ctx.blockLengthSamples`) so the end returns to dry without a click. `frz_width` blends the two wet channels (L' = a·L + b·R, mirrored, a:b = (1/2+w/2):(1/2−w/2) normalised to a²+b²=1 — equal power over the sweep since the washes are incoherent: 1 wide, 0 mono) | `frz_mix`, `frz_width`, `frz_` 7 weights |
   | Aux | rhythmic aux send: the gater's draw/envelope/curves verbatim, but the shaped signal is *added* to the plugin's two aux stereo outputs (`aux_send1`/`aux_send2`) instead of being cut, while the main path is scaled by a flat `aux_pass` (1 = transparent, a send on top; 0 = the block leaves the main chain). The tap is the bus signal at the lane's position, before the bus volume/pan. Aux buffers arrive via `EffectBase::setAuxBuffers`, set by the engine once per processBlock; nullptr = that bus is disabled in the host and the send is dropped | `aux_`: 7 weights, `att`, `rel`, `attcurve`, `relcurve`, `send1`, `send2`, `pass` |
   | Pan | rhythmic panner: the gater's clock (same weighted draw), but each step lands on one of three positions -1/0/+1 rather than alternating two gains. `pan_mode` picks the sequence — `Cycle ->` (left, centre, right, period 3), `Cycle <-` (its mirror), `Cycle <->` (left, centre, right, centre: period 4, turning round rather than jumping across the image) or `Random` (drawn per step; the `1` coordinate keeps that stream clear of the block's duration draw at 0). `pan_glide` is the fraction of a step spent travelling to the new position, `pan_mix` the usual dry/wet as per-channel gain 1−mix+mix·g. Balance law, as the buses use; a mono main bus passes through untouched. `panStateAt()` in PannerEffect.h is shared with the block visual | `pan_`: 7 weights, `mode`, `glide`, `mix` |
 
@@ -57,7 +57,7 @@ patterns), FxmeFX (Tube saturation origin), Gloubiboulga (formant origin).
   Filters/loopers keep running at full level so their state stays
   continuous — mix only blends the output.
 - **Weighted random durations** (gate rate, grain length, filter ramp,
-  ring glide, reverse slice, aux send rate, pan step): the
+  ring glide, reverse slice, aux send rate, pan step, freeze retrigger): the
   user weights P(1/4..1/32) × P(straight/triplet/dotted); the actual duration
   is drawn at block entry. **Draws are a pure function of (seed, lane
   identity, blockId, drawIndex)** — never of time or loop pass — so every
@@ -222,8 +222,10 @@ swaps the map inside. GUI sequencer edits go through `LockedRubber`
 (SequencerRubber subclass taking the lock around mouse/key handlers).
 
 **BlockContext** handed to `onBlockEnter`: lane identity, blockId, seed,
-sampleRate, bpm, mididurSeconds (sampled at entry), `overrides` pointer
-(nullptr = none/parse error), `isReEnter`.
+sampleRate, bpm, mididurSeconds (sampled at entry), `blockLengthSamples`
+(the block's span at the current tempo, for effects that fade at the edge or
+clock inside it — the freeze uses it), `overrides` pointer (nullptr =
+none/parse error), `isReEnter`.
 
 ## 4. Parameters & state
 
@@ -468,7 +470,11 @@ umbrella `FxmeTools/FxmeTools.h` (module v0.0.3):
   phase streams, stereo width, wet/dry mix — the low 8 bits of the
   identity tag are the channel index): a standalone freeze plugin only
   needs to add parameters around it, and Mango's FreezeEffect is exactly
-  that adapter.
+  that adapter. `retrigger()` (added for Mango's rhythmic freeze) re-captures
+  from a rolling per-instance input history and swaps the magnitude spectrum
+  in place while the wash keeps playing — the 4-frame overlap-add crossfades
+  old→new, so it is click- and gap-free, and the running frame counter keeps
+  it deterministic.
   `dsp/ArEnvelope.h` (unused by Mango currently), `dsp/DeterministicRandom.h`,
   `midi/NoteDuration.h`.
 - `dsp/GrainLooper.h` (pre-existing) gained: `setAttack(frac, gamma)` /

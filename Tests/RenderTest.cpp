@@ -352,6 +352,59 @@ static void testFreeze()
 }
 
 //==============================================================================
+static void testFreezeRetrigger()
+{
+    // A render long enough to cross several 1/4 retriggers (0.5 s each at the
+    // 120 free-run) stays bit-deterministic — the retrigger grid and the
+    // re-captured washes are pure functions of (seed, lane, block).
+    auto renderLong = []
+    {
+        MangoAudioProcessor p;
+        setParam (p, "l0_type", 8.0f);
+        addFullBlock (p, 0);
+        return render (p, 2.5);
+    };
+    CHECK (renderLong() == renderLong());
+
+    // A freeze block shorter than the drawn interval is a single capture (no
+    // retrigger boundary inside it), and its wash fades back toward the dry
+    // input over the block's last few ms so the end does not click. A 2-step
+    // 1/16 block is 0.25 s at the free-run, well under the 1/4 (0.5 s) grid.
+    MangoAudioProcessor p;
+    setParam (p, "l0_type", 8.0f);
+    {
+        const juce::ScopedLock sl (p.engine.lock());
+        p.engine.sequencerFor (0).addBlock (0, 2);
+    }
+    const auto out = render (p, 0.4);
+
+    std::vector<float> in (out.size());
+    {
+        double phase = 0.0;
+        const double inc = 2.0 * juce::MathConstants<double>::pi * 440.0 / kSampleRate;
+        for (auto& s : in) { s = (float) std::sin (phase); phase += inc; }
+    }
+    auto meanAbsDiff = [&] (double t0, double t1)
+    {
+        const size_t i0 = (size_t) (t0 * kSampleRate);
+        const size_t i1 = juce::jmin (out.size(), (size_t) (t1 * kSampleRate));
+        double a = 0.0;
+        for (size_t i = i0; i < i1; ++i) a += std::abs ((double) out[i] - (double) in[i]);
+        return i1 > i0 ? a / (double) (i1 - i0) : 0.0;
+    };
+
+    // Mid-block the wash is decorrelated from the dry input (far from it);
+    // by the block's last ms the mix has faded, so the output has returned
+    // close to dry — no jump when the lane goes silent right after.
+    const double midDiff = meanAbsDiff (0.10, 0.20);
+    const double endDiff = meanAbsDiff (0.246, 0.2498);
+    CHECK (midDiff > 0.1);
+    CHECK (endDiff < 0.4 * midDiff);
+    std::printf ("freeze retrigger: long render deterministic; edge |wash-dry| %.3f -> %.3f\n",
+                 midDiff, endDiff);
+}
+
+//==============================================================================
 static void testBuses()
 {
     auto makeInput = [] (size_t count)
@@ -1403,6 +1456,7 @@ int main (int argc, char* argv[])
     testRingMod();
     testReverser();
     testFreeze();
+    testFreezeRetrigger();
     testBuses();
     testAuxSend();
     testPanner();
