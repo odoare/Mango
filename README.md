@@ -114,6 +114,9 @@ an unused bus's volume down, or use the global dry/wet, to balance it.
 
 ## Per-block override language
 
+*Full reference, printable:* [doc/minilanguage.md](doc/minilanguage.md)
+(`make -C doc` renders it to PDF).
+
 Select a block and type overrides into the *block overrides* field
 (space-separated `key=value`, strict all-or-nothing parsing; an unparsable
 string turns the field red and is kept for fixing):
@@ -261,7 +264,7 @@ FxmeTools additions, testing, invariants): [doc/architecture.md](doc/architectur
 ## Acknowledgements
 
 Some effect lanes use the fast Fourier Transform engine of
-[WDL](https://www.cockos.com/wdl/) (`WDL_ConvolutionEngine_Div`). WDL is © Cockos Incorporated (2006 and later),
+[WDL](https://www.cockos.com/wdl/) (`WDL_WDL_fft`). WDL is © Cockos Incorporated (2006 and later),
 distributed under the permissive zlib license. Thanks to Justin Frankel and the
 Cockos team ([github.com/justinfrankel/WDL](https://github.com/justinfrankel/WDL)).
 
