@@ -139,15 +139,21 @@ v0=a v1=u               formant glide from A to U
 
 ## Global controls
 
-The colour code is the fruit: a yellow → green → red ramp. It runs as a
-gradient under the top bar and across the eight config slots, and splits the
-global controls by role: **yellow** for dry/wet, seed and the presets,
-**green** for the grid and bus routing, **red** for the config bank. Lane
-colours stay off that ramp: they mark which bus a lane is in, not chrome.
+The knobs at the top right apply to the whole plugin:
 
-Dry/Wet, Seed (0–99999), the shared grid (step size 1/16…1/1, 1–64 steps),
-and the lane count (1–8, default 4; hidden lanes keep their blocks and
-settings and simply stop processing).
+| Control | What it does |
+|---------|--------------|
+| **Steps** | How many steps long the pattern is (1–64) |
+| **step** | The length of one step (1/16 … 1/1). Steps × step size is the pattern length: 16 steps of 1/16 is one bar |
+| **Seed** | Re-rolls every random choice at once (0–99999). Turn it until you like what you hear; the same seed always plays the same way |
+| **Dry/Wet** | Blends everything the plugin does against the untouched input |
+
+The grid is shared: all lanes use the same step size and step count, so
+blocks always line up across lanes.
+
+The **lanes − / +** chooser at the bottom left sets how many lanes are shown
+(1–8, four by default). Hidden lanes keep their blocks and settings, they
+just stop processing, so you can park a lane without losing your work.
 
 **Aux outputs**: besides the main stereo pair the plugin offers two extra
 stereo outputs, **Aux 1** and **Aux 2**, declared disabled (enable them in
@@ -166,9 +172,9 @@ global dry/wet are never stored, so a recall can't clobber your live mix.
 Slots show their state (filled = active, outlined = stored, dim = empty,
 dot = edited since loaded); alt-click a store slot to clear it, and *undo
 store* takes back the last overwrite. Recalls can be
-immediate or quantised to the next bar or pattern. Only the slot **selector**
-is a plugin parameter, so the bank is fully automatable from the host without
-multiplying the parameter count.
+immediate or quantised to the next bar or pattern, so a switch lands in time.
+The slot number is a plugin parameter, so your host can automate which config
+is playing.
 
 **Help**: the round **i** buttons open a short explanation of whatever they
 sit next to: the selected lane's effect, the lanes-and-buses strip at the
@@ -189,10 +195,9 @@ factory presets plus user presets saved as XML under the platform user-data
 folder (`.../Mango/Presets`). Presets carry the complete state, sequencer
 blocks and override strings included.
 
-Parameter changes apply to the sounding blocks immediately: the active block
-is refreshed in place (same random draw, new values), keeping the gate/ramp
-phase running. Host loop jumps re-enter blocks so every pass starts clean and
-plays the same drawn sequence.
+Everything responds live: turn a knob while a block is sounding and you hear
+it straight away, without the effect restarting or losing its place in the
+rhythm. Looping a section in your DAW replays it identically each time round.
 
 ## Building
 
