@@ -253,5 +253,12 @@ FxmeTools additions, testing, invariants): [doc/architecture.md](doc/architectur
   static `addParameters(params, lanePrefix, name)` hook, register the type in
   `Source/Dsp/EffectTypes.h` and the factory in `MangoEngine.cpp`.
 
+## Acknowledgements
+
+Some effect lanes use the fast Fourier Transform engine of
+[WDL](https://www.cockos.com/wdl/) (`WDL_ConvolutionEngine_Div`). WDL is © Cockos Incorporated (2006 and later),
+distributed under the permissive zlib license. Thanks to Justin Frankel and the
+Cockos team ([github.com/justinfrankel/WDL](https://github.com/justinfrankel/WDL)).
+
 ---
 Author: Olivier Doaré · FX-Mechanics · LGPL-3.0-or-later
