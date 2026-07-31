@@ -135,6 +135,39 @@ public:
         addAndMakeVisible (info);
     }
 
+    /** The override string of the block currently selected on this lane (empty
+        when none is). The panel names the keys that block pins *and this
+        effect actually reads*, because those knobs stop responding: without
+        the notice, a preset whose blocks carry e.g. `dur=mididur` looks like
+        a broken Time knob. */
+    void setBlockOverrides (const juce::String& blockText)
+    {
+        // Whole-token matching throughout: several keys are substrings of
+        // others (att/attcurve, amp/damp, mode/model), so a String::contains
+        // test would silently drop them.
+        juce::StringArray found;
+
+        if (blockText.isNotEmpty())
+            if (const auto parsed = parseOverrides (blockText.toStdString()))
+            {
+                // `keywords` is this effect's own key list, so the two can
+                // never drift apart.
+                const auto mine = juce::StringArray::fromTokens (keywords, " \n", "");
+                for (int i = 0; i < parsed->count; ++i)
+                {
+                    const juce::String name (detail::keyNames[(int) parsed->entries[i].key]);
+                    if (mine.contains (name))
+                        found.addIfNotAlreadyThere (name);   // a block may set a key twice
+                }
+            }
+
+        const auto keys = found.joinIntoString (" ");
+        if (keys == overriddenKeys)
+            return;
+        overriddenKeys = keys;
+        repaint();
+    }
+
     void paint (juce::Graphics& g) override
     {
         auto r = getLocalBounds();
@@ -154,6 +187,19 @@ public:
             g.setFont (juce::Font (juce::FontOptions (11.0f)));
             g.drawText ("duration probabilities", weightsLabelArea,
                         juce::Justification::centredLeft);
+        }
+
+        // What the selected block takes over, and therefore which knobs
+        // above are currently doing nothing. Drawn in the lane's accent so
+        // it reads as a state of this panel, not as more reference text.
+        if (! overriddenKeys.isEmpty() && ! overrideArea.isEmpty())
+        {
+            g.setColour (accent);
+            g.setFont (juce::Font (juce::FontOptions (11.0f, juce::Font::bold)));
+            g.drawText ("block overrides: " + overriddenKeys
+                          + (overriddenKeys.containsChar (' ') ? "  (knobs inactive)"
+                                                              : "  (knob inactive)"),
+                        overrideArea, juce::Justification::centredLeft);
         }
 
         // The override-language keywords this effect understands, as a
@@ -203,7 +249,9 @@ public:
             layoutKnobRow (weightKnobs, r, 4, 52);
         }
 
+        // Bottom-up: the key reference, then the override notice just above it.
         keywordsArea = r.removeFromBottom (juce::jmin (46, r.getHeight())).reduced (2, 0);
+        overrideArea = r.removeFromBottom (juce::jmin (16, r.getHeight())).reduced (2, 0);
     }
 
     int laneOf() const  { return laneIndex; }
@@ -446,8 +494,9 @@ private:
     std::vector<Knob>  knobs, weightKnobs;
     std::deque<Combo>  combos;
     fxme::InfoButton   info;
-    juce::Rectangle<int> weightsLabelArea, keywordsArea;
-    juce::String keywords;
+    juce::Rectangle<int> weightsLabelArea, keywordsArea, overrideArea;
+    juce::String keywords;        // the keys this effect reads
+    juce::String overriddenKeys;  // ...of those, the ones the selected block pins
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (EffectPanel)
 };

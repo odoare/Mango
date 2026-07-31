@@ -435,6 +435,15 @@ explains the override language. New effect types must add a `helpFor` case.
   EffectPanel (48 pre-built, visibility-switched; weight mini-knobs) /
   BlockTextPanel (3-line multiline field: Return commits and leaves the
   field, Ctrl/Cmd+Return inserts a newline, focus loss commits too).
+- **Override notice**: `EffectPanel::setBlockOverrides()` names the keys the
+  selected block pins *and* this effect reads, in the panel's accent above
+  the key reference. Without it an overridden knob just looks broken: the
+  factory presets carry `dur=mididur` on delay blocks and `w16=1` on filter
+  blocks, which was reported as "the Time knob does nothing" and "the
+  probability knobs stopped reacting". The editor feeds it from
+  `refreshPanelOverrides()` (selection, panel switch, and text commit); key
+  matching is whole-token, since `att`/`attcurve`, `amp`/`damp` and
+  `mode`/`model` are substrings of each other.
 - **Selection flow**: rubber `onBlockSelected(lane, id)` → editor deselects
   other rubbers, shows `panels[lane][currentType]`, loads block text. A 10 Hz
   editor timer follows lane-type changes; processor ChangeBroadcaster resets
@@ -702,3 +711,95 @@ the `gate_att` range change in §11) — appending the Player does not.
 **One-line answer to the release question:** yes — as long as the effect enum
 and every choice parameter stay append-only, the shipping architecture will
 take the Player lane and still load presets/sessions made before it.
+
+## 13. Backlog: sequencer editing & UX
+
+*Mostly from a user's workflow critique (2026-07). Their framing was "number
+of clicks, mouse distance, time to complete a task, visual responsiveness,
+visual recognition" — a fair lens, and worth keeping while working through
+this list. Ordered by value/effort, not by who asked.*
+
+Note **where** each item lands: `SequencerRubber` / `StringSequencer` live in
+**FxmeTools** and are shared with other plugins, so changes there need the
+same care as any module change (and benefit every project).
+
+### 13.1 Confirmed defects (fix first)
+
+- **Grid shrink destroys blocks.** `StringSequencer::setNumSteps` *erases*
+  blocks whose `startStep >= numSteps` and clamps the rest, so 32 → 16 → 32
+  loses everything past step 16 permanently. Blocks should survive out of
+  range: keep them in the model, hide/skip them while out of range, and clip
+  only at save time (or not at all). Touches `setNumSteps`, the engine's
+  block iteration, and `sequencersToTree`. **FxmeTools.**
+- **Edge-grab zone is 7 px** (`SequencerRubber::kEdgeGrab`), too fine at
+  small step widths. Scale it with the step width (e.g.
+  `jlimit(6, 14, stepWidth/4)`), and show a resize cursor on hover so the
+  zone is discoverable. **FxmeTools.**
+
+### 13.2 Editing workflow
+
+- **Paint mode**: hold and drag across the lane to lay down a run of
+  fixed-length blocks, instead of one drag per block. The single most
+  requested time-saver for dense patterns. **FxmeTools.**
+- **Copy / paste / duplicate blocks** (and across lanes). Already on the
+  wish list before the critique.
+- **Multi-select** (rubber-band or shift-click) + operations on the
+  selection: move, delete, resize, and *drag up/down to change a parameter*
+  on all selected blocks at once.
+- **Move should swap, not wall.** `StringSequencer::moveBlock` currently
+  stops against neighbours; dragging past one should displace/swap it, and a
+  block should be able to travel the whole lane. **FxmeTools.**
+- **Shrink / expand selected blocks** by a step, from keys or buttons.
+- **Randomise fill**: one lane or all lanes, with a density control. Fits
+  Mango's seeded-randomness identity; must stay deterministic (draw from the
+  seed, not from `rand()`), so it belongs with the `detrand` machinery.
+
+### 13.3 Parameter entry
+
+- **Inline block editor**: a small popup under the clicked block with that
+  block's most-used parameters, instead of only the right-hand panel. This is
+  the biggest single reduction in mouse travel and eye movement. The right
+  panel stays as the full view.
+- **Duration weights as a grid.** The current model is an *outer product* —
+  `baseWeights[4] × modWeights[3]` — so "straight 1/4 **and** dotted 1/8" is
+  not expressible: turning on dotted turns it on for every note value. A
+  4×3 (or wider) grid of per-cell toggles would be strictly more expressive
+  and easier to read than seven knobs. Drag-across-to-toggle is the cheap
+  interaction win.
+  **State cost:** this replaces 7 floats per effect with 12+ per effect, so
+  it is a parameter-layout change — new ids alongside the old, old ones kept
+  and mapped, or a documented migration. Not a free change; see §10's
+  append-only rule.
+- **Wider note range**: 1/1 and 1/2 at the slow end, 1/64 at the fast end
+  (currently 1/4…1/32). Cheap on its own, but interacts with the grid item
+  above — decide them together.
+
+### 13.4 Visual responsiveness
+
+- **Hover states** on blocks, lane headers and the bus diagram (the critique
+  singled this out, and it is largely missing today).
+- **Cursor feedback**: resize cursor on block edges, move cursor on bodies,
+  paint cursor in paint mode.
+
+### 13.5 Considered and declined
+
+- **"The per-block text language is a side feature; give manual block setup
+  instead."** Declined: the override language *is* the manual per-block
+  setup, and it is central to what Mango is for. It stays and will grow
+  (see §12: the Player lane adds keys to it). The real problem the critique
+  points at is **discoverability**, which is being addressed instead: the
+  override notice in the effect panel (§7), the printable reference
+  (`doc/minilanguage.md`), and presets that do not depend on overrides.
+  A GUI editor for block parameters (§13.3) is complementary to the text,
+  not a replacement for it.
+
+### 13.6 Already implemented (recurring questions)
+
+Kept here so answers to future reports are consistent:
+
+- **Delete a block**: alt-click, or select and press Delete. (Right-click
+  clears the block's *text*.)
+- **Fix one block by hand instead of hunting with the seed**: pin it with a
+  block override, e.g. `dur=0.125`.
+- **Move / resize a block**: drag its body / its edges.
+- **Per-block parameter values**: the override language, one line per block.

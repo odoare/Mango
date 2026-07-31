@@ -45,6 +45,10 @@ private:
 
     void selectBlock (int laneIndex, int blockId);
     void refreshVisiblePanel();
+
+    /** Tells the visible effect panel which of its knobs the selected block
+        has taken over (so it can say so). */
+    void refreshPanelOverrides();
     void refreshBlockText();
     void showConfigs (bool shouldShow);
     void showPresets (bool shouldShow);

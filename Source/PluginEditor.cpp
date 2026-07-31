@@ -111,6 +111,7 @@ MangoAudioProcessorEditor::MangoAudioProcessorEditor (MangoAudioProcessor& p)
     {
         const bool ok = processor.setBlockContent (lane, block, text);
         rack.repaint();
+        refreshPanelOverrides();   // the notice follows what was just typed
         return ok;
     };
 
@@ -272,6 +273,8 @@ void MangoAudioProcessorEditor::refreshVisiblePanel()
 
     visibleLane = lane;
     visibleType = type;
+
+    refreshPanelOverrides();   // the panel that just appeared needs the notice
 }
 
 void MangoAudioProcessorEditor::refreshBlockText()
@@ -282,6 +285,19 @@ void MangoAudioProcessorEditor::refreshBlockText()
                             processor.engine.blockHasParseError (selectedLane, selectedBlock));
     else
         blockText.setBlock (-1, -1, {}, false);
+
+    refreshPanelOverrides();
+}
+
+void MangoAudioProcessorEditor::refreshPanelOverrides()
+{
+    if (visibleLane < 0 || visibleType < 0 || visibleType >= kNumEffectTypes)
+        return;
+
+    // Only the selected block's own lane can override this panel's knobs.
+    const bool onThisLane = selectedLane == visibleLane && selectedBlock >= 0;
+    panels[(size_t) visibleLane][(size_t) visibleType]->setBlockOverrides (
+        onThisLane ? processor.blockContent (selectedLane, selectedBlock) : juce::String());
 }
 
 void MangoAudioProcessorEditor::timerCallback()
