@@ -3,6 +3,8 @@
 **FX-Mechanics modular sound glitcher / mangler**: a JUCE audio effect (VST3 / AU /
 Standalone) with MIDI input.
 
+Demo video : https://youtu.be/Jsm9x_oHtCg?si=1vN9Y-DyYJyCsD78
+
 ![Mango](doc/screenshot.png)
 
 Mango is a **rubber step sequencer** of up to eight lanes, each driving one
