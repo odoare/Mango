@@ -452,6 +452,17 @@ explains the override language. New effect types must add a `helpFor` case.
   battles — every click starts a bounded 10 Hz OS-focus claim (~0.8 s for
   plain clicks, ~2 s refreshed while a caret is active), Return commits &
   leaves single-line fields, Escape reverts.
+  **It suspends itself while a modal popup is open** (`blockedByModal()`).
+  Without that, info callouts and combo-box dropdowns closed the instant they
+  opened *on Windows only*: both are temporary desktop windows
+  (`ComponentPeer::windowIsTemporary`), and JUCE's Windows peer dismisses a
+  temporary modal on any window's `WM_KILLFOCUS` (it posts
+  `inputAttemptWhenModal`), so the fixer's grab killed them within one 100 ms
+  tick — reported as "the hint windows blink twice and disappear" (FL Studio,
+  Win 10). Linux never showed it because the grab there usually fails, which
+  is the very reason the enforcement exists: **the fixer only misbehaves
+  where it actually works**, so this class must be tested on Windows, not
+  just on the platform it was written for.
 
 ## 8. FxmeTools additions made for Mango (lib/FxmeTools, branch `mango-additions`)
 

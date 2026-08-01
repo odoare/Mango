@@ -142,6 +142,10 @@ namespace mng::theme
         c.panel     = panel;
         c.panelLine = panelLine;
         b.setColours (c);
+
+        // The callout is a modal popup; keep the click from stirring the
+        // keyboard focus at all (see fxme::TextEntryFocusFixer's conventions).
+        b.setMouseClickGrabsKeyboardFocus (false);
     }
 
     /** Side of the square info buttons, and the gap after a title. */
