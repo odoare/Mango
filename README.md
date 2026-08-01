@@ -128,6 +128,7 @@ dur=0.125 fb=0.6        eighth-note delay with more feedback
 dur=mididur/2           half the period of the last MIDI note received
 dur=mididur fb=0.99 damp=0.4    plucked-string resonance on the last note
 f0=midifreq f1=midifreq*2       sweep from the note's fundamental to its octave
+dur=mididur2 fb=0.97    resonance on the second-lowest note of the chord held
 v0=a v1=u               formant glide from A to U
 ```
 
@@ -141,6 +142,12 @@ v0=a v1=u               formant glide from A to U
 - **`mididur`** is 1/f of the last MIDI note-on the plugin received, sampled when
   the block starts; **`midifreq`** is its frequency in Hz (1/mididur), for the
   frequency keys (`f0=midifreq`, `midifreq*2`, `midifreq/2`, `2*midifreq`).
+- Add a digit **1 to 4** to either word to follow a **chord** instead of a single
+  note, counted from the lowest up: `mididur1` is the bottom note, `midifreq2` the
+  pitch of the next one. Point each lane at a different voice and one chord tunes
+  the whole rack. Four notes are followed at once (play a fifth and the oldest is
+  dropped), and a voice you are not holding falls back to the top note of the
+  chord, so nothing ever goes silent.
 
 ## Global controls
 

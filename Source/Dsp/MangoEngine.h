@@ -54,6 +54,7 @@
 #include <unordered_map>
 #include "EffectBase.h"
 #include "EffectTypes.h"
+#include "HeldNotes.h"
 #include "../ParamIDs.h"
 
 namespace mng
@@ -117,7 +118,26 @@ public:
 
     // ---- audio thread ----------------------------------------------------------
 
-    void setMididurSeconds (float s) noexcept { mididurSeconds.store (s); }
+    /** MIDI note tracking for the mini-language. `mididur`/`midifreq` follow
+        the last note-on; the voice digits follow the notes still held. */
+    void midiNoteOn (int noteNumber) noexcept
+    {
+        midiState.last = midiNotePeriod (noteNumber);
+        heldNotes.noteOn (noteNumber);
+        publishMidiState();
+    }
+
+    void midiNoteOff (int noteNumber) noexcept
+    {
+        heldNotes.noteOff (noteNumber);
+        publishMidiState();
+    }
+
+    void midiAllNotesOff() noexcept
+    {
+        heldNotes.allNotesOff();
+        publishMidiState();
+    }
 
     /** A parameter of this lane changed: its active block is re-entered on
         the next process() so the audible result updates immediately (same
@@ -149,7 +169,16 @@ public:
 
     double guiPlayheadStep (int laneIndex) const { return guiStep[(size_t) laneIndex].load(); }
     int    guiActiveBlock (int laneIndex) const  { return guiActive[(size_t) laneIndex].load(); }
-    float  guiMididur() const                    { return mididurSeconds.load(); }
+    MidiNoteState guiMidiNotes() const
+    {
+        MidiNoteState s;
+        s.last      = pubLast.load();
+        s.heldCount = juce::jlimit (0, MidiNoteState::kMaxVoices, pubHeldCount.load());
+        for (int i = 0; i < s.heldCount; ++i)
+            s.held[i] = pubHeld[(size_t) i].load();
+        return s;
+    }
+
     double guiBpm() const                        { return publishedBpm.load(); }
 
     /** Counters bumped every time the timeline crosses a bar / pattern
@@ -212,7 +241,28 @@ private:
     double currentBpm = 120.0;
     bool   pendingStart = true;   // engines start on the first process() (bpm known)
     double absoluteBeats = 0.0;        // audio thread; host ppq when synced
-    std::atomic<float> mididurSeconds { 1.0f / 440.0f };
+
+    // MIDI note state for the mini-language's mididur / midifreq (§5). Audio
+    // thread only: written from the MIDI loop, read at block enter, both in
+    // the same processBlock call.
+    HeldNotes     heldNotes;
+    MidiNoteState midiState;
+
+    void publishMidiState() noexcept
+    {
+        heldNotes.fill (midiState);
+        pubLast.store (midiState.last);
+        for (int i = 0; i < midiState.heldCount; ++i)
+            pubHeld[(size_t) i].store (midiState.held[i]);
+        pubHeldCount.store (midiState.heldCount);
+    }
+
+    // ...republished for the GUI, which reads it to resolve the override
+    // shown on a block. Display only, so a read torn across the voices costs
+    // one stale label frame and needs no more than plain atomics.
+    std::atomic<float> pubLast { 1.0f / 440.0f };
+    std::array<std::atomic<float>, MidiNoteState::kMaxVoices> pubHeld {};
+    std::atomic<int>   pubHeldCount { 0 };
 
     std::array<std::atomic<double>, numLanes> guiStep {};
     std::array<std::atomic<int>, numLanes>    guiActive {};

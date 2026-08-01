@@ -298,7 +298,7 @@ void MangoEngine::handleBlockEnter (Lane& lane, int blockId, bool isReEnter)
     ctx.seed           = (uint64_t) (int64_t) seedParam->load();
     ctx.sampleRate     = sampleRate;
     ctx.bpm            = currentBpm;
-    ctx.mididurSeconds = mididurSeconds.load();
+    ctx.midi           = midiState;
     ctx.isReEnter      = isReEnter;
 
     // Block length in samples at the current tempo, for effects that fade at

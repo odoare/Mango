@@ -117,7 +117,7 @@ private:
     {
         if (ctx.overrides != nullptr)
             if (const auto* e = ctx.overrides->find (k))
-                return { true, e->eval (ctx.mididurSeconds) };
+                return { true, e->eval (ctx.midi) };
         return {};
     }
 

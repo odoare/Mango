@@ -32,6 +32,7 @@
 #include <FxmeTools/midi/StringSequencer.h>
 #include <FxmeTools/midi/SequencerEngine.h>
 #include <Dsp/OverrideParser.h>
+#include <Dsp/HeldNotes.h>
 
 static int numChecks = 0;
 
@@ -778,6 +779,72 @@ static int testOverrideParser()
 }
 
 //==============================================================================
+// Chord support: the voice digits on mididur / midifreq, and the note
+// tracking they read.
+static int testMidiPolyphony()
+{
+    using namespace mng;
+
+    // Parsing: voice digits on both magic words, in every expression form.
+    auto p = parseOverrides ("dur=mididur2 f0=midifreq3 fb=mididur1*2 q=4*midifreq4 att=mididur/2");
+    CHECK (p.has_value());
+    CHECK (p->find (OvKey::Dur)->kind == Expr::MididurScaled  && p->find (OvKey::Dur)->voice == 2);
+    CHECK (p->find (OvKey::F0)->kind  == Expr::MidifreqScaled && p->find (OvKey::F0)->voice  == 3);
+    CHECK (p->find (OvKey::Fb)->voice == 1 && near (p->find (OvKey::Fb)->value, 2.0f, 1e-6));
+    CHECK (p->find (OvKey::Q)->voice  == 4 && near (p->find (OvKey::Q)->value,  4.0f, 1e-6));
+    CHECK (p->find (OvKey::Att)->voice == 0);   // no digit: still the last note
+
+    // Out-of-range or malformed digits are parse errors, not silent clamps.
+    CHECK (! parseOverrides ("dur=mididur5").has_value());
+    CHECK (! parseOverrides ("dur=mididur0").has_value());
+    CHECK (! parseOverrides ("f0=midifreq9*2").has_value());
+
+    // Held notes are addressed low to high, whatever order they were played.
+    HeldNotes held;
+    held.noteOn (64); held.noteOn (60); held.noteOn (67);
+    MidiNoteState m;
+    m.last = midiNotePeriod (67);
+    held.fill (m);
+    CHECK (m.heldCount == 3);
+    CHECK (near (m.periodFor (1), midiNotePeriod (60), 1e-9));
+    CHECK (near (m.periodFor (2), midiNotePeriod (64), 1e-9));
+    CHECK (near (m.periodFor (3), midiNotePeriod (67), 1e-9));
+
+    // A voice past the chord falls back to its top note (never to silence);
+    // voice 0 stays the last note played.
+    CHECK (near (m.periodFor (4), midiNotePeriod (67), 1e-9));
+    CHECK (near (m.periodFor (0), midiNotePeriod (67), 1e-9));
+
+    // midifreq2 on that chord is the second-lowest note's pitch.
+    auto f = parseOverrides ("f0=midifreq2");
+    CHECK (f.has_value());
+    CHECK (near (f->find (OvKey::F0)->eval (m), 1.0f / midiNotePeriod (64), 1e-3));
+
+    // Past four notes the OLDEST is forgotten, so the chord follows what was
+    // played last: 64 then 60 drop out, 48 and 55 come in.
+    held.noteOn (72); held.noteOn (48); held.noteOn (55);
+    held.fill (m);
+    CHECK (m.heldCount == 4);
+    CHECK (near (m.periodFor (1), midiNotePeriod (48), 1e-9));
+    CHECK (near (m.periodFor (4), midiNotePeriod (72), 1e-9));
+
+    held.noteOn (55);                  // retrigger: costs no voice
+    CHECK (held.size() == 4);
+
+    // Note-off removes just that note; an empty chord falls back to `last`.
+    held.noteOff (48); held.noteOff (55); held.noteOff (67); held.noteOff (72);
+    CHECK (held.size() == 0);
+    held.fill (m);
+    CHECK (m.heldCount == 0);
+    CHECK (near (m.periodFor (2), m.last, 1e-9));
+
+    held.noteOn (60);
+    held.allNotesOff();                // panic
+    CHECK (held.size() == 0);
+    return 0;
+}
+
+//==============================================================================
 int main()
 {
     if (testDeterministicRandom())      return 1;
@@ -797,6 +864,7 @@ int main()
     if (testSequencerEngineMovedBlockExit()) return 1;
     if (testSequencerEngineEmptyBlocks()) return 1;
     if (testOverrideParser())           return 1;
+    if (testMidiPolyphony())            return 1;
 
     std::printf ("All %d checks passed.\n", numChecks);
     return 0;

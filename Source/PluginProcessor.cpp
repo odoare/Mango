@@ -149,13 +149,17 @@ void MangoAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::
             auxPtr[bus] = &aux[bus];
         }
 
-    // mididur: the period of the last note-on received. MIDI passes through.
+    // mididur follows the last note-on; the voice digits (mididur1..4) follow
+    // the notes still held, so note-offs matter too. MIDI passes through.
     for (const auto metadata : midi)
     {
         const auto msg = metadata.getMessage();
         if (msg.isNoteOn())
-            engine.setMididurSeconds (
-                (float) (1.0 / juce::MidiMessage::getMidiNoteInHertz (msg.getNoteNumber())));
+            engine.midiNoteOn (msg.getNoteNumber());
+        else if (msg.isNoteOff())
+            engine.midiNoteOff (msg.getNoteNumber());
+        else if (msg.isAllNotesOff() || msg.isResetAllControllers())
+            engine.midiAllNotesOff();   // a panic must not leave voices stuck
     }
 
     // Input is metered before the engine runs — it processes `main` in place.

@@ -16,6 +16,11 @@
     `mididur*N`, `mididur/N`, `N*mididur` (same forms for midifreq).
     Vowel keys also accept the letters a e i o u.
 
+    Both magic variables take an optional voice digit 1..4 — `mididur2`,
+    `midifreq3*2` — addressing the chord currently held, sorted low to high,
+    so one block can tune several lanes to different notes of the same chord.
+    Without a digit they keep meaning the last note played, held or not.
+
     Units: `dur` follows note-value convention for plain numbers — a fraction
     of a whole note (0.25 = quarter, 0.125 = eighth, ...) resolved against
     the host tempo — while any expression containing `mididur` is a time in
@@ -44,22 +49,59 @@
 namespace mng
 {
 
+/** The MIDI note state an Expr resolves against.
+
+    `last` is the period of the most recent note-on, which is what plain
+    `mididur` / `midifreq` have always meant and still mean. `held` is the
+    chord sounding right now (note-on without its note-off), sorted low to
+    high, addressed by the voice digit: `mididur1` is the lowest note.
+
+    Polyphony is capped at kMaxVoices; when a further note arrives the oldest
+    held one is forgotten, so the chord always follows what was played last. */
+struct MidiNoteState
+{
+    static constexpr int kMaxVoices = 4;
+
+    float last = 1.0f / 440.0f;
+    float held[kMaxVoices] {};
+    int   heldCount = 0;
+
+    MidiNoteState() = default;
+
+    /** Single-note shorthand: no chord, just a last-note period. */
+    MidiNoteState (float lastPeriod) : last (lastPeriod) {}
+
+    /** The period a voice digit addresses. A voice past the end of the chord
+        falls back to its highest note, and an empty chord falls back to
+        `last`, so `mididur2` on a single note behaves like `mididur` instead
+        of collapsing to zero and silencing whatever it drives. */
+    float periodFor (int voice) const
+    {
+        if (voice <= 0 || heldCount <= 0)
+            return last;
+        return held[(voice < heldCount ? voice : heldCount) - 1];
+    }
+};
+
 /** One override value: a plain constant, `constant * mididur`, or
     `constant * midifreq` = constant/mididur (division by N is folded into
-    the constant at parse time). */
+    the constant at parse time). `voice` is the magic variable's optional
+    digit: 0 = the last note played, 1..kMaxVoices = the held chord. */
 struct Expr
 {
     enum Kind { Const, MididurScaled, MidifreqScaled };
     Kind  kind  = Const;
     float value = 0.0f;
+    int   voice = 0;
 
-    float eval (float mididurSeconds) const
+    float eval (const MidiNoteState& midi) const
     {
+        if (kind == Const)
+            return value;
+        const float period = midi.periodFor (voice);
         if (kind == MididurScaled)
-            return value * mididurSeconds;
-        if (kind == MidifreqScaled)
-            return mididurSeconds > 1.0e-6f ? value / mididurSeconds : 0.0f;
-        return value;
+            return value * period;
+        return period > 1.0e-6f ? value / period : 0.0f;
     }
 };
 
@@ -143,12 +185,13 @@ namespace detail
         }
     }
 
-    inline std::optional<Expr> parseExpr (const std::string& s, bool vowelKey)
-    {
-        if (vowelKey)
-            if (const auto v = parseVowel (s))
-                return Expr { Expr::Const, *v };
+    /** A magic variable reference at `pos`: the word plus its optional voice
+        digit. `len` is how much of `s` it consumed, so the caller can check
+        that nothing unparsed is left over. */
+    struct MagicRef { Expr::Kind kind = Expr::Const; int voice = 0; size_t len = 0; };
 
+    inline std::optional<MagicRef> parseMagic (const std::string& s, size_t pos)
+    {
         static const std::pair<std::string, Expr::Kind> kMagic[] = {
             { "mididur",  Expr::MididurScaled  },
             { "midifreq", Expr::MidifreqScaled },
@@ -156,36 +199,67 @@ namespace detail
 
         for (const auto& [word, kind] : kMagic)
         {
-            if (s == word)
-                return Expr { kind, 1.0f };
+            if (s.compare (pos, word.size(), word) != 0)
+                continue;
 
-            // word*N / word/N
-            if (s.rfind (word, 0) == 0 && s.size() > word.size() + 1)
+            MagicRef m { kind, 0, word.size() };
+
+            // Optional voice digit. Out-of-range digits are left unconsumed
+            // rather than clamped, so `mididur5` fails to parse (and shows
+            // red) instead of quietly meaning something else.
+            if (pos + m.len < s.size())
             {
-                const char op = s[word.size()];
-                const auto n  = parseNumber (s.substr (word.size() + 1));
+                const char c = s[pos + m.len];
+                if (c >= '1' && c <= (char) ('0' + MidiNoteState::kMaxVoices))
+                {
+                    m.voice = c - '0';
+                    ++m.len;
+                }
+            }
+            return m;
+        }
+        return std::nullopt;
+    }
+
+    inline std::optional<Expr> parseExpr (const std::string& s, bool vowelKey)
+    {
+        if (vowelKey)
+            if (const auto v = parseVowel (s))
+                return Expr { Expr::Const, *v, 0 };
+
+        // word[voice] , word[voice]*N , word[voice]/N
+        if (const auto m = parseMagic (s, 0))
+        {
+            if (m->len == s.size())
+                return Expr { m->kind, 1.0f, m->voice };
+
+            if (s.size() > m->len + 1)
+            {
+                const char op = s[m->len];
+                const auto n  = parseNumber (s.substr (m->len + 1));
                 if (! n)
                     return std::nullopt;
                 if (op == '*')
-                    return Expr { kind, *n };
+                    return Expr { m->kind, *n, m->voice };
                 if (op == '/' && *n != 0.0f)
-                    return Expr { kind, 1.0f / *n };
-                return std::nullopt;
+                    return Expr { m->kind, 1.0f / *n, m->voice };
             }
-
-            // N*word
-            const auto star = s.find ('*');
-            if (star != std::string::npos && s.substr (star + 1) == word)
-            {
-                const auto n = parseNumber (s.substr (0, star));
-                if (! n)
-                    return std::nullopt;
-                return Expr { kind, *n };
-            }
+            return std::nullopt;
         }
 
+        // N*word[voice]
+        if (const auto star = s.find ('*'); star != std::string::npos)
+            if (const auto m = parseMagic (s, star + 1))
+                if (m->len == s.size() - star - 1)
+                {
+                    const auto n = parseNumber (s.substr (0, star));
+                    if (! n)
+                        return std::nullopt;
+                    return Expr { m->kind, *n, m->voice };
+                }
+
         if (const auto n = parseNumber (s))
-            return Expr { Expr::Const, *n };
+            return Expr { Expr::Const, *n, 0 };
         return std::nullopt;
     }
 } // namespace detail

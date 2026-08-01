@@ -104,6 +104,7 @@ Source/
     EffectTypes.h             EffectType enum + display names (extension point)
     DurationWeights.h         the 7 weight params + resolveTable(ctx, weights)
     OverrideParser.h          the mini-language (JUCE-free; see §5)
+    HeldNotes.h               MIDI chord tracking for the voice digits (JUCE-free)
     Effects/*.h               the EffectBase implementations (header-only)
   Components/
     LaneRackComponent.h       ruler + lane rows (LaneHeader + LockedRubber) + block painter
@@ -262,9 +263,33 @@ none/parse error), `isReEnter`.
 ## 5. Override mini-language (Source/Dsp/OverrideParser.h)
 
 JUCE-free, strict, all-or-nothing: space-separated `key=expr`;
-`expr := number | mididur | mididur*N | mididur/N | N*mididur`; vowel keys
-also accept `a e i o u`. `Expr` is a flat POD (Const | MididurScaled) the
-audio thread evaluates without allocation. Up to 16 assignments/block.
+`expr := number | magic | magic*N | magic/N | N*magic` where
+`magic := (mididur | midifreq) [1-4]`; vowel keys also accept `a e i o u`.
+`Expr` is a flat POD (kind, constant, voice) the audio thread evaluates
+without allocation. Up to 16 assignments/block.
+
+**Polyphony.** The optional digit addresses the chord being held, sorted low
+to high (`mididur1` = bottom note); no digit keeps the original meaning, the
+last note-on, held or not. `Expr::eval` takes a `MidiNoteState` (last note +
+up to `kMaxVoices` = 4 held periods) instead of a bare float.
+
+- `Source/Dsp/HeldNotes.h` (JUCE-free, audio thread, tested) tracks note-on /
+  note-off. Notes are stored in **arrival** order and sorted only when
+  published, which keeps "forget the oldest" and "voice 1 is the lowest"
+  independent. A fifth note drops the oldest rather than being ignored, so
+  the chord follows what was played last; a repeated note-on costs no voice.
+- Fallbacks are deliberate: a voice past the chord's end resolves to its top
+  note, and an empty chord resolves to `last`. A digit must never resolve to
+  zero, which would silence or divide-by-zero whatever it drives.
+- Out-of-range digits (`mididur5`) do **not** clamp — they fail to parse, so
+  the field turns red instead of quietly meaning something else.
+- The state lives in `MangoEngine` (audio thread; written from the MIDI loop,
+  read at block enter, same `processBlock` call) and is republished through
+  plain atomics for `guiMidiNotes()`, which the block painter uses to resolve
+  the override it displays. That read can tear across voices; it is display
+  only, so the cost is one stale label frame.
+- MIDI panic (`isAllNotesOff` / `isResetAllControllers`) clears the chord —
+  otherwise a stuck voice would outlive the notes that made it.
 
 **Units convention**: a plain-number `dur` is a fraction of a whole note
 (0.125 = eighth) resolved against the tempo (`overrideDurSeconds`); any
@@ -561,6 +586,14 @@ umbrella `FxmeTools/FxmeTools.h` (module v0.0.3):
   moved/resized from under the playhead exit at the next step).
 - `components/SequencerRubber.h` gained `setMinPixelsPerStep`, body-drag
   move, alt-click delete.
+- `components/SequencerRubber.h`: **edge-grab zone.** Was a fixed 7 px, too
+  fine to aim at. Now `edgeGrab(blockRect)` = `jlimit(10, 16, stepWidth/4)`,
+  capped at a **third of the block's width**. The cap is the part that
+  matters: `hitTest` resolves an ambiguous hit as *left edge*, so a zone
+  wider than half a block made short blocks resize-only and impossible to
+  drag — the old fixed 7 px did exactly that below ~14 px per step. The
+  hover resize cursor comes from the same `hitTest`, so it can never
+  advertise a zone that is not there.
 - `components/TopBar.h` (generalised from Spread, logo passed in),
   `components/TextEntryFocusFixer.h` (new; see §7).
 
@@ -760,10 +793,9 @@ same care as any module change (and benefit every project).
 
 - ~~**Grid shrink destroys blocks.**~~ **Fixed** (see §8, "dormant blocks").
   `numSteps` is now a window, not a limit on the data.
-- **Edge-grab zone is 7 px** (`SequencerRubber::kEdgeGrab`), too fine at
-  small step widths. Scale it with the step width (e.g.
-  `jlimit(6, 14, stepWidth/4)`), and show a resize cursor on hover so the
-  zone is discoverable. **FxmeTools.**
+- ~~**Edge-grab zone is 7 px.**~~ **Fixed** (see §8, "edge-grab zone"). The
+  hover resize cursor asked for in the same item was already there, and now
+  follows the same `hitTest`, so it always shows the real zone.
 
 ### 13.2 Editing workflow
 

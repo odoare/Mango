@@ -29,12 +29,30 @@ spaces (press **Ctrl+Return** for a newline, **Return** to commit).
 | number | a plain value | `fb=0.6` |
 | `mididur` | length of one cycle of the last MIDI note, in **seconds** | `dur=mididur` |
 | `midifreq` | pitch of that note, in **Hz** (= 1/mididur) | `f0=midifreq` |
-| scaled | either magic word times or divided by a number | `mididur*2`, `mididur/4`, `2*midifreq` |
+| voice digit | the same, on one note of the chord you are holding | `dur=mididur2`, `f0=midifreq1` |
+| scaled | any magic word times or divided by a number | `mididur*2`, `mididur/4`, `2*midifreq3` |
 | vowel letter | for `v0` / `v1` only | `v0=a` |
 
-**MIDI tracking.** Both follow the last note-on, sampled when the block
-starts: `dur=mididur` tunes a delay to the note, `f0=midifreq` points a
-filter at it.
+**MIDI tracking.** Without a digit both follow the last note-on, sampled when
+the block starts: `dur=mididur` tunes a delay to the note, `f0=midifreq`
+points a filter at it.
+
+**Chords.** Add a digit **1 to 4** to address a note of the chord currently
+held, counted **from the lowest up**: `mididur1` is the bottom note,
+`mididur2` the next one, and so on (`midifreq1..4` likewise). Give each lane
+a different voice and one chord tunes the whole rack:
+
+```
+lane 1   dur=mididur1 fb=0.97      \
+lane 2   dur=mididur2 fb=0.97       )  a chord of tuned combs
+lane 3   dur=mididur3 fb=0.97      /
+```
+
+Up to four notes are followed at once; play a fifth and the **oldest** is
+dropped, so the chord always tracks what you played last. Ask for a voice you
+are not holding (`mididur3` on a two-note chord) and you get the top note
+instead of silence, and with nothing held at all you get the last note
+played, exactly like plain `mididur`.
 
 ### The one unit trap
 
@@ -128,6 +146,7 @@ v0=a v1=u                        filter: glide from "ah" to "oo"
 mode=2 v0=i v1=o                 filter: force formant mode, I to O
 w16=1 w32=1 mix=0.5              gater: fast, half depth
 dur=mididur/2 amp=1              ring: carrier at twice the note pitch
+f0=midifreq2 q=8                 filter: ring the second note of the chord
 bits=3 down=8 mix=0.7            quant: crunchy, blended back
 pass=0 aux1=1                    aux: send this block away from the main mix
 mode=3 glide=0                   panner: random, hard jumps
@@ -148,3 +167,8 @@ w4=1 wdot=1                      freeze: re-capture every dotted quarter
 - A `mididur` expression is in seconds and **ignores the host tempo**. That
   is the point, but it means `dur=mididur` will not stay in time with the
   grid unless the note happens to line up.
+- Voice digits stop at **4**: `mididur5` is a typo, not a fifth voice, so it
+  turns the line red.
+- The voice digits read the notes held **when the block starts**. Releasing a
+  note does not retune a block that is already sounding; the next block picks
+  up the new chord.

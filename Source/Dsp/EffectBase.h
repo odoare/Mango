@@ -38,7 +38,7 @@ struct BlockContext
     uint64_t seed       = 0;       // global seed parameter
     double   sampleRate = 44100.0;
     double   bpm        = 120.0;
-    float    mididurSeconds = 1.0f / 440.0f;
+    MidiNoteState midi;            // what mididur / midifreq resolve against
     int      blockLengthSamples = 0;   // the block's span in samples at this tempo
                                        // (0 if unknown); effects that fade at
                                        // the block edge or clock inside it use it
@@ -79,7 +79,7 @@ inline float overrideOr (const BlockContext& ctx, OvKey key, float fallback)
 {
     if (ctx.overrides != nullptr)
         if (const auto* e = ctx.overrides->find (key))
-            return e->eval (ctx.mididurSeconds);
+            return e->eval (ctx.midi);
     return fallback;
 }
 
@@ -93,7 +93,7 @@ inline float overrideDurSeconds (const BlockContext& ctx, OvKey key, float fallb
         if (const auto* e = ctx.overrides->find (key))
         {
             if (e->kind != Expr::Const)
-                return e->eval (ctx.mididurSeconds);
+                return e->eval (ctx.midi);
             return e->value * 4.0f * 60.0f / (float) ctx.bpm;   // whole-note fraction
         }
     return fallbackSeconds;

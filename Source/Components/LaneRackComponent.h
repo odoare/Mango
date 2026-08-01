@@ -325,7 +325,7 @@ private:
         const double stepBeats  = processor.engine.sequencerFor (laneIndex).getStepSizeBeats();
         const double blockBeats = (b.endStep - b.startStep) * stepBeats;
         const double bpm        = processor.engine.guiBpm();
-        const float  mididur    = processor.engine.guiMididur();
+        const auto   midi       = processor.engine.guiMidiNotes();
 
         std::optional<ParsedOverrides> ov;
         if (! b.content.empty())
@@ -335,7 +335,7 @@ private:
         {
             if (ov)
                 if (const auto* e = ov->find (k))
-                    return e->eval (mididur);
+                    return e->eval (midi);
             return fallback;
         };
         auto ovDurBeats = [&] (double fallbackBeats)
@@ -343,7 +343,7 @@ private:
             if (ov)
                 if (const auto* e = ov->find (OvKey::Dur))
                     return e->kind != Expr::Const
-                         ? (double) e->eval (mididur) * bpm / 60.0   // seconds -> beats
+                         ? (double) e->eval (midi) * bpm / 60.0   // seconds -> beats
                          : (double) e->value * 4.0;                  // whole-note fraction
             return fallbackBeats;
         };
@@ -408,7 +408,7 @@ private:
                 if (ov)
                     if (const auto* e = ov->find (OvKey::Dur))
                         delayBeats = e->kind != Expr::Const
-                                   ? (double) e->eval (mididur) * bpm / 60.0
+                                   ? (double) e->eval (midi) * bpm / 60.0
                                    : (double) e->value * 4.0;
                 const float fb = ovOr (OvKey::Fb, param ("dly_fb"));
                 blockgfx::paintDelayLines (g, r, blockBeats, delayBeats, fb, curveColour);
