@@ -535,6 +535,27 @@ umbrella `FxmeTools/FxmeTools.h` (module v0.0.3):
   follow the layout), with a pointing-hand cursor over them.
 - `midi/StringSequencer.h` gained `addBlockWithId` (id-stable restore) and
   `moveBlock` (whole-block move with walls).
+- `midi/StringSequencer.h`: **dormant blocks.** `numSteps` is a *window*, not
+  a limit on the data. `setNumSteps` used to erase every block starting past
+  the new count and clamp the rest, so 32 -> 16 -> 32 silently destroyed the
+  second half; it now only moves the window. A block whose start falls
+  outside is **dormant**: `isInRange()` is false, it is not played, drawn or
+  hit-tested, and it returns unchanged when the window grows again. A block
+  left *straddling* the edge keeps its real `endStep` but stops at
+  `playableEnd()`, which is what playback, drawing and the engine's block
+  length (§3, `handleBlockEnter`) use.
+  - Consumers walking `blocks()` must test `isInRange()` (the rubber's paint
+    and hit-test do; `blockAt()` does it internally, so `SequencerEngine`
+    needed no change).
+  - The two add paths are deliberately asymmetric: `addBlock` is interactive
+    and stays inside the window, `addBlockWithId` is the restore path and
+    takes any range verbatim, so state saved at 32 steps reloads intact into
+    a 16-step window. Mango's `sequencersToTree` already wrote the full
+    range, so this is what makes the round-trip lossless.
+  - The move/resize walls (`nextStart`) keep an **in-range** block in range,
+    and leave a dormant one walled only by its neighbour.
+  - `dormantCount()` drives the rubber's amber arrow at the pattern's right
+    edge: the whole point is that a shrink must not *look* like data loss.
 - `midi/SequencerEngine.h` gained `setEnterEmptyBlocks`, `relocate()` (always
   exit+re-enter on transport jumps), and a range-based exit check (blocks
   moved/resized from under the playhead exit at the next step).
@@ -549,7 +570,7 @@ umbrella `FxmeTools/FxmeTools.h` (module v0.0.3):
   errors, all-or-nothing), detrand distribution/weighted choice, duration
   table (incl. the spec's 1/1.6 example), ArEnvelope, BitCrusher, DelayLine,
   Saturator bounds, GrainLooper attack/release incl. the first-grain window,
-  StringSequencer addBlockWithId/moveBlock, SequencerEngine empty-block and
+  StringSequencer addBlockWithId/moveBlock/grid-shrink, SequencerEngine empty-block and
   moved-block-exit behaviour.
 - **MangoRenderTest** (`Tests/RenderTest.cpp`): an independent console app
   compiling the plugin sources (linking the plugin lib would duplicate JUCE
@@ -612,7 +633,8 @@ umbrella `FxmeTools/FxmeTools.h` (module v0.0.3):
 - `gate_att`/`gate_rel` ranges changed 0–0.25 → 0–1 after the first builds;
   no state-version migration exists (old saved values reinterpret on the new
   scale). Add a version bump if sessions from before that change matter.
-- 64-step cap (StringSequencer clamp), grid shrink truncates blocks.
+- 64-step cap (StringSequencer clamp). Grid shrink no longer truncates: the
+  blocks past the end go dormant and come back (§8).
 - FxmeFX still carries its private copies of the tube curves.
 - If keyboard input still dies in a specific DAW after the focus-fixer
   battles, it's host keyboard routing (REAPER: "Send all keyboard input to
@@ -736,12 +758,8 @@ same care as any module change (and benefit every project).
 
 ### 13.1 Confirmed defects (fix first)
 
-- **Grid shrink destroys blocks.** `StringSequencer::setNumSteps` *erases*
-  blocks whose `startStep >= numSteps` and clamps the rest, so 32 → 16 → 32
-  loses everything past step 16 permanently. Blocks should survive out of
-  range: keep them in the model, hide/skip them while out of range, and clip
-  only at save time (or not at all). Touches `setNumSteps`, the engine's
-  block iteration, and `sequencersToTree`. **FxmeTools.**
+- ~~**Grid shrink destroys blocks.**~~ **Fixed** (see §8, "dormant blocks").
+  `numSteps` is now a window, not a limit on the data.
 - **Edge-grab zone is 7 px** (`SequencerRubber::kEdgeGrab`), too fine at
   small step widths. Scale it with the step width (e.g.
   `jlimit(6, 14, stepWidth/4)`), and show a resize cursor on hover so the

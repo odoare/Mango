@@ -305,7 +305,9 @@ void MangoEngine::handleBlockEnter (Lane& lane, int blockId, bool isReEnter)
     // the edge or clock inside the block (freeze). 0 if the block is gone.
     if (const auto* b = lane.seq.blockById (blockId))
     {
-        const double beats = (b->endStep - b->startStep) * lane.seq.getStepSizeBeats();
+        // playableEnd: a block straddling the grid's end stops there, so the
+        // length effects fade/clock against matches what is actually heard.
+        const double beats = (lane.seq.playableEnd (*b) - b->startStep) * lane.seq.getStepSizeBeats();
         ctx.blockLengthSamples = (int) std::lround (beats * 60.0 / currentBpm * sampleRate);
     }
 

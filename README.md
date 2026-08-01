@@ -148,7 +148,7 @@ The knobs at the top right apply to the whole plugin:
 
 | Control | What it does |
 |---------|--------------|
-| **Steps** | How many steps long the pattern is (1–64) |
+| **Steps** | How many steps long the pattern is (1–64). Shortening the pattern hides the blocks past the new end (an amber arrow at the right edge shows they are there) and lengthening it brings them back unchanged |
 | **step** | The length of one step (1/16 … 1/1). Steps × step size is the pattern length: 16 steps of 1/16 is one bar |
 | **Seed** | Re-rolls every random choice at once (0–99999). Turn it until you like what you hear; the same seed always plays the same way |
 | **Dry/Wet** | Blends everything the plugin does against the untouched input |

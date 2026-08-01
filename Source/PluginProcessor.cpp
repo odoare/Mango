@@ -337,7 +337,12 @@ bool MangoAudioProcessor::blockExists (int laneIndex, int blockId) const
     if (laneIndex < 0 || laneIndex >= numLanes || blockId < 0)
         return false;
     const juce::ScopedLock sl (engine.lock());
-    return engine.sequencerFor (laneIndex).blockById (blockId) != nullptr;
+    const auto& seq = engine.sequencerFor (laneIndex);
+    const auto* b   = seq.blockById (blockId);
+    // A block the grid shrank past the window still exists in the model (it
+    // comes back if the grid grows again), but it is invisible, so it must
+    // not stay selected with the panel and text field pointing at it.
+    return b != nullptr && seq.isInRange (*b);
 }
 
 //==============================================================================

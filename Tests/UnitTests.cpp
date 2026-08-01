@@ -535,6 +535,55 @@ static int testStringSequencerAddWithId()
 }
 
 //==============================================================================
+// Shrinking the grid must not destroy blocks: numSteps is a window, and the
+// blocks outside it come back unchanged when it grows again.
+static int testStringSequencerGridShrink()
+{
+    fxme::StringSequencer seq;
+    seq.setNumSteps (32);
+    const int a = seq.addBlock (0, 4);      // [0,4)   stays in range
+    const int b = seq.addBlock (14, 6);     // [14,20) straddles a 16-step window
+    const int c = seq.addBlock (24, 4);     // [24,28) goes dormant
+    seq.setContent (c, "dur=mididur");
+
+    seq.setNumSteps (16);
+
+    CHECK (seq.blocks().size() == 3);       // nothing erased
+    CHECK (seq.dormantCount() == 1);
+    CHECK (seq.isInRange (*seq.blockById (a)));
+    CHECK (seq.isInRange (*seq.blockById (b)));
+    CHECK (! seq.isInRange (*seq.blockById (c)));
+
+    // The straddler keeps its real range but plays/draws only to the edge.
+    CHECK (seq.blockById (b)->endStep == 20);
+    CHECK (seq.playableEnd (*seq.blockById (b)) == 16);
+    CHECK (seq.blockAt (15) != nullptr && seq.blockAt (15)->id == b);
+    CHECK (seq.blockAt (25) == nullptr);    // dormant blocks never sound
+
+    // An in-range block cannot be dragged out of the window...
+    CHECK (seq.moveBlock (a, 30));
+    CHECK (seq.blockById (a)->startStep == 10 && seq.blockById (a)->endStep == 14);
+    // ...and the straddler's start is walled at the edge too.
+    CHECK (seq.moveBlockStart (b, 19));
+    CHECK (seq.blockById (b)->startStep == 15);
+
+    // Growing back restores the dormant block, content included.
+    seq.setNumSteps (32);
+    CHECK (seq.dormantCount() == 0);
+    CHECK (seq.blockById (c)->startStep == 24 && seq.blockById (c)->endStep == 28);
+    CHECK (seq.blockById (c)->content == "dur=mididur");
+
+    // State saved at 32 steps reloads intact into a 16-step window.
+    fxme::StringSequencer re;
+    re.setNumSteps (16);
+    CHECK (re.addBlockWithId (5, 24, 4));
+    CHECK (re.dormantCount() == 1);
+    re.setNumSteps (32);
+    CHECK (re.blockById (5)->startStep == 24 && re.blockById (5)->endStep == 28);
+    return 0;
+}
+
+//==============================================================================
 static int testStringSequencerMoveBlock()
 {
     fxme::StringSequencer seq;
@@ -743,6 +792,7 @@ int main()
     if (testSaturator())                return 1;
     if (testGrainLooperAttack())        return 1;
     if (testStringSequencerAddWithId()) return 1;
+    if (testStringSequencerGridShrink()) return 1;
     if (testStringSequencerMoveBlock()) return 1;
     if (testSequencerEngineMovedBlockExit()) return 1;
     if (testSequencerEngineEmptyBlocks()) return 1;
