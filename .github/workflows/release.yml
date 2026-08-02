@@ -129,7 +129,7 @@ jobs:
       - name: Build pkg installer
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
-          [[ "$VERSION" =~ ^[0-9] ]] || VERSION="0.1.0"   # manual runs have no tag
+          [[ "$VERSION" =~ ^[0-9] ]] || VERSION="0.1.1"   # manual runs have no tag
           ART=Mango/build/Mango_artefacts/Release
           mkdir -p pkg_root/Library/Audio/Plug-Ins/VST3
           mkdir -p pkg_root/Library/Audio/Plug-Ins/Components
