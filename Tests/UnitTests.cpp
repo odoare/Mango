@@ -90,10 +90,28 @@ static int testNoteDuration()
     CHECK (near (noteDurationBeats (NoteBase::Eighth,       NoteMod::Straight), 0.5));
     CHECK (near (noteDurationBeats (NoteBase::Sixteenth,    NoteMod::Dotted),   0.375));
     CHECK (near (noteDurationBeats (NoteBase::ThirtySecond, NoteMod::Triplet),  0.125 * 2.0 / 3.0));
+    CHECK (near (noteDurationBeats (NoteBase::SixtyFourth,  NoteMod::Straight), 0.0625));
+    CHECK (near (noteDurationBeats (NoteBase::SixtyFourth,  NoteMod::Dotted),   0.09375));
+
+    // 1/64 defaults to weight 0, so a table that predates it draws exactly as
+    // it did before — the whole point of appending rather than inserting.
+    WeightedDurationTable def;
+    CHECK (near (def.baseWeights[(int) NoteBase::SixtyFourth], 0.0));
+    for (int i = 0; i < 200; ++i)
+        CHECK (near (def.drawBeats (i / 200.0f), 1.0));
+
+    // Only 1/64 triplets enabled.
+    WeightedDurationTable t64;
+    t64.baseWeights[0] = 0.0f;
+    t64.baseWeights[(int) NoteBase::SixtyFourth] = 1.0f;
+    t64.modWeights[0] = 0.0f; t64.modWeights[1] = 1.0f;
+    for (int i = 0; i < 100; ++i)
+        CHECK (near (t64.drawBeats (i / 100.0f), 0.0625 * 2.0 / 3.0));
 
     // All-zero weights fall back to a straight quarter.
     WeightedDurationTable t;
-    t.baseWeights[0] = t.baseWeights[1] = t.baseWeights[2] = t.baseWeights[3] = 0.0f;
+    for (int b = 0; b < kNumNoteBases; ++b)
+        t.baseWeights[b] = 0.0f;
     CHECK (near (t.drawBeats (0.3f), 1.0));
 
     // Only 1/8 straight enabled -> always 0.5 beats.
@@ -784,6 +802,10 @@ static int testOverrideParser()
     CHECK (near (w->find (OvKey::W4)->value, 0.0f, 1e-7));
     CHECK (near (w->find (OvKey::W32)->value, 1.0f, 1e-7));
     CHECK (near (w->find (OvKey::Wtrip)->value, 0.5f, 1e-7));
+
+    auto w64 = parseOverrides ("w64=1 w4=0");
+    CHECK (w64.has_value() && near (w64->find (OvKey::W64)->value, 1.0f, 1e-7));
+    CHECK (! parseOverrides ("w128=1").has_value());
 
     // More than 8 assignments (the old cap) parse fine.
     auto many = parseOverrides ("dur=1 fb=1 att=1 rel=1 q=1 f0=1 f1=1 bits=1 w4=1 w8=1");

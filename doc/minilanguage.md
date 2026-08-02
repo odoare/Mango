@@ -95,7 +95,7 @@ Every other key is in the same unit as its knob.
 | `aux1` `aux2` | aux send levels | 0–1 |
 | `pass` | aux main passthrough | 0–1 (this is the aux send's mix) |
 | `glide` | panner travel time | 0–1 = fraction of a step |
-| `w4` `w8` `w16` `w32` | duration weights | 0–1 each |
+| `w4` `w8` `w16` `w32` `w64` | duration weights | 0–1 each |
 | `wstr` `wtrip` `wdot` | straight / triplet / dotted weights | 0–1 each |
 
 `mode` means different things on the filter and the panner (each lane only
@@ -117,7 +117,7 @@ sees its own).
 | Aux | `dur att rel attcurve relcurve aux1 aux2 pass` + weights |
 | Pan | `dur mode glide mix` + weights |
 
-*weights* = `w4 w8 w16 w32 wstr wtrip wdot`
+*weights* = `w4 w8 w16 w32 w64 wstr wtrip wdot`
 
 ## Duration weights
 
@@ -128,6 +128,7 @@ Setting `dur` pins it instead and skips the draw.
 ```
 w4=1 w8=0 w16=0 w32=0        always a quarter
 w16=1 w32=0.5                sixteenths, sometimes thirty-seconds
+w32=1 w64=1                  a fast, uneven stutter
 w8=1 wstr=1 wtrip=1          eighths, straight or triplet
 ```
 

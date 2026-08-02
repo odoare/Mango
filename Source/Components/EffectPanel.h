@@ -3,7 +3,7 @@
     EffectPanel.h
 
     The right-column control panel for one (lane, effect type) pair: knobs,
-    choice boxes and — for the duration-randomised effects — the 4+3
+    choice boxes and — for the duration-randomised effects — the 5+3
     probability-weight mini knobs. All controls attach to the lane's
     prefixed parameters, so the lanes × types panels are pre-built and
     simply visibility-switched when the selection or a lane's type changes.
@@ -246,7 +246,10 @@ public:
         if (! weightKnobs.empty())
         {
             weightsLabelArea = r.removeFromTop (16);
-            layoutKnobRow (weightKnobs, r, 4, 52);
+            // 5/row keeps the two groups on their own lines: the five note
+            // values, then the three modifiers. 4/row would spill w64 onto
+            // the modifier row and read as if it were one.
+            layoutKnobRow (weightKnobs, r, 5, 52);
         }
 
         // Bottom-up: the key reference, then the override notice just above it.
@@ -280,7 +283,7 @@ private:
         and OverrideParser.h — keep in sync when adding keys). */
     static juce::String overrideKeysFor (EffectType t)
     {
-        static const juce::String weights ("w4 w8 w16 w32 wstr wtrip wdot");
+        static const juce::String weights ("w4 w8 w16 w32 w64 wstr wtrip wdot");
         switch (t)
         {
             case EffectType::Gater:      return "dur att rel attcurve relcurve mix\n" + weights;
@@ -304,7 +307,7 @@ private:
     {
         static const juce::String drawn (
             "\n\nThe rate is not a fixed value: you weight how likely each "
-            "note length is (1/4 to 1/32, straight / triplet / dotted) and "
+            "note length is (1/4 to 1/64, straight / triplet / dotted) and "
             "the actual one is drawn at the start of each block. The draw "
             "depends only on the seed, the lane and the block - so every "
             "pass through the pattern plays exactly the sequence the block "

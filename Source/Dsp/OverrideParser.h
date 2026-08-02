@@ -112,6 +112,8 @@ enum class OvKey
     Aux1, Aux2, Pass,                      // aux send levels + main passthrough
     Glide,                                 // panner: move time between positions
     W4, W8, W16, W32, Wstr, Wtrip, Wdot,   // duration probability weights
+    W64,                                   // ...appended, not grouped: this enum
+                                           // extends at the tail only (see §10)
     Count
 };
 
@@ -146,7 +148,8 @@ namespace detail
         "dur", "fb", "damp", "porta", "att", "rel", "attcurve", "relcurve", "q", "f0", "f1", "v0", "v1",
         "bits", "down", "drive", "bias", "sag", "mix", "model", "mode", "fade", "amp", "width", "gain",
         "aux1", "aux2", "pass", "glide",
-        "w4", "w8", "w16", "w32", "wstr", "wtrip", "wdot"
+        "w4", "w8", "w16", "w32", "wstr", "wtrip", "wdot",
+        "w64"
     };
 
     inline std::optional<OvKey> keyFromString (const std::string& s)

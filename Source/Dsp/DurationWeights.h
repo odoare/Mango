@@ -2,7 +2,7 @@
   ------------------------------------------------------------------------------
     DurationWeights.h
 
-    The 4+3 probability-weight parameters (durations 1/4..1/32, modifiers
+    The 5+3 probability-weight parameters (durations 1/4..1/64, modifiers
     straight/triplet/dotted) shared by every effect that draws a random
     rhythmic duration (gater, grain duplicator, filter ramp), and their
     binding to a fxme::WeightedDurationTable.
@@ -22,8 +22,8 @@ namespace mng
 
 struct DurationWeights
 {
-    static constexpr const char* baseSuffixes[fxme::kNumNoteBases] = { "w4", "w8", "w16", "w32" };
-    static constexpr const char* baseLabels[fxme::kNumNoteBases]   = { "1/4", "1/8", "1/16", "1/32" };
+    static constexpr const char* baseSuffixes[fxme::kNumNoteBases] = { "w4", "w8", "w16", "w32", "w64" };
+    static constexpr const char* baseLabels[fxme::kNumNoteBases]   = { "1/4", "1/8", "1/16", "1/32", "1/64" };
     static constexpr const char* modSuffixes[fxme::kNumNoteMods]   = { "wstr", "wtrip", "wdot" };
     static constexpr const char* modLabels[fxme::kNumNoteMods]     = { "Str", "Trip", "Dot" };
 
@@ -73,7 +73,8 @@ inline fxme::WeightedDurationTable resolveTable (const BlockContext& ctx,
 {
     auto t = weights.table();
     static constexpr OvKey baseKeys[fxme::kNumNoteBases] = { OvKey::W4, OvKey::W8,
-                                                             OvKey::W16, OvKey::W32 };
+                                                             OvKey::W16, OvKey::W32,
+                                                             OvKey::W64 };
     static constexpr OvKey modKeys[fxme::kNumNoteMods]   = { OvKey::Wstr, OvKey::Wtrip,
                                                              OvKey::Wdot };
     for (int b = 0; b < fxme::kNumNoteBases; ++b)

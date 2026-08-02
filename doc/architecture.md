@@ -38,17 +38,17 @@ patterns), FxmeFX (Tube saturation origin), Gloubiboulga (formant origin).
 
   | Type | DSP | Lane parameters (`l<i>_` prefix) |
   |---|---|---|
-  | Gater | open(dur)/closed(dur) cycles, starts open | `gate_`: 7 duration weights, `att`, `rel`, `attcurve`, `relcurve` |
-  | Grain | records a grain at block entry, loops it (`fxme::GrainLooper`/channel); seam crossfade fixed at 15 ms (the `grain_fade` param was removed as not useful) | `grain_`: 7 weights, `att`, `attcurve`, `rel`, `relcurve` |
+  | Gater | open(dur)/closed(dur) cycles, starts open | `gate_`: 8 duration weights, `att`, `rel`, `attcurve`, `relcurve` |
+  | Grain | records a grain at block entry, loops it (`fxme::GrainLooper`/channel); seam crossfade fixed at 15 ms (the `grain_fade` param was removed as not useful) | `grain_`: 8 weights, `att`, `attcurve`, `rel`, `relcurve` |
   | Delay | feedback delay (`fxme::DelayLine`/channel), buffer persists across blocks; feedback reaches 0.999, a damping lowpass sits in the loop and the time glide is settable (1–50 ms), so `dur=mididur fb=0.99` is a Karplus-Strong style resonator | `dly_dur` (s), `dly_fb`, `dly_damp`, `dly_porta` (ms) |
   | Dist | tube saturation (`fxme::Saturator`/channel); `dist_gain` = ±24 dB makeup on the saturated signal, before the mix (loudness depends on input level — manual compensation) | `dist_model/drive/bias/sag/gain/mix` |
-  | Filter | LP/HP sweep f0→f1 or formant vowel glide, ramp repeats at a drawn rate | `flt_`: 7 weights, `mode`, `q`, `f0`, `f1`, `v0`, `v1` |
+  | Filter | LP/HP sweep f0→f1 or formant vowel glide, ramp repeats at a drawn rate | `flt_`: 8 weights, `mode`, `q`, `f0`, `f1`, `v0`, `v1` |
   | Quant | lo-fi: bit crusher (`fxme::BitCrusher`) + sample & hold decimator (`fxme::Downsampler`/channel, hold phase restarts at block entry — but not on live-tweak re-enters — so passes reproduce) + wet/dry mix | `qnt_bits` (1–24), `qnt_down` (÷1–64), `qnt_mix` |
-  | Ring | ring modulator: sine carrier glides exponentially f0→f1 over a drawn tempo-synced ramp, repeating for the block; amount 0–1 blends clean → full ±1 modulation (`x·(1−amp+amp·sin)`); carrier phase restarts at block entry (not on re-enters) so passes reproduce; one carrier feeds all channels | `ring_`: 7 weights, `f0`, `f1` (0.5 Hz–10 kHz), `amp` |
-  | Rev | reverser: records drawn-duration slices and plays each backwards (while slice k records, slice k−1 plays reversed; the first slice of a block passes through); `fade` = 0–0.5 slice fraction faded at the seams; slice grid restarts at block entry (not on re-enters) so passes reproduce; pure sample copy, no interpolation | `rev_`: 7 weights, `fade` |
-  | Freeze | spectral freeze (`fxme::SpectralFreezeMulti` — Mango's effect is only the APVTS adapter; WDL FFT): captures one 2048-sample window at block entry (passed through while recording, so blocks shorter than ~43 ms stay dry), then random-phase resynthesis of its magnitude spectrum — Hann/75% OLA, one iFFT per 512-sample hop (4 at the capture→wash switch) — sustains a static wash; phases keyed on (seed, lane, block, channel), the frame counter running across retriggers, so passes reproduce and the two channels decorrelate into a wide image. **Retrigger**: `frz_` weights (default straight 1/4) draw a grid on which the wash is re-captured from a rolling input history (seamless — `SpectralFreeze::retrigger` keeps the wash playing and swaps the spectrum, the OLA crossfading it); a boundary at/after the block end never fires, so a block ≤ the interval is a single capture (old sessions unchanged). The wash's mix fades to 0 over the block's last ~10 ms (`ctx.blockLengthSamples`) so the end returns to dry without a click. `frz_width` blends the two wet channels (L' = a·L + b·R, mirrored, a:b = (1/2+w/2):(1/2−w/2) normalised to a²+b²=1 — equal power over the sweep since the washes are incoherent: 1 wide, 0 mono) | `frz_mix`, `frz_width`, `frz_` 7 weights |
-  | Aux | rhythmic aux send: the gater's draw/envelope/curves verbatim, but the shaped signal is *added* to the plugin's two aux stereo outputs (`aux_send1`/`aux_send2`) instead of being cut, while the main path is scaled by a flat `aux_pass` (1 = transparent, a send on top; 0 = the block leaves the main chain). The tap is the bus signal at the lane's position, before the bus volume/pan. Aux buffers arrive via `EffectBase::setAuxBuffers`, set by the engine once per processBlock; nullptr = that bus is disabled in the host and the send is dropped | `aux_`: 7 weights, `att`, `rel`, `attcurve`, `relcurve`, `send1`, `send2`, `pass` |
-  | Pan | rhythmic panner: the gater's clock (same weighted draw), but each step lands on one of three positions -1/0/+1 rather than alternating two gains. `pan_mode` picks the sequence — `Cycle ->` (left, centre, right, period 3), `Cycle <-` (its mirror), `Cycle <->` (left, centre, right, centre: period 4, turning round rather than jumping across the image) or `Random` (drawn per step; the `1` coordinate keeps that stream clear of the block's duration draw at 0). `pan_glide` is the fraction of a step spent travelling to the new position, `pan_mix` the usual dry/wet as per-channel gain 1−mix+mix·g. Balance law, as the buses use; a mono main bus passes through untouched. `panStateAt()` in PannerEffect.h is shared with the block visual | `pan_`: 7 weights, `mode`, `glide`, `mix` |
+  | Ring | ring modulator: sine carrier glides exponentially f0→f1 over a drawn tempo-synced ramp, repeating for the block; amount 0–1 blends clean → full ±1 modulation (`x·(1−amp+amp·sin)`); carrier phase restarts at block entry (not on re-enters) so passes reproduce; one carrier feeds all channels | `ring_`: 8 weights, `f0`, `f1` (0.5 Hz–10 kHz), `amp` |
+  | Rev | reverser: records drawn-duration slices and plays each backwards (while slice k records, slice k−1 plays reversed; the first slice of a block passes through); `fade` = 0–0.5 slice fraction faded at the seams; slice grid restarts at block entry (not on re-enters) so passes reproduce; pure sample copy, no interpolation | `rev_`: 8 weights, `fade` |
+  | Freeze | spectral freeze (`fxme::SpectralFreezeMulti` — Mango's effect is only the APVTS adapter; WDL FFT): captures one 2048-sample window at block entry (passed through while recording, so blocks shorter than ~43 ms stay dry), then random-phase resynthesis of its magnitude spectrum — Hann/75% OLA, one iFFT per 512-sample hop (4 at the capture→wash switch) — sustains a static wash; phases keyed on (seed, lane, block, channel), the frame counter running across retriggers, so passes reproduce and the two channels decorrelate into a wide image. **Retrigger**: `frz_` weights (default straight 1/4) draw a grid on which the wash is re-captured from a rolling input history (seamless — `SpectralFreeze::retrigger` keeps the wash playing and swaps the spectrum, the OLA crossfading it); a boundary at/after the block end never fires, so a block ≤ the interval is a single capture (old sessions unchanged). The wash's mix fades to 0 over the block's last ~10 ms (`ctx.blockLengthSamples`) so the end returns to dry without a click. `frz_width` blends the two wet channels (L' = a·L + b·R, mirrored, a:b = (1/2+w/2):(1/2−w/2) normalised to a²+b²=1 — equal power over the sweep since the washes are incoherent: 1 wide, 0 mono) | `frz_mix`, `frz_width`, `frz_` 8 weights |
+  | Aux | rhythmic aux send: the gater's draw/envelope/curves verbatim, but the shaped signal is *added* to the plugin's two aux stereo outputs (`aux_send1`/`aux_send2`) instead of being cut, while the main path is scaled by a flat `aux_pass` (1 = transparent, a send on top; 0 = the block leaves the main chain). The tap is the bus signal at the lane's position, before the bus volume/pan. Aux buffers arrive via `EffectBase::setAuxBuffers`, set by the engine once per processBlock; nullptr = that bus is disabled in the host and the send is dropped | `aux_`: 8 weights, `att`, `rel`, `attcurve`, `relcurve`, `send1`, `send2`, `pass` |
+  | Pan | rhythmic panner: the gater's clock (same weighted draw), but each step lands on one of three positions -1/0/+1 rather than alternating two gains. `pan_mode` picks the sequence — `Cycle ->` (left, centre, right, period 3), `Cycle <-` (its mirror), `Cycle <->` (left, centre, right, centre: period 4, turning round rather than jumping across the image) or `Random` (drawn per step; the `1` coordinate keeps that stream clear of the block's duration draw at 0). `pan_glide` is the fraction of a step spent travelling to the new position, `pan_mix` the usual dry/wet as per-channel gain 1−mix+mix·g. Balance law, as the buses use; a mono main bus passes through untouched. `panStateAt()` in PannerEffect.h is shared with the block visual | `pan_`: 8 weights, `mode`, `glide`, `mix` |
 
 - **Per-effect mix**: every effect has a wet/dry `<fx>_mix` parameter
   (default 1, override key `mix`) — except the ring modulator, whose
@@ -58,7 +58,7 @@ patterns), FxmeFX (Tube saturation origin), Gloubiboulga (formant origin).
   continuous — mix only blends the output.
 - **Weighted random durations** (gate rate, grain length, filter ramp,
   ring glide, reverse slice, aux send rate, pan step, freeze retrigger): the
-  user weights P(1/4..1/32) × P(straight/triplet/dotted); the actual duration
+  user weights P(1/4..1/64) × P(straight/triplet/dotted); the actual duration
   is drawn at block entry. **Draws are a pure function of (seed, lane
   identity, blockId, drawIndex)** — never of time or loop pass — so every
   pattern pass plays exactly what the block visuals display; the seed
@@ -77,7 +77,7 @@ patterns), FxmeFX (Tube saturation origin), Gloubiboulga (formant origin).
   parameters are reachable:
   `dur fb damp porta att rel attcurve relcurve q f0 f1 v0 v1 bits down
   drive bias sag gain mix width model mode fade amp aux1 aux2 pass
-  glide w4 w8 w16 w32 wstr wtrip wdot`.
+  glide w4 w8 w16 w32 w64 wstr wtrip wdot`.
 - **Globals**: dry/wet, seed (0–99999), step size, num steps, bus routing
   mode + per-bus volume/pan (see §3 buses), lane count
   (−/+ buttons).
@@ -549,6 +549,15 @@ umbrella `FxmeTools/FxmeTools.h` (module v0.0.3):
   it deterministic.
   `dsp/ArEnvelope.h` (unused by Mango currently), `dsp/DeterministicRandom.h`,
   `midi/NoteDuration.h`.
+- `midi/NoteDuration.h`: **1/64** (0.1.2). `NoteBase` is ordered by descending
+  duration, so `SixtyFourth` appends at the tail and keeps every existing
+  index; `kNumNoteBases` 4 → 5 and `baseWeights` defaults to 0 for it, so a
+  table that predates it draws exactly as before. The `u ~ 1.0` fallback now
+  reads `(NoteBase) (kNumNoteBases - 1)` instead of naming ThirtySecond, so
+  the next value added cannot leave it pointing at the wrong cell. On the
+  Mango side this is one new float parameter per weight group (`w64`, default
+  0) plus `OvKey::W64` — see §10 point 6 for why it also had to go into the
+  factory presets.
 - `dsp/GrainLooper.h` (pre-existing) gained: `setAttack(frac, gamma)` /
   `setRelease(frac, gamma)` per-instance envelopes on top of the seam fades,
   and **the first (recording) grain shapes its live pass-through with the
@@ -737,7 +746,7 @@ automatically by transient detection.
   preset panes, and stored in `ViewState` alongside them.
 - **Per-lane (Player) parameters**, drawn/retriggered exactly like the other
   rhythmic effects: which **marker** to start from, the **playback rate**,
-  and the 7 duration-probability weights (1/4…1/32 × straight/triplet/dotted)
+  and the 8 duration-probability weights (1/4…1/64 × straight/triplet/dotted)
   that set the **retrigger** rate inside each block. Each is overridable in
   the mini-language (new `OvKey`s, e.g. `marker`, `rate`, reusing the
   existing weight keys `w4…wdot`).
@@ -809,9 +818,22 @@ missing/invalid tree).
    presets stay self-contained.
 5. A **new `OvKey` is appended** to the enum + `keyNames` (already the
    documented rule); old blocks simply never use it.
+6. **A brand-new parameter must be written into the factory presets.** This
+   is the one place where "absent defaulted" is *not* true, and it is worth
+   knowing exactly: in `updateParameterConnectionsToChildTrees`, a `<PARAM>`
+   child that exists but has no `value` gets
+   `getProperty (value, getDenormalisedDefaultValue())` — the default, as
+   expected. But a parameter with **no child at all** gets a fresh child with
+   only its id, and the following `flushParameterValuesToValueTree()` writes
+   its **current** value. So loading a preset saved before the parameter
+   existed leaves that parameter wherever the user last left it, silently.
+   `w64` (added 0.1.2) was therefore written into all seven factory XMLs with
+   `value="0.0"`. Same for any future addition — or the preset will drift
+   with whatever the user was doing beforehand.
 
 **No state-version tag is needed** and none exists: the format is additive and
-tolerant (unknown/extra ignored, absent defaulted). A version tag would only
+tolerant (unknown/extra ignored, absent defaulted — with the one exception in
+point 6 above). A version tag would only
 be worth adding if a future change had to *reinterpret* existing data (e.g.
 the `gate_att` range change in §11) — appending the Player does not.
 
@@ -875,7 +897,7 @@ same care as any module change (and benefit every project).
   and mapped, or a documented migration. Not a free change; see §10's
   append-only rule.
 - **Wider note range**: 1/1 and 1/2 at the slow end, 1/64 at the fast end
-  (currently 1/4…1/32). Cheap on its own, but interacts with the grid item
+  (currently 1/4…1/64). Cheap on its own, but interacts with the grid item
   above — decide them together.
 
 ### 13.4 Visual responsiveness

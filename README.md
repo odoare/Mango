@@ -88,7 +88,7 @@ added repeats rather than crossfading.
 
 **Duration probabilities** (gate rate, grain length, filter ramp, ring glide,
 reverse slice, aux send rate, pan step, freeze retrigger): rather than a fixed rate you weight
-1/4, 1/8, 1/16, 1/32 and straight / triplet / dotted; the actual duration is
+1/4, 1/8, 1/16, 1/32, 1/64 and straight / triplet / dotted; the actual duration is
 drawn from those weights (e.g. with P(1/4)=1, P(1/8)=0.5, P(1/16)=0.1 the
 chance of an uncut quarter is 1/1.6). The draw depends only on the seed, the
 lane and the block, so the block picture always shows exactly what you'll hear.
@@ -148,7 +148,7 @@ v0=a v1=u               formant glide from A to U
   time in seconds (`mididur`, `mididur*2`, `mididur/4`, `3*mididur`).
 - Other keys are in the parameter's native unit:
   `fb damp porta att rel attcurve relcurve q f0 f1 v0 v1 bits down drive bias sag gain mix width model mode fade amp aux1 aux2 pass glide`
-  and the duration probability weights `w4 w8 w16 w32 wstr wtrip wdot`
+  and the duration probability weights `w4 w8 w16 w32 w64 wstr wtrip wdot`
   (each effect reads the keys it understands).
 - **`mididur`** is 1/f of the last MIDI note-on the plugin received, sampled when
   the block starts; **`midifreq`** is its frequency in Hz (1/mididur), for the
