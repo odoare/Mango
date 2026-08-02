@@ -585,6 +585,27 @@ static int testStringSequencerGridShrink()
 }
 
 //==============================================================================
+// canPlaceBlock backs the copy gestures (cmd-drag duplicate, cmd-D): a copy
+// must land whole on free steps or not at all.
+static int testStringSequencerCanPlace()
+{
+    fxme::StringSequencer seq;
+    seq.setNumSteps (16);
+    const int a = seq.addBlock (0, 4);     // [0,4)
+    seq.addBlock (8, 4);                   // [8,12)
+
+    CHECK (seq.canPlaceBlock (4, 4));      // the gap, exactly
+    CHECK (! seq.canPlaceBlock (4, 5));    // one step into the next block
+    CHECK (! seq.canPlaceBlock (2, 2));    // inside the first
+    CHECK (seq.canPlaceBlock (12, 4));     // flush against the window's end
+    CHECK (! seq.canPlaceBlock (14, 4));   // would run off it: no partial copy
+    CHECK (seq.canPlaceBlock (0, 4, a));   // ...unless that block is excluded
+    CHECK (! seq.canPlaceBlock (-1, 2));
+    CHECK (! seq.canPlaceBlock (4, 0));
+    return 0;
+}
+
+//==============================================================================
 static int testStringSequencerMoveBlock()
 {
     fxme::StringSequencer seq;
@@ -860,6 +881,7 @@ int main()
     if (testGrainLooperAttack())        return 1;
     if (testStringSequencerAddWithId()) return 1;
     if (testStringSequencerGridShrink()) return 1;
+    if (testStringSequencerCanPlace()) return 1;
     if (testStringSequencerMoveBlock()) return 1;
     if (testSequencerEngineMovedBlockExit()) return 1;
     if (testSequencerEngineEmptyBlocks()) return 1;

@@ -445,7 +445,14 @@ also *not* serialised — a reloaded session is a new run and gets its splash.
   drag = **move block** (`StringSequencer::moveBlock`, walls against
   neighbours); edge drag = resize; **alt-click = delete** (mouse-only
   alternative to the Delete key, added because hosted Linux windows lose the
-  keyboard-focus race); right-click = clear content; Delete key = delete.
+  keyboard-focus race); Delete key = delete.
+- **Copy gestures** (FxmeTools, see §8): cmd/ctrl-drag = duplicate the block
+  where it is dropped, cmd/ctrl-shift-drag = copy only its content onto the
+  block under the cursor, cmd/ctrl-D = duplicate into the steps right after
+  the selection. Clearing a block's content moved from right-click to
+  **shift**-right-click. All of them use `ModifierKeys::commandModifier`
+  (Ctrl on Linux/Windows, Cmd on macOS) rather than a literal ctrl, because
+  on macOS ctrl-click *is* a right-click and would collide with it.
 **Help** (`fxme::InfoButton`, `theme::styleInfo` for the shared palette):
 four callouts, each placed immediately after the title it explains rather
 than at a panel edge — so a title's width is measured with
@@ -586,6 +593,20 @@ umbrella `FxmeTools/FxmeTools.h` (module v0.0.3):
   moved/resized from under the playhead exit at the next step).
 - `components/SequencerRubber.h` gained `setMinPixelsPerStep`, body-drag
   move, alt-click delete.
+- `components/SequencerRubber.h`: **copy gestures.** Cmd/ctrl-drag
+  (`Drag::Duplicating`) and cmd/ctrl-shift-drag (`Drag::CopyingContent`) both
+  leave the source untouched and commit on mouse-up, so a refused drop is a
+  no-op rather than a half-applied edit; the duplicate paints its landing
+  ghost red while `StringSequencer::canPlaceBlock` says no. Cmd/ctrl-D reuses
+  the same `placeCopy` path at `endStep` and selects the copy, which is what
+  makes repeating the key lay down a run (the requested "paint mode" without
+  the extra block-size control it would have needed). New callback
+  `onBlockContentChanged` — additive, so other users of the module keep
+  `onBlockContentCleared` meaning *cleared*. `placeCopy` fires it **before**
+  `onBlockSelected`: the owner re-parses on it, and selecting first would
+  briefly show the copy as an unparsed (red) block. Content is read into a
+  local `std::string` before any mutation, since adding a block re-sorts the
+  sequencer's vector and dangles pointers into it.
 - `components/SequencerRubber.h`: **edge-grab zone.** Was a fixed 7 px, too
   fine to aim at. Now `edgeGrab(blockRect)` = `jlimit(10, 16, stepWidth/4)`,
   capped at a **third of the block's width**. The cap is the part that
@@ -799,11 +820,15 @@ same care as any module change (and benefit every project).
 
 ### 13.2 Editing workflow
 
-- **Paint mode**: hold and drag across the lane to lay down a run of
-  fixed-length blocks, instead of one drag per block. The single most
-  requested time-saver for dense patterns. **FxmeTools.**
-- **Copy / paste / duplicate blocks** (and across lanes). Already on the
-  wish list before the critique.
+- ~~**Paint mode**~~ **Declined, covered instead.** A drag-to-paint mode
+  needs a separate control for the block length it paints, which is a knob
+  earning its place only for dense patterns. Repeating **cmd/ctrl-D** lays
+  the same run from the block you already sized, with no new control.
+- ~~**Copy / paste / duplicate blocks**~~ **Done** within a lane: cmd/ctrl-D,
+  cmd/ctrl-drag to duplicate, cmd/ctrl-shift-drag to copy just the override
+  text (§8). *Across* lanes is still open — the rubbers are one per lane and
+  a drag does not leave its own component, so it needs either a real
+  DragAndDropContainer or a clipboard on the rack.
 - **Multi-select** (rubber-band or shift-click) + operations on the
   selection: move, delete, resize, and *drag up/down to change a parameter*
   on all selected blocks at once.
@@ -858,9 +883,12 @@ same care as any module change (and benefit every project).
 
 Kept here so answers to future reports are consistent:
 
-- **Delete a block**: alt-click, or select and press Delete. (Right-click
-  clears the block's *text*.)
+- **Delete a block**: alt-click, or select and press Delete. (**Shift**-right-click
+  clears the block's *text* — plain right-click did until 0.1.1, which was
+  one stray click away from losing a line of overrides.)
 - **Fix one block by hand instead of hunting with the seed**: pin it with a
   block override, e.g. `dur=0.125`.
 - **Move / resize a block**: drag its body / its edges.
+- **Repeat a block**: cmd/ctrl-D, or cmd/ctrl-drag it somewhere free. To
+  reuse just its override text on an existing block, cmd/ctrl-shift-drag.
 - **Per-block parameter values**: the override language, one line per block.

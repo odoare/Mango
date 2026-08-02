@@ -73,13 +73,22 @@ public:
                 if (onBlockContentChanged)
                     onBlockContentChanged (i, blockId);
             };
+            // Duplicate / content copy: same refresh, the content just came
+            // from another block instead of being emptied.
+            row.rubber->onBlockContentChanged = [this, i] (int blockId)
+            {
+                processor.engine.rebuildOverrides();
+                if (onBlockContentChanged)
+                    onBlockContentChanged (i, blockId);
+            };
         }
         startTimerHz (30);
     }
 
     /** (laneIndex identity, blockId or -1) */
     std::function<void (int, int)> onBlockSelected;
-    /** A block's string was cleared from the rubber (right-click). */
+    /** A block's string changed from the rubber: cleared (shift-right-click),
+        or copied in from another block (ctrl-drag, ctrl-shift-drag, ctrl-D). */
     std::function<void (int, int)> onBlockContentChanged;
     /** The lane->bus assignment changed (reorder, bus switch, lane count):
         the editor re-accents the effect panels from colourOfLane(). */

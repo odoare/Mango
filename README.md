@@ -47,7 +47,12 @@ and a step count (1–64). Blocks are edited directly on the strips:
 | Drag a block's body | Move it (it walls against its neighbours) |
 | Drag a block's edge | Resize it |
 | Alt-click, or Delete key | Delete the selected block |
-| Right-click | Clear the block's override text |
+| Ctrl-drag a block | Drop a copy of it (text included). The copy only appears if it lands on free steps: the outline turns red while it does not fit |
+| Ctrl-D | Copy the selected block into the steps right after it, and select the copy. Press it again to lay down a run |
+| Ctrl-Shift-drag a block | Copy just its override text onto the block you drop it on (nothing happens if you drop on empty space) |
+| Shift-right-click | Clear the block's override text |
+
+On macOS use Cmd where the table says Ctrl.
 
 Lanes have fixed identities: reordering only changes the display/processing
 order, so a lane's blocks, settings and random draws follow it as it moves.

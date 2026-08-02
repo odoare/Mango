@@ -64,7 +64,11 @@ public:
             "Any expression using mididur is a time in seconds, so it ignores "
             "the tempo. Every other key is in the same unit as its knob.\n\n"
             "Return commits and leaves the field; Ctrl+Return adds a newline "
-            "(the parser treats it as a space); clicking away commits too.");
+            "(the parser treats it as a space); clicking away commits too.\n\n"
+            "REUSING A LINE\n\n"
+            "Ctrl+Shift-drag a block onto another one to copy just this text "
+            "across. Ctrl-drag copies the whole block, text included. To "
+            "empty a block's line, shift-right-click it.");
         addAndMakeVisible (info);
 
         // Three lines: room for several assignments; newlines are ordinary
