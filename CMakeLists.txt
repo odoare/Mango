@@ -4,15 +4,23 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release CACHE STRING "" FORCE)
 endif()
 
+# These MUST come before project(): that is where CMake configures the Apple
+# toolchain and reads them. Set afterwards, CMAKE_OSX_DEPLOYMENT_TARGET is
+# ignored outright and the architectures are unreliable — which is how v0.1.0
+# shipped an arm64-only "universal" build from an Apple Silicon runner.
+#
+# 10.13 is JUCE 8's floor. It has to be well below 11.0 or the plugin refuses
+# to load on Catalina (10.15); the arm64 slice of a universal build is clamped
+# up to 11.0 by the toolchain on its own, so this costs nothing.
+if(APPLE)
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "10.13" CACHE STRING "Minimum macOS deployment version")
+    set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "Target architectures")
+endif()
+
 project(Mango VERSION 0.1.1 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-if(APPLE)
-    set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "Minimum macOS deployment version")
-    set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "Target architectures")
-endif()
 
 # JUCE is expected as a sibling of this repo; FxmeTools lives in-tree as a git
 # submodule under lib/. The module is registered directly rather than through

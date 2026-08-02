@@ -728,6 +728,26 @@ umbrella `FxmeTools/FxmeTools.h` (module v0.0.3):
   scale). Add a version bump if sessions from before that change matter.
 - 64-step cap (StringSequencer clamp). Grid shrink no longer truncates: the
   blocks past the end go dormant and come back (§8).
+- **macOS packaging (learned the hard way in v0.1.0).** Two user reports of
+  the plugin not loading on Intel Macs traced to the release build, not the
+  code:
+  - `CMAKE_OSX_ARCHITECTURES` / `CMAKE_OSX_DEPLOYMENT_TARGET` sat **after**
+    `project()` in CMakeLists. They must come **before** it — that is where
+    the Apple toolchain is configured. The runner is `macos-14` (Apple
+    Silicon), so the "universal" zip was arm64 only and no Intel host could
+    load it.
+  - The CI "Verify universal binary" step ran `lipo -info` and *printed* the
+    result without asserting on it, so the broken build passed green. Any
+    verification step that cannot fail is not one; it now greps for both
+    slices in all three bundles and exits non-zero.
+  - The deployment target was 11.0, which excludes **Catalina 10.15** even
+    with a correct x86_64 slice. Now 10.13 (JUCE 8's floor); the arm64 slice
+    is clamped up to 11.0 by the toolchain by itself.
+  - Bundles are now **ad-hoc codesigned** in CI. Unsigned bundles built on
+    another machine are a standard cause of "it never appears in the scan",
+    and AU validation rejects them. This is not notarisation: users still
+    have to clear the download quarantine
+    (`xattr -dr com.apple.quarantine`), which is worth putting in the README.
 - FxmeFX still carries its private copies of the tube curves.
 - If keyboard input still dies in a specific DAW after the focus-fixer
   battles, it's host keyboard routing (REAPER: "Send all keyboard input to

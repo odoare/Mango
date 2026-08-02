@@ -115,16 +115,58 @@ jobs:
 
       - name: Configure & Build
         run: |
-          # CMAKE_OSX_ARCHITECTURES is set to arm64;x86_64 in Mango's CMakeLists,
-          # so both slices are built without passing anything here.
-          cmake -B Mango/build -S Mango -DCMAKE_BUILD_TYPE=Release
+          # Passed explicitly as well as set in CMakeLists: a -D on the command
+          # line is in the cache before any CMakeLists line runs, so it cannot
+          # be missed the way an in-file set() after project() can.
+          cmake -B Mango/build -S Mango \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET=10.13
           cmake --build Mango/build --config Release --target MangoBinaryData --parallel 1
           # Capped at 2: the universal build doubles the compile/link load.
           cmake --build Mango/build --config Release --parallel 2
 
-      - name: Verify universal binary
+      # This step used to print `lipo -info` and pass whatever it found, so a
+      # single-architecture build sailed through CI and shipped. It now fails
+      # the run, and it checks every bundle rather than only the VST3.
+      - name: Verify universal binaries
         run: |
-          lipo -info "Mango/build/Mango_artefacts/Release/VST3/Mango.vst3/Contents/MacOS/Mango"
+          set -euo pipefail
+          ART=Mango/build/Mango_artefacts/Release
+          status=0
+          for bundle in \
+            "$ART/VST3/Mango.vst3/Contents/MacOS/Mango" \
+            "$ART/AU/Mango.component/Contents/MacOS/Mango" \
+            "$ART/Standalone/Mango.app/Contents/MacOS/Mango"
+          do
+            if [[ ! -f "$bundle" ]]; then
+              echo "::error::missing binary: $bundle"; status=1; continue
+            fi
+            info=$(lipo -info "$bundle")
+            echo "$info"
+            for arch in x86_64 arm64; do
+              if ! grep -qw "$arch" <<< "$info"; then
+                echo "::error::$bundle has no $arch slice"; status=1
+              fi
+            done
+            # Intel users on Catalina need this to be <= 10.15.
+            vtool -show-build "$bundle" | grep -E 'minos|platform' || true
+          done
+          exit $status
+
+      # Ad-hoc signature. Unsigned bundles built on another machine are a
+      # classic "the plugin never appears in the scan": recent macOS refuses to
+      # load them, and AU validation rejects them outright. This is not
+      # notarisation — users still have to clear the download quarantine — but
+      # it removes the failure that costs nothing to remove.
+      - name: Ad-hoc codesign
+        run: |
+          set -euo pipefail
+          ART=Mango/build/Mango_artefacts/Release
+          for bundle in "$ART/VST3/Mango.vst3" "$ART/AU/Mango.component" "$ART/Standalone/Mango.app"; do
+            codesign --force --deep --sign - --timestamp=none "$bundle"
+            codesign --verify --verbose "$bundle"
+          done
 
       - name: Build pkg installer
         run: |
