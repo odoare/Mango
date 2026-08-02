@@ -44,7 +44,7 @@ and a step count (1–64). Blocks are edited directly on the strips:
 |---------|--------|
 | Drag empty space | Create a block |
 | Click a block | Select it (click again to deselect) |
-| Drag a block's body | Move it (it walls against its neighbours) |
+| Drag a block's body | Move it (it walls against its neighbours). Drag it onto another lane running **the same effect** to move it there |
 | Drag a block's edge | Resize it |
 | Alt-click, or Delete key | Delete the selected block |
 | Ctrl-drag a block | Drop a copy of it (text included), on this lane or another one running **the same effect**. The copy only appears if it lands on free steps: the outline turns red while it does not fit |
@@ -54,11 +54,17 @@ and a step count (1–64). Blocks are edited directly on the strips:
 
 On macOS use Cmd where the table says Ctrl.
 
-Both drags work across lanes. An override string is only text, and a key an
-effect does not use is simply ignored, so it can go anywhere. A whole block
-carries that text as its meaning, so it may only land on a lane running the
-same effect (a delay's `dur=mididur fb=0.99` would say nothing to a bit
-crusher). The ghost is red whenever the drop would be refused.
+Moving and both copy gestures work across lanes. An override string is only
+text, and a key an effect does not use is simply ignored, so it can go
+anywhere. A whole block carries that text as its meaning, so moving or copying
+one is only allowed onto a lane running the same effect (a delay's
+`dur=mididur fb=0.99` would say nothing to a bit crusher). The ghost is red
+whenever the drop would be refused, and refusing costs nothing: the block stays
+where it was.
+
+One thing to expect when moving a block to another lane: its random durations
+are drawn from the seed, the *lane* and the block, so a moved block re-rolls
+them. Pin them with a `dur=` override first if you need it to sound the same.
 
 Lanes have fixed identities: reordering only changes the display/processing
 order, so a lane's blocks, settings and random draws follow it as it moves.

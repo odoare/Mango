@@ -162,7 +162,7 @@ public:
             return;
 
         const auto& r = *rows[(size_t) copyGhost.laneIndex].rubber;
-        auto local = copyGhost.contentOnly
+        auto local = copyGhost.kind == CopyDrag::Kind::Content
                    ? r.rectForBlock (copyGhost.targetBlockId)
                    : r.rectForSteps (copyGhost.startStep,
                                      copyGhost.startStep + copyGhost.lengthSteps);
@@ -585,18 +585,20 @@ private:
     };
 
     //==========================================================================
-    // Cross-lane copy drags.
+    // Cross-lane drags: move a block, copy a block, copy an override string.
     //
     // The rules differ by gesture on purpose. An override string is just
     // text, and a key an effect does not use is ignored, so it may go to any
-    // lane. A whole block carries that text as its meaning, so it may only
-    // land on a lane running the SAME effect: `dur=mididur fb=0.99` copied
-    // onto a bit crusher would be a block that silently does nothing like the
-    // one it came from.
+    // lane. A whole block carries that text as its meaning, so moving or
+    // copying one is restricted to a lane running the SAME effect:
+    // `dur=mididur fb=0.99` landed on a bit crusher would be a block that
+    // silently does nothing like the one it came from.
+    using CopyDrag = fxme::SequencerRubber::CopyDrag;
+
     struct CopyGhost
     {
         bool active         = false;
-        bool contentOnly    = false;
+        CopyDrag::Kind kind = CopyDrag::Kind::Move;
         bool valid          = false;
         int  laneIndex      = -1;    // lane identity under the cursor
         int  startStep      = 0;
@@ -647,20 +649,22 @@ private:
             const auto local = rubber.getLocalPoint (nullptr, d.screenPos);
 
             copyGhost.active      = true;
-            copyGhost.contentOnly = d.contentOnly;
+            copyGhost.kind        = d.kind;
             copyGhost.laneIndex   = target;
             copyGhost.lengthSteps = d.lengthSteps;
             // Resolved against the TARGET's geometry, not the source's.
             copyGhost.startStep   = rubber.stepAtX (local.x) - d.grabOffset;
 
             const juce::ScopedLock sl (processor.engine.lock());
-            if (d.contentOnly)
+            if (d.kind == CopyDrag::Kind::Content)
             {
                 copyGhost.targetBlockId = rubber.blockIdAt (local);
                 copyGhost.valid         = copyGhost.targetBlockId >= 0;
             }
             else
             {
+                // Move and Duplicate carry a whole block, so both need a lane
+                // of the same effect and room for the block to land intact.
                 copyGhost.valid = effectTypeOf (sourceLane) == effectTypeOf (target)
                                && processor.engine.sequencerFor (target)
                                       .canPlaceBlock (copyGhost.startStep, copyGhost.lengthSteps);
@@ -671,7 +675,7 @@ private:
             repaint();
     }
 
-    /** Commits a copy drag dropped on another lane, if the drop is legal.
+    /** Commits a drag dropped on another lane, if the drop is legal.
         Runs under the engine lock already taken by LockedRubber::mouseUp
         (juce::CriticalSection is recursive). */
     void commitCrossLaneCopy (int sourceLane, const fxme::SequencerRubber::CopyDrag& d)
@@ -693,7 +697,7 @@ private:
         const std::string content = srcBlock->content;   // before any mutation
 
         int changed = -1;
-        if (g.contentOnly)
+        if (g.kind == CopyDrag::Kind::Content)
         {
             if (dst.setContent (g.targetBlockId, content))
                 changed = g.targetBlockId;
@@ -702,6 +706,13 @@ private:
         {
             dst.setContent (id, content);
             changed = id;
+
+            // Add first, remove second: if the landing failed we still have
+            // the block. The new id comes from the target lane, and the draws
+            // are keyed on (seed, lane, block), so a moved block re-rolls its
+            // random durations — unavoidable, since the lane is part of the key.
+            if (g.kind == CopyDrag::Kind::Move)
+                src.removeBlock (d.sourceBlockId);
         }
 
         if (changed < 0)
@@ -711,16 +722,17 @@ private:
         if (onBlockContentChanged)
             onBlockContentChanged (g.laneIndex, changed);
 
-        // A duplicated block becomes the selection, as it does within a lane;
-        // a text copy leaves the selection alone, since the target block was
-        // already there and the user is not "on" it.
-        if (! g.contentOnly)
+        // A moved or duplicated block becomes the selection, as a duplicate
+        // does within a lane; a text copy leaves the selection alone, since
+        // the target block was already there and the user is not "on" it.
+        if (g.kind != CopyDrag::Kind::Content)
         {
             deselectAllExcept (g.laneIndex);
             rows[(size_t) g.laneIndex].rubber->selectBlock (changed);
             if (onBlockSelected)
                 onBlockSelected (g.laneIndex, changed);
         }
+        rows[(size_t) sourceLane].rubber->repaint();
         rows[(size_t) g.laneIndex].rubber->repaint();
     }
 
