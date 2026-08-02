@@ -81,13 +81,23 @@ public:
                 if (onBlockContentChanged)
                     onBlockContentChanged (i, blockId);
             };
+            // A copy drag that left its own strip: only the rack can see the
+            // other lanes, so it owns the target hunt, the rules and the ghost.
+            row.rubber->onCopyDragMoved = [this, i] (const fxme::SequencerRubber::CopyDrag& d)
+            {
+                updateCopyGhost (i, d);
+            };
+            row.rubber->onCopyDropped = [this, i] (const fxme::SequencerRubber::CopyDrag& d)
+            {
+                commitCrossLaneCopy (i, d);
+            };
         }
         startTimerHz (30);
     }
 
     /** (laneIndex identity, blockId or -1) */
     std::function<void (int, int)> onBlockSelected;
-    /** A block's string changed from the rubber: cleared (shift-right-click),
+    /** A block's string changed from the rubber: cleared (alt-right-click),
         or copied in from another block (ctrl-drag, ctrl-shift-drag, ctrl-D). */
     std::function<void (int, int)> onBlockContentChanged;
     /** The lane->bus assignment changed (reorder, bus switch, lane count):
@@ -141,6 +151,30 @@ public:
                         ruler.getX() + (int) (s * stepW), ruler.getY(),
                         (int) (stepW * 4.0f), ruler.getHeight(),
                         juce::Justification::bottomLeft);
+    }
+
+    /** The drop ghost of a copy drag that has left its own lane. Drawn here
+        rather than in the target rubber because the drag never leaves the
+        component it started in, so no rubber can paint the answer. */
+    void paintOverChildren (juce::Graphics& g) override
+    {
+        if (! copyGhost.active)
+            return;
+
+        const auto& r = *rows[(size_t) copyGhost.laneIndex].rubber;
+        auto local = copyGhost.contentOnly
+                   ? r.rectForBlock (copyGhost.targetBlockId)
+                   : r.rectForSteps (copyGhost.startStep,
+                                     copyGhost.startStep + copyGhost.lengthSteps);
+        if (local.isEmpty())
+            return;   // content copy over empty space: nothing would happen
+
+        const auto rect = local.translated (r.getX(), r.getY());
+        const auto c    = copyGhost.valid ? juce::Colours::white : theme::mangoRed;
+        g.setColour (c.withAlpha (0.22f));
+        g.fillRect (rect);
+        g.setColour (c.withAlpha (0.85f));
+        g.drawRect (rect, 2);
     }
 
     void resized() override
@@ -549,6 +583,146 @@ private:
         std::unique_ptr<LaneHeader>   header;
         std::unique_ptr<LockedRubber> rubber;
     };
+
+    //==========================================================================
+    // Cross-lane copy drags.
+    //
+    // The rules differ by gesture on purpose. An override string is just
+    // text, and a key an effect does not use is ignored, so it may go to any
+    // lane. A whole block carries that text as its meaning, so it may only
+    // land on a lane running the SAME effect: `dur=mididur fb=0.99` copied
+    // onto a bit crusher would be a block that silently does nothing like the
+    // one it came from.
+    struct CopyGhost
+    {
+        bool active         = false;
+        bool contentOnly    = false;
+        bool valid          = false;
+        int  laneIndex      = -1;    // lane identity under the cursor
+        int  startStep      = 0;
+        int  lengthSteps    = 1;
+        int  targetBlockId  = -1;    // content copy: block under the cursor
+    };
+
+    CopyGhost copyGhost;
+
+    int effectTypeOf (int laneIndex) const
+    {
+        return (int) processor.apvts.getRawParameterValue (pid::laneType (laneIndex))->load();
+    }
+
+    /** The lane whose strip is under `screenPos`, or -1. */
+    int laneAtScreenPos (juce::Point<int> screenPos) const
+    {
+        const auto p = getLocalPoint (nullptr, screenPos);
+        for (int i = 0; i < numLanes; ++i)
+        {
+            const auto& rubber = *rows[(size_t) i].rubber;
+            if (! rubber.isVisible())
+                continue;
+
+            // The row band, not the exact bounds: rows are inset by 2 px, and
+            // matching bounds alone would blink the ghost off in the gap every
+            // time a drag crosses from one lane to the next.
+            const auto b = rubber.getBounds();
+            if (p.x >= b.getX() && p.x < b.getRight()
+                && p.y >= b.getY() - 2 && p.y < b.getBottom() + 2)
+                return i;
+        }
+        return -1;
+    }
+
+    /** Recomputes the ghost for a copy drag in progress. Called on every drag
+        move, including while the cursor is still home, so the ghost clears
+        the moment the drag comes back to its own lane. */
+    void updateCopyGhost (int sourceLane, const fxme::SequencerRubber::CopyDrag& d)
+    {
+        const bool wasActive = copyGhost.active;
+        copyGhost = {};
+
+        const int target = d.insideSource ? -1 : laneAtScreenPos (d.screenPos);
+        if (target >= 0 && target != sourceLane)
+        {
+            auto& rubber = *rows[(size_t) target].rubber;
+            const auto local = rubber.getLocalPoint (nullptr, d.screenPos);
+
+            copyGhost.active      = true;
+            copyGhost.contentOnly = d.contentOnly;
+            copyGhost.laneIndex   = target;
+            copyGhost.lengthSteps = d.lengthSteps;
+            // Resolved against the TARGET's geometry, not the source's.
+            copyGhost.startStep   = rubber.stepAtX (local.x) - d.grabOffset;
+
+            const juce::ScopedLock sl (processor.engine.lock());
+            if (d.contentOnly)
+            {
+                copyGhost.targetBlockId = rubber.blockIdAt (local);
+                copyGhost.valid         = copyGhost.targetBlockId >= 0;
+            }
+            else
+            {
+                copyGhost.valid = effectTypeOf (sourceLane) == effectTypeOf (target)
+                               && processor.engine.sequencerFor (target)
+                                      .canPlaceBlock (copyGhost.startStep, copyGhost.lengthSteps);
+            }
+        }
+
+        if (copyGhost.active || wasActive)
+            repaint();
+    }
+
+    /** Commits a copy drag dropped on another lane, if the drop is legal.
+        Runs under the engine lock already taken by LockedRubber::mouseUp
+        (juce::CriticalSection is recursive). */
+    void commitCrossLaneCopy (int sourceLane, const fxme::SequencerRubber::CopyDrag& d)
+    {
+        updateCopyGhost (sourceLane, d);   // the drop point is the truth
+        const auto g = copyGhost;
+        copyGhost = {};
+        repaint();
+
+        if (! g.active || ! g.valid)
+            return;
+
+        auto& src = processor.engine.sequencerFor (sourceLane);
+        auto& dst = processor.engine.sequencerFor (g.laneIndex);
+
+        const auto* srcBlock = src.blockById (d.sourceBlockId);
+        if (srcBlock == nullptr)
+            return;
+        const std::string content = srcBlock->content;   // before any mutation
+
+        int changed = -1;
+        if (g.contentOnly)
+        {
+            if (dst.setContent (g.targetBlockId, content))
+                changed = g.targetBlockId;
+        }
+        else if (const int id = dst.addBlock (g.startStep, g.lengthSteps); id >= 0)
+        {
+            dst.setContent (id, content);
+            changed = id;
+        }
+
+        if (changed < 0)
+            return;
+
+        processor.engine.rebuildOverrides();
+        if (onBlockContentChanged)
+            onBlockContentChanged (g.laneIndex, changed);
+
+        // A duplicated block becomes the selection, as it does within a lane;
+        // a text copy leaves the selection alone, since the target block was
+        // already there and the user is not "on" it.
+        if (! g.contentOnly)
+        {
+            deselectAllExcept (g.laneIndex);
+            rows[(size_t) g.laneIndex].rubber->selectBlock (changed);
+            if (onBlockSelected)
+                onBlockSelected (g.laneIndex, changed);
+        }
+        rows[(size_t) g.laneIndex].rubber->repaint();
+    }
 
     /** Re-derives lane -> (bus, position-in-bus) from the engine; true if
         anything changed and the rack needs recolouring. */

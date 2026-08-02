@@ -47,12 +47,18 @@ and a step count (1–64). Blocks are edited directly on the strips:
 | Drag a block's body | Move it (it walls against its neighbours) |
 | Drag a block's edge | Resize it |
 | Alt-click, or Delete key | Delete the selected block |
-| Ctrl-drag a block | Drop a copy of it (text included). The copy only appears if it lands on free steps: the outline turns red while it does not fit |
+| Ctrl-drag a block | Drop a copy of it (text included), on this lane or another one running **the same effect**. The copy only appears if it lands on free steps: the outline turns red while it does not fit |
 | Ctrl-D | Copy the selected block into the steps right after it, and select the copy. Press it again to lay down a run |
-| Ctrl-Shift-drag a block | Copy just its override text onto the block you drop it on (nothing happens if you drop on empty space) |
-| Shift-right-click | Clear the block's override text |
+| Ctrl-Shift-drag a block | Copy just its override text onto the block you drop it on, in **any** lane (nothing happens if you drop on empty space) |
+| Alt-right-click | Clear the block's override text (alt deletes: the block with the left button, its text with the right) |
 
 On macOS use Cmd where the table says Ctrl.
+
+Both drags work across lanes. An override string is only text, and a key an
+effect does not use is simply ignored, so it can go anywhere. A whole block
+carries that text as its meaning, so it may only land on a lane running the
+same effect (a delay's `dur=mididur fb=0.99` would say nothing to a bit
+crusher). The ghost is red whenever the drop would be refused.
 
 Lanes have fixed identities: reordering only changes the display/processing
 order, so a lane's blocks, settings and random draws follow it as it moves.

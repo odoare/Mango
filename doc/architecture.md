@@ -450,9 +450,29 @@ also *not* serialised — a reloaded session is a new run and gets its splash.
   where it is dropped, cmd/ctrl-shift-drag = copy only its content onto the
   block under the cursor, cmd/ctrl-D = duplicate into the steps right after
   the selection. Clearing a block's content moved from right-click to
-  **shift**-right-click. All of them use `ModifierKeys::commandModifier`
+  **alt**-right-click, which puts both destructive gestures on the same
+  modifier: alt + left deletes the block, alt + right deletes its text.
+  The copy gestures use `ModifierKeys::commandModifier`
   (Ctrl on Linux/Windows, Cmd on macOS) rather than a literal ctrl, because
   on macOS ctrl-click *is* a right-click and would collide with it.
+- **Cross-lane copies live in the rack, not the rubber.** A drag keeps the
+  mouse captured by the component it started in, so a rubber can never see a
+  drop on a sibling. `SequencerRubber` therefore hands a copy drag that
+  leaves it to the owner (`onCopyDragMoved` / `onCopyDropped`, carrying a
+  `CopyDrag`), and `LaneRackComponent` does the rest: `laneAtScreenPos` finds
+  the target row, `updateCopyGhost` decides legality, `paintOverChildren`
+  draws the ghost (the rack is the only component that can paint over another
+  lane), `commitCrossLaneCopy` applies it. The drag carries `grabOffset`
+  rather than a landing step so the rack resolves it against the **target's**
+  geometry, which matters the moment two strips are scrolled differently.
+  - The two gestures have different rules on purpose. **Content** may go to
+    any lane: it is text, and a key an effect does not use is ignored.
+    A **whole block** may only land on a lane running the *same* effect type
+    (`l<i>_type`), because the block carries that text as its meaning, and
+    `dur=mididur fb=0.99` on a bit crusher would be a block that silently
+    does nothing like the one it came from.
+  - `updateCopyGhost` runs again at the drop rather than trusting the last
+    drag frame, so the decision is made on the position that was released.
 **Help** (`fxme::InfoButton`, `theme::styleInfo` for the shared palette):
 four callouts, each placed immediately after the title it explains rather
 than at a panel edge — so a title's width is measured with
@@ -824,11 +844,9 @@ same care as any module change (and benefit every project).
   needs a separate control for the block length it paints, which is a knob
   earning its place only for dense patterns. Repeating **cmd/ctrl-D** lays
   the same run from the block you already sized, with no new control.
-- ~~**Copy / paste / duplicate blocks**~~ **Done** within a lane: cmd/ctrl-D,
-  cmd/ctrl-drag to duplicate, cmd/ctrl-shift-drag to copy just the override
-  text (§8). *Across* lanes is still open — the rubbers are one per lane and
-  a drag does not leave its own component, so it needs either a real
-  DragAndDropContainer or a clipboard on the rack.
+- ~~**Copy / paste / duplicate blocks**~~ **Done**, including across lanes:
+  cmd/ctrl-D, cmd/ctrl-drag to duplicate, cmd/ctrl-shift-drag to copy just
+  the override text (§7, §8).
 - **Multi-select** (rubber-band or shift-click) + operations on the
   selection: move, delete, resize, and *drag up/down to change a parameter*
   on all selected blocks at once.
@@ -883,12 +901,14 @@ same care as any module change (and benefit every project).
 
 Kept here so answers to future reports are consistent:
 
-- **Delete a block**: alt-click, or select and press Delete. (**Shift**-right-click
+- **Delete a block**: alt-click, or select and press Delete. (**Alt**-right-click
   clears the block's *text* — plain right-click did until 0.1.1, which was
-  one stray click away from losing a line of overrides.)
+  one stray click away from losing a line of overrides. Alt is the destroy
+  modifier for both: left button takes the block, right button its text.)
 - **Fix one block by hand instead of hunting with the seed**: pin it with a
   block override, e.g. `dur=0.125`.
 - **Move / resize a block**: drag its body / its edges.
-- **Repeat a block**: cmd/ctrl-D, or cmd/ctrl-drag it somewhere free. To
-  reuse just its override text on an existing block, cmd/ctrl-shift-drag.
+- **Repeat a block**: cmd/ctrl-D, or cmd/ctrl-drag it somewhere free — on
+  this lane or another one running the same effect. To reuse just its
+  override text on an existing block in *any* lane, cmd/ctrl-shift-drag.
 - **Per-block parameter values**: the override language, one line per block.

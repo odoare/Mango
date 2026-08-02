@@ -67,8 +67,11 @@ public:
             "(the parser treats it as a space); clicking away commits too.\n\n"
             "REUSING A LINE\n\n"
             "Ctrl+Shift-drag a block onto another one to copy just this text "
-            "across. Ctrl-drag copies the whole block, text included. To "
-            "empty a block's line, shift-right-click it.");
+            "across - any lane will take it, since a key an effect does not "
+            "use is ignored. Ctrl-drag copies the whole block, text included, "
+            "but only onto a lane running the same effect. To empty a block's "
+            "line, alt-right-click it (alt-click on its own deletes the whole "
+            "block).");
         addAndMakeVisible (info);
 
         // Three lines: room for several assignments; newlines are ordinary
