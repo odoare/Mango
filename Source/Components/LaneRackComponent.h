@@ -394,15 +394,15 @@ private:
         // The duration this block draws on pass 0 (same hash as the engine).
         auto drawnBeats = [&] (const char* weightPrefix)
         {
-            static constexpr OvKey baseKeys[] = { OvKey::W4, OvKey::W8, OvKey::W16, OvKey::W32 };
-            static constexpr OvKey modKeys[]  = { OvKey::Wstr, OvKey::Wtrip, OvKey::Wdot };
+            // DurationWeights owns the key tables: a local copy here was left
+            // at four entries when 1/64 was added and read out of bounds.
             fxme::WeightedDurationTable t;
             for (int i = 0; i < fxme::kNumNoteBases; ++i)
-                t.baseWeights[i] = ovOr (baseKeys[i],
+                t.baseWeights[i] = ovOr (DurationWeights::baseKeys[i],
                     apvts.getRawParameterValue (prefix + weightPrefix
                                                 + DurationWeights::baseSuffixes[i])->load());
             for (int i = 0; i < fxme::kNumNoteMods; ++i)
-                t.modWeights[i] = ovOr (modKeys[i],
+                t.modWeights[i] = ovOr (DurationWeights::modKeys[i],
                     apvts.getRawParameterValue (prefix + weightPrefix
                                                 + DurationWeights::modSuffixes[i])->load());
             const auto seed = (uint64_t) (int64_t) apvts.getRawParameterValue (pid::seed)->load();

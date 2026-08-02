@@ -144,13 +144,21 @@ struct ParsedOverrides
 
 namespace detail
 {
-    inline const char* keyNames[(int) OvKey::Count] = {
+    inline constexpr const char* keyNames[(int) OvKey::Count] = {
         "dur", "fb", "damp", "porta", "att", "rel", "attcurve", "relcurve", "q", "f0", "f1", "v0", "v1",
         "bits", "down", "drive", "bias", "sag", "mix", "model", "mode", "fade", "amp", "width", "gain",
         "aux1", "aux2", "pass", "glide",
         "w4", "w8", "w16", "w32", "wstr", "wtrip", "wdot",
         "w64"
     };
+
+    /** constexpr string equality, so tables of keys can be checked against
+        tables of parameter suffixes at compile time (see DurationWeights). */
+    inline constexpr bool sameKeyName (const char* a, const char* b)
+    {
+        while (*a != '\0' && *a == *b) { ++a; ++b; }
+        return *a == *b;
+    }
 
     inline std::optional<OvKey> keyFromString (const std::string& s)
     {
