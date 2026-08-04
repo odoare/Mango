@@ -20,6 +20,62 @@ lane and the block, so a pattern always plays back identically (in real time
 and in an offline bounce alike), and changing the seed re-rolls everything at
 once.
 
+## Installing
+
+Download the zip for your platform from the
+[releases page](https://github.com/odoare/Mango/releases) and copy the plugin
+into the usual folder:
+
+| | VST3 | AU |
+|---|---|---|
+| Linux | `~/.vst3/` | |
+| Windows | `C:\Program Files\Common Files\VST3\` | |
+| macOS | `/Library/Audio/Plug-Ins/VST3/` | `/Library/Audio/Plug-Ins/Components/` |
+
+Then rescan in your DAW (it caches the plugin list).
+
+### macOS: one extra step
+
+Mango is free software and is **not signed with an Apple Developer ID**
+(that is a paid subscription). macOS tags anything downloaded through a
+browser as untrusted, and refuses to load it: the plugin will simply not
+appear in your DAW's scan, usually with no error message at all.
+
+Clear the tag after copying the files, in Terminal:
+
+```sh
+xattr -dr com.apple.quarantine /Library/Audio/Plug-Ins/VST3/Mango.vst3
+xattr -dr com.apple.quarantine /Library/Audio/Plug-Ins/Components/Mango.component
+xattr -dr com.apple.quarantine /Applications/Mango.app
+```
+
+(Run only the lines for the parts you installed.) Then rescan. If you used the
+`.pkg` installer and macOS refused to open it, right-click it and choose
+**Open**, or allow it under System Settings → Privacy & Security.
+
+The macOS build is a universal binary and runs on both Apple Silicon and Intel
+Macs, from macOS 10.13 up.
+
+## Sending MIDI to Mango
+
+Mango is an audio **effect** that also listens to MIDI notes. It never makes
+sound from them: they only feed `mididur` and `midifreq` in the block override
+language, so a delay can tune itself to what you play (the *PlayMidi* presets
+are built on this). Everything else works with no MIDI at all.
+
+Hosts differ in how, and whether, they let an audio effect receive MIDI:
+
+| Host | How |
+|---|---|
+| **REAPER** | Put Mango on any track. MIDI on that track reaches it directly. |
+| **Ableton Live** | An audio effect on an *audio* track cannot receive MIDI in Live: there is no routing for it. Put Mango on a **MIDI track, after an instrument** instead, so the track carries both the audio and the notes. |
+| **Bitwig / Studio One / Cubase** | Route a MIDI track's output to the plugin (a "MIDI out to plugin" / note-input assignment on the effect). |
+| **Logic** | Use the **AU**, which appears under *MIDI-controlled Effects* rather than Audio FX. |
+
+If a *PlayMidi* preset sounds static, no notes are arriving: the effects fall
+back to their knob values rather than tracking a pitch. Play a few notes and
+watch a delay's block picture change to confirm it is getting them.
+
 ## Getting started
 
 1. Insert Mango on a track that already has sound going through it (it is an

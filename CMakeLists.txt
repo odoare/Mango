@@ -17,7 +17,7 @@ if(APPLE)
     set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "Target architectures")
 endif()
 
-project(Mango VERSION 0.1.2 LANGUAGES C CXX)
+project(Mango VERSION 0.1.3 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -45,7 +45,12 @@ juce_add_plugin(Mango
     IS_MIDI_EFFECT              FALSE
     EDITOR_WANTS_KEYBOARD_FOCUS TRUE
     VST3_CATEGORIES             Fx Distortion
-    AU_MAIN_TYPE                kAudioUnitType_Effect
+    # MusicEffect, not Effect: in the AU spec kAudioUnitType_Effect ('aufx')
+    # has no MIDI input at all, so an AU declared that way can never receive
+    # notes however the host is routed — which killed mididur/midifreq in the
+    # AU build. An audio effect that accepts MIDI must be 'aumf'.
+    # (Logic lists 'aumf' plugins under MIDI-controlled Effects, not Audio FX.)
+    AU_MAIN_TYPE                kAudioUnitType_MusicEffect
     BUNDLE_ID                   "com.FXMechanics.Mango"
 )
 
