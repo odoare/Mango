@@ -26,8 +26,21 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # submodule under lib/. The module is registered directly rather than through
 # fxmetools_attach: of the WDL sources (FxmeTools' own submodule) Mango only
 # needs fft.c, for <FxmeTools/dsp/SpectralFreeze.h> (the Freeze effect).
+#
+# FxmeTools is split in two, and Mango sits almost entirely on the JUCE-free
+# half: every FxmeTools header it uses — the dsp/ kernels, DeterministicRandom,
+# the midi/ sequencing — now lives under lib/FxmeTools/core. That directory is a
+# second include root for the same <FxmeTools/...> spelling, so no include here
+# changes, but the target has to be added or none of them resolve.
 add_subdirectory(../JUCE JUCE)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/lib/FxmeTools/core FxmeCore)
 juce_add_module(${CMAKE_CURRENT_SOURCE_DIR}/lib/FxmeTools/FxmeTools)
+
+# The module's own sources include core headers, and juce_add_module creates an
+# INTERFACE target whose sources are compiled into the consumer, so core has to
+# travel with it.
+target_link_libraries(FxmeTools INTERFACE FxmeCore)
+
 set(FXMETOOLS_WDL_FFT ${CMAKE_CURRENT_SOURCE_DIR}/lib/FxmeTools/WDL/WDL/fft.c)
 
 juce_add_plugin(Mango
@@ -101,6 +114,7 @@ target_compile_definitions(Mango
 target_link_libraries(Mango
     PRIVATE
         FxmeTools
+        FxmeCore
         juce::juce_audio_basics
         juce::juce_audio_devices
         juce::juce_audio_formats
@@ -126,6 +140,12 @@ option(MANGO_BUILD_TESTS "Build Mango unit tests" OFF)
 if(MANGO_BUILD_TESTS)
     enable_testing()
     add_executable(MangoTests Tests/UnitTests.cpp ${FXMETOOLS_WDL_FFT})
+    # This target links no JUCE at all, which makes it exactly what FxmeCore is
+    # for. Linking it brings core's include root along, so the <FxmeTools/...>
+    # headers under test resolve without naming the core directory here.
+    # MangoRenderTest needs no equivalent line: it links the FxmeTools module,
+    # which carries core with it.
+    target_link_libraries(MangoTests PRIVATE FxmeCore)
     target_include_directories(MangoTests PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/lib/FxmeTools
         ${CMAKE_CURRENT_SOURCE_DIR}/Source)
