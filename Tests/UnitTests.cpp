@@ -328,33 +328,67 @@ static int testSpectralFreezeMulti()
     std::fill (l.begin(), l.end(), 0.0f);
     std::fill (r.begin(), r.end(), 0.0f);
     m.process (ptrs, 2, N);
-    float  diff0 = 0.0f, level = 0.0f;
-    double acc0 = 0.0;
+    float diff0 = 0.0f, level = 0.0f;
     for (int i = N / 2; i < N; ++i)   // past the capture->wash crossfade
     {
         diff0 = std::max (diff0, std::fabs (l[(size_t) i] - r[(size_t) i]));
         level = std::max (level, std::fabs (l[(size_t) i]));
-        acc0 += (double) l[(size_t) i] * l[(size_t) i];
     }
     CHECK (diff0 == 0.0f);
     CHECK (level > 0.1f);
 
-    // Width 1: the two phase streams are decorrelated, channels differ —
-    // and thanks to the equal-power blend the energy matches width 0.
+    // Width 1: the two phase streams are decorrelated, so the channels differ.
     m.setWidth (1.0f);
     std::fill (l.begin(), l.end(), 0.0f);
     std::fill (r.begin(), r.end(), 0.0f);
     m.process (ptrs, 2, N);
-    float  diff1 = 0.0f;
-    double acc1 = 0.0;
+    float diff1 = 0.0f;
     for (int i = 0; i < N; ++i)
         diff1 = std::max (diff1, std::fabs (l[(size_t) i] - r[(size_t) i]));
-    for (int i = N / 2; i < N; ++i)
-        acc1 += (double) l[(size_t) i] * l[(size_t) i];
     CHECK (diff1 > 0.01f);
 
-    const double rmsRatio = std::sqrt (acc0 / acc1);
-    CHECK (rmsRatio > 0.7 && rmsRatio < 1.4);
+    // Equal-power blend: the energy must not depend on the width setting.
+    //
+    // This cannot be measured from single blocks of one instance. The wash is a
+    // randomised-phase resynthesis whose level swings by a factor of ~2.7 from
+    // block to block, and the first block after a capture is quieter still
+    // because of the capture->wash crossfade. Comparing one width's block to
+    // another width's *next* block therefore measures the wash's own
+    // fluctuation, not the blend — it reads as an 8 dB error when there is
+    // none. Two separately captured instances, advanced in lockstep and
+    // averaged over several blocks past the crossfade, measure the blend.
+    {
+        const int kBlocks = 8;
+        double energy[2] = { 0.0, 0.0 };
+        const float widths[2] = { 0.0f, 1.0f };
+
+        for (int v = 0; v < 2; ++v)
+        {
+            fxme::SpectralFreezeMulti f;
+            f.prepare (2);
+            f.setIdentity (42, 0x100);
+            f.startCapture();
+
+            for (int i = 0; i < N; ++i)
+                l[(size_t) i] = r[(size_t) i] = (float) std::sin (w * i);
+            f.process (ptrs, 2, N);          // capture
+
+            f.setWidth (widths[v]);
+            for (int b = 0; b < kBlocks; ++b)
+            {
+                std::fill (l.begin(), l.end(), 0.0f);
+                std::fill (r.begin(), r.end(), 0.0f);
+                f.process (ptrs, 2, N);
+                if (b == 0)
+                    continue;                // skip the capture->wash crossfade
+                for (int i = 0; i < N; ++i)
+                    energy[v] += (double) l[(size_t) i] * l[(size_t) i];
+            }
+        }
+
+        const double rmsRatio = std::sqrt (energy[0] / energy[1]);
+        CHECK (rmsRatio > 0.9 && rmsRatio < 1.1);
+    }
     return 0;
 }
 
@@ -890,25 +924,52 @@ static int testMidiPolyphony()
 //==============================================================================
 int main()
 {
-    if (testDeterministicRandom())      return 1;
-    if (testNoteDuration())             return 1;
-    if (testArEnvelope())               return 1;
-    if (testBitCrusher())               return 1;
-    if (testDownsampler())              return 1;
-    if (testSpectralFreeze())           return 1;
-    if (testSpectralFreezeRetrigger())  return 1;
-    if (testSpectralFreezeMulti())      return 1;
-    if (testDelayLine())                return 1;
-    if (testSaturator())                return 1;
-    if (testGrainLooperAttack())        return 1;
-    if (testStringSequencerAddWithId()) return 1;
-    if (testStringSequencerGridShrink()) return 1;
-    if (testStringSequencerCanPlace()) return 1;
-    if (testStringSequencerMoveBlock()) return 1;
-    if (testSequencerEngineMovedBlockExit()) return 1;
-    if (testSequencerEngineEmptyBlocks()) return 1;
-    if (testOverrideParser())           return 1;
-    if (testMidiPolyphony())            return 1;
+    // Every case runs, and failures are reported together at the end.
+    //
+    // This used to be a chain of `if (testX()) return 1;`, which stopped at the
+    // first failure — so a fault in one case hid every case after it. That is
+    // not hypothetical: an off-by-one in Downsampler masked the three
+    // SpectralFreeze cases, and one of those was itself mismeasuring, for as
+    // long as both went unnoticed. A suite that reports only its first failure
+    // tells you least when it has most to say.
+    struct Case { const char* name; int (*run)(); };
+    static const Case cases[] = {
+        { "testDeterministicRandom", testDeterministicRandom },
+        { "testNoteDuration", testNoteDuration },
+        { "testArEnvelope", testArEnvelope },
+        { "testBitCrusher", testBitCrusher },
+        { "testDownsampler", testDownsampler },
+        { "testSpectralFreeze", testSpectralFreeze },
+        { "testSpectralFreezeRetrigger", testSpectralFreezeRetrigger },
+        { "testSpectralFreezeMulti", testSpectralFreezeMulti },
+        { "testDelayLine", testDelayLine },
+        { "testSaturator", testSaturator },
+        { "testGrainLooperAttack", testGrainLooperAttack },
+        { "testStringSequencerAddWithId", testStringSequencerAddWithId },
+        { "testStringSequencerGridShrink", testStringSequencerGridShrink },
+        { "testStringSequencerCanPlace", testStringSequencerCanPlace },
+        { "testStringSequencerMoveBlock", testStringSequencerMoveBlock },
+        { "testSequencerEngineMovedBlockExit", testSequencerEngineMovedBlockExit },
+        { "testSequencerEngineEmptyBlocks", testSequencerEngineEmptyBlocks },
+        { "testOverrideParser", testOverrideParser },
+        { "testMidiPolyphony", testMidiPolyphony },
+    };
+
+    int failed = 0;
+
+    for (const auto& c : cases)
+        if (c.run() != 0)
+        {
+            std::printf ("  ^ in %s\n", c.name);
+            ++failed;
+        }
+
+    if (failed != 0)
+    {
+        std::printf ("%d of %d test case(s) FAILED (%d checks ran).\n",
+                     failed, (int) (sizeof (cases) / sizeof (cases[0])), numChecks);
+        return 1;
+    }
 
     std::printf ("All %d checks passed.\n", numChecks);
     return 0;
