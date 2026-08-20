@@ -684,6 +684,7 @@ juce::uint64 MangoAudioProcessor::configSignature (bool includeParams) const
 void MangoAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
     auto state = apvts.copyState();
+    state.setProperty ("version", 1, nullptr);
 
     state.removeChild (state.getChildWithName ("MangoSeq"), nullptr);
     state.appendChild (sequencersToTree(), nullptr);
@@ -698,6 +699,8 @@ void MangoAudioProcessor::setStateInformation (const void* data, int sizeInBytes
     auto tree = juce::ValueTree::readFromData (data, (size_t) sizeInBytes);
     if (! tree.isValid())
         return;
+    // "version" property: nothing to migrate against yet (this is version 1),
+    // but a future format change needs it to already be there.
 
     const auto seqTree  = tree.getChildWithName ("MangoSeq");
     const auto viewTree = tree.getChildWithName ("MangoView");

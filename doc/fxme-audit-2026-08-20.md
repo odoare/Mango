@@ -161,7 +161,7 @@ deprecation sweep.
 
 ## House style
 
-- [ ] **H1. Saved state carries no version marker.**
+- [x] **H1. Saved state carries no version marker.**
       [PluginProcessor.cpp:684-719](../Source/PluginProcessor.cpp#L684-L719)
       (`getStateInformation`/`setStateInformation`) write and read the raw
       APVTS `ValueTree` (plus the `MangoSeq`/`MangoView` side-trees) with no
@@ -174,7 +174,17 @@ deprecation sweep.
       in `setStateInformation` (`tree.getProperty ("version", 1)`) so a
       future format change has something to branch on. Purely additive —
       old and new savers/loaders round-trip identically either way.
-      **safe to apply**
+      **safe to apply** — **done**:
+      `state.setProperty ("version", 1, nullptr);` added at
+      [PluginProcessor.cpp:687](../Source/PluginProcessor.cpp#L687), right
+      after `apvts.copyState()`. `setStateInformation` doesn't read it back
+      into a branch yet — there's only one version so there's nothing to
+      migrate from — but a comment at
+      [PluginProcessor.cpp:701-702](../Source/PluginProcessor.cpp#L701-L702)
+      marks where a future version bump reads `tree.getProperty ("version",
+      1)` and branches. Unbuilt — a saved session/preset from before this
+      change loads fine either way (missing property just isn't there,
+      nothing reads it yet); worth a round-trip save/load to confirm.
 
 ## Already correct
 
@@ -341,18 +351,25 @@ This audit did not build the project. In particular:
 
 ## Commit plan
 
-Nothing here was changed by this audit — apply the **safe to apply** items
-above first (R1, R3, R4, H1), build, then commit. Suggested order:
-
-- [ ] In this repo (Mango): apply R1, R3, R4, H1 (or a subset), build
-      `Mango_VST3` and `Standalone` with `-j2`, and confirm the drop-down
-      tint, the distortion knob's centre fill, and focus behaviour by hand
-      — none of these are covered by `MangoTests`/`MangoRenderTest`.
-- [ ] Commit the FxmeTools submodule bump: `lib/FxmeTools` is currently a
-      clean checkout 6 commits ahead of the pinned pointer (`70e5cda` →
-      `c677ae4`). This is not a source edit, just `git add lib/FxmeTools &&
-      git commit` in the parent repo once you're satisfied — the CMake and
-      test-suite work for this bump is already committed
-      (`d4ce8e6`, `2ddbf11`).
-- [ ] R2 (the `TooltipWindow`) is a product decision, not part of this
-      batch — raise it separately if tooltips-everywhere is wanted.
+- [x] R1 committed (`7e15a09`, "Accent colour for look and feel").
+- [x] R2 committed (`5333f79`, "Implement tooltips") — applied by the user's
+      explicit choice, tooltips are now live everywhere `setTooltip()` is
+      called.
+- [x] R3 committed (`03a98fb`, "Mangane bipolar knobs") — includes the
+      widened fix (six curve knobs, not just `dist_gain`) and the
+      `centreValue` correction.
+- [x] R4 committed (`d655d9d`, "Mouse click on buttonss don't grab keyboard
+      focus").
+- [ ] H1 is applied in the working tree
+      ([PluginProcessor.cpp](../Source/PluginProcessor.cpp)) but not yet
+      committed.
+- [ ] Build `Mango_VST3` and `Standalone` with `-j2` and confirm all five
+      by hand — none of R1–R4/H1 are covered by `MangoTests`/
+      `MangoRenderTest`.
+- [ ] Commit the FxmeTools submodule bump: `lib/FxmeTools` is still a clean
+      checkout 6 commits ahead of the pinned pointer (`70e5cda` →
+      `c677ae4`), unrelated to and unaffected by the R1–R4/H1 work above.
+      Not a source edit, just `git add lib/FxmeTools && git commit` in the
+      parent repo once you're satisfied — the CMake and test-suite work for
+      this bump was already committed before this audit (`d4ce8e6`,
+      `2ddbf11`).
