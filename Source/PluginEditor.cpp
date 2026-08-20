@@ -20,6 +20,7 @@ MangoAudioProcessorEditor::MangoAudioProcessorEditor (MangoAudioProcessor& p)
 {
     setLookAndFeel (&lnf);
     lnf.setAccentColour (theme::mangoYellow);   // tints every inherited combo box's menu
+    tooltipWindow.setLookAndFeel (&lnf);        // nullptr-parented, so it needs telling
 
     // The fruit + waveform artwork fills the gap left of the meters (it
     // carries the same yellow -> green -> red ramp as the rest of the GUI).

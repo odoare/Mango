@@ -51,7 +51,7 @@ deprecation sweep.
       after `setLookAndFeel (&lnf);`. Unbuilt — confirm the drop-down tint by
       hand.
 
-- [ ] **R2. `setTooltip()` is called but no `juce::TooltipWindow` exists, so
+- [x] **R2. `setTooltip()` is called but no `juce::TooltipWindow` exists, so
       no tooltip in the plugin is ever visible.**
       [PluginEditor.cpp:45](../Source/PluginEditor.cpp#L45)
       (`presetToggle.setTooltip(...)`) and
@@ -66,7 +66,14 @@ deprecation sweep.
       `nullptr`-parented TooltipWindow lives on the desktop and uses the
       *default* look-and-feel otherwise).
       **decision** — this makes tooltips start appearing everywhere in the
-      plugin, which is a product/UX choice, not a pure cleanup.
+      plugin, which is a product/UX choice, not a pure cleanup. **Done**, by
+      the user's explicit choice: `juce::TooltipWindow tooltipWindow { nullptr,
+      700 };` added to [PluginEditor.h](../Source/PluginEditor.h#L101-L103)
+      (after `splash`), `tooltipWindow.setLookAndFeel (&lnf);` added at
+      [PluginEditor.cpp:23](../Source/PluginEditor.cpp#L23). Destruction order
+      is safe as-is: `tooltipWindow` is declared after `lnf`, so it is
+      destroyed first, well before `lnf` goes away. Unbuilt — worth a look for
+      any tooltip whose wording assumed it would never be seen.
 
 - [ ] **R3. The distortion effect's output-gain knob is bipolar but is never
       told so, so its value arc fills from -24 dB instead of growing from

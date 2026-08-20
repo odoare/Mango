@@ -100,6 +100,10 @@ private:
     // and whenever the top bar's artwork is clicked.
     fxme::SplashOverlay splash;
 
+    // Parented to nullptr so it lives on the desktop above every child
+    // window; setLookAndFeel'd in the ctor so it still picks up lnf.
+    juce::TooltipWindow tooltipWindow { nullptr, 700 };
+
     int selectedLane  = -1;   // lane identity
     int selectedBlock = -1;
     int visibleLane = -1, visibleType = -1;
