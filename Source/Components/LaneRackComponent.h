@@ -307,6 +307,7 @@ private:
         {
             b.setButtonText (text);
             b.setAccent (accent, theme::text);
+            b.setMouseClickGrabsKeyboardFocus (false);
             addAndMakeVisible (b);
         }
 

@@ -59,6 +59,7 @@ MangoAudioProcessorEditor::MangoAudioProcessorEditor (MangoAudioProcessor& p)
     configToggle.setButtonText ("Configs");
     configToggle.setAccent (theme::mangoRed, theme::mangoRed.brighter (0.3f));
     configToggle.setTooltip ("Store / recall sequencer configurations");
+    configToggle.setMouseClickGrabsKeyboardFocus (false);
     configToggle.onClick = [this] { showConfigs (configToggle.getToggleState()); };
     addAndMakeVisible (configToggle);
     addChildComponent (configPanel);

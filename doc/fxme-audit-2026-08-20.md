@@ -128,7 +128,7 @@ deprecation sweep.
       that all three curve-knob pairs now show empty at their 0.5 default
       rather than half-full.
 
-- [ ] **R4. Two toggle buttons can steal keyboard focus away from an
+- [x] **R4. Two toggle buttons can steal keyboard focus away from an
       in-progress block-text edit, unlike every other utility button in the
       project.** `configToggle`
       ([PluginEditor.h:93](../Source/PluginEditor.h#L93),
@@ -149,7 +149,15 @@ deprecation sweep.
       **Fix:** add `setMouseClickGrabsKeyboardFocus (false)` inside
       `setupToggle()` (covers mute/solo/bus in one place) and one line next
       to `configToggle.setTooltip(...)` in the `PluginEditor` constructor.
-      **safe to apply**
+      **safe to apply** — **done**:
+      `configToggle.setMouseClickGrabsKeyboardFocus (false);` added at
+      [PluginEditor.cpp:62](../Source/PluginEditor.cpp#L62), and
+      `b.setMouseClickGrabsKeyboardFocus (false);` added inside
+      `setupToggle()` at
+      [LaneRackComponent.h:310](../Source/Components/LaneRackComponent.h#L310),
+      covering mute/solo/bus in the one place they're built. Unbuilt —
+      confirm clicking Mute/Solo/Bus/Configs mid-edit no longer steals the
+      caret.
 
 ## House style
 
