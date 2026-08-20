@@ -43,17 +43,17 @@ public:
             case EffectType::Gater:
                 addKnob (prefix + "gate_att", "Attack");
                 addKnob (prefix + "gate_rel", "Release");
-                addKnob (prefix + "gate_attcurve", "Att Curve");
-                addKnob (prefix + "gate_relcurve", "Rel Curve");
+                addKnob (prefix + "gate_attcurve", "Att Curve", nullptr, true, 0.5);
+                addKnob (prefix + "gate_relcurve", "Rel Curve", nullptr, true, 0.5);
                 addKnob (prefix + "gate_mix", "Mix");
                 addWeights (prefix + "gate_");
                 break;
 
             case EffectType::Grain:
                 addKnob (prefix + "grain_att", "Attack");
-                addKnob (prefix + "grain_attcurve", "Att Curve");
+                addKnob (prefix + "grain_attcurve", "Att Curve", nullptr, true, 0.5);
                 addKnob (prefix + "grain_rel", "Release");
-                addKnob (prefix + "grain_relcurve", "Rel Curve");
+                addKnob (prefix + "grain_relcurve", "Rel Curve", nullptr, true, 0.5);
                 addKnob (prefix + "grain_mix", "Mix");
                 addWeights (prefix + "grain_");
                 break;
@@ -71,7 +71,7 @@ public:
                 addKnob (prefix + "dist_drive", "Drive");
                 addKnob (prefix + "dist_bias", "Bias");
                 addKnob (prefix + "dist_sag", "Sag");
-                addKnob (prefix + "dist_gain", "Out dB");
+                addKnob (prefix + "dist_gain", "Out dB", nullptr, true);   // -24..+24 dB, centred on 0
                 addKnob (prefix + "dist_mix", "Mix");
                 break;
 
@@ -117,8 +117,8 @@ public:
                 addKnob (prefix + "aux_pass", "Pass");
                 addKnob (prefix + "aux_att", "Attack");
                 addKnob (prefix + "aux_rel", "Release");
-                addKnob (prefix + "aux_attcurve", "Att Curve");
-                addKnob (prefix + "aux_relcurve", "Rel Curve");
+                addKnob (prefix + "aux_attcurve", "Att Curve", nullptr, true, 0.5);
+                addKnob (prefix + "aux_relcurve", "Rel Curve", nullptr, true, 0.5);
                 addWeights (prefix + "aux_");
                 break;
 
@@ -440,12 +440,13 @@ private:
     };
 
     void addKnob (const juce::String& paramId, const juce::String& label,
-                  std::vector<Knob>* target = nullptr)
+                  std::vector<Knob>* target = nullptr, bool bipolar = false,
+                  double centreValue = 0.0)
     {
         auto& list = *(target != nullptr ? target : &knobs);
         auto& k = list.emplace_back();
         k.slider = std::make_unique<fxme::FxmeSlider>();
-        theme::styleKnob (*k.slider, label, accent);
+        theme::styleKnob (*k.slider, label, accent, bipolar, centreValue);
         addAndMakeVisible (*k.slider);
         k.att = std::make_unique<SliderAttachment> (apvts, paramId, *k.slider);
     }

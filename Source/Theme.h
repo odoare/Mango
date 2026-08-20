@@ -118,8 +118,12 @@ namespace mng::theme
     // FxmeTools rotary knob: dark disc, one accent per control on the value
     // arc / outline / pointer; FxmeLookAndFeel draws the value read-out inside
     // the knob and the label (the slider's name) just below it.
+    // `centreValue` is in the slider's own units (0.0 suits a ±range like
+    // pan or dist_gain; a 0..1 "curve" knob whose neutral setting is its
+    // midpoint wants 0.5) — see setCentralValue()'s own docs on why the
+    // geometric midpoint only coincides with the meaningful one sometimes.
     inline void styleKnob (fxme::FxmeSlider& s, const juce::String& name, juce::Colour a,
-                           bool bipolar = false)
+                           bool bipolar = false, double centreValue = 0.0)
     {
         s.setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
         s.setName (name);
@@ -129,7 +133,7 @@ namespace mng::theme
         s.setColour (juce::Slider::trackColourId,               a);
         s.setColour (juce::Slider::thumbColourId,               a.brighter (0.4f));
         if (bipolar)
-            s.setCentralValue (0.0);
+            s.setCentralValue (centreValue);
     }
 
     /** Round "i" help button: accent on the disc, the panel palette on the

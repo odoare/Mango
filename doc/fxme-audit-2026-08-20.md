@@ -75,7 +75,7 @@ deprecation sweep.
       destroyed first, well before `lnf` goes away. Unbuilt — worth a look for
       any tooltip whose wording assumed it would never be seen.
 
-- [ ] **R3. The distortion effect's output-gain knob is bipolar but is never
+- [x] **R3. The distortion effect's output-gain knob is bipolar but is never
       told so, so its value arc fills from -24 dB instead of growing from
       0 dB.** The `dist_gain` parameter
       ([DistortionEffect.h:44-46](../Source/Dsp/Effects/DistortionEffect.h#L44-L46))
@@ -96,11 +96,37 @@ deprecation sweep.
       it through to `theme::styleKnob (*k.slider, label, accent, bipolar)`
       (the fourth parameter already exists and does exactly this, see
       [Theme.h:121-133](../Source/Theme.h#L121-L133)), and pass `true` only
-      at the `dist_gain` call site. Every other parameter reached through
-      `addKnob` was checked (grepped for `NormalisableRange<float> (-` across
-      `Dsp/Effects/` and `PluginProcessor.cpp`) and is genuinely unipolar, so
-      no other call site needs the flag.
-      **safe to apply**
+      at the `dist_gain` call site.
+      **safe to apply** — **done, but the original scoping was too narrow**:
+      the grep for `NormalisableRange<float> (-` (a literal negative lower
+      bound) missed a whole other class of bipolar control — a 0..1 knob
+      whose *meaningful* centre is 0.5 rather than the range minimum, which
+      doesn't show up as a negative bound. The user caught this on the Att
+      Curve / Rel Curve knobs; grepping for `curve` across `Dsp/Effects/`
+      found it applies to six knobs across three effects (`gate_attcurve`/
+      `gate_relcurve`, `grain_attcurve`/`grain_relcurve`,
+      `aux_attcurve`/`aux_relcurve` — all range 0..1, default 0.5, "0.5 is
+      the linear ramp" per each effect's own doc comment), not just the one
+      `dist_gain` knob.
+
+      That also exposed a real bug in the mechanical fix as first written:
+      `Theme::styleKnob`'s `bipolar` branch hardcoded
+      `s.setCentralValue (0.0)`, which is correct for a ± range like
+      `dist_gain` or bus pan but wrong for a 0..1 range centred at 0.5 —
+      passing `bipolar=true` alone would have anchored the curve knobs at
+      the *bottom* of their range, not the middle, silently reintroducing
+      the same bug on a different set of controls. Fixed by replacing the
+      hardcoded 0.0 with a `double centreValue = 0.0` parameter on
+      `styleKnob` ([Theme.h:118-133](../Source/Theme.h#L118-L133), default
+      preserves the `dist_gain`/pan behaviour unchanged) and on
+      `EffectPanel::addKnob`
+      ([EffectPanel.h:442-452](../Source/Components/EffectPanel.h#L442-L452)).
+      All six curve call sites now pass `(nullptr, true, 0.5)`
+      ([EffectPanel.h:46-47, 54, 56, 120-121](../Source/Components/EffectPanel.h#L46-L47)).
+      `dist_gain` is untouched (its default `centreValue` of 0.0 is already
+      right). Unbuilt — confirm the "Out dB" knob fills from 12 o'clock, and
+      that all three curve-knob pairs now show empty at their 0.5 default
+      rather than half-full.
 
 - [ ] **R4. Two toggle buttons can steal keyboard focus away from an
       in-progress block-text edit, unlike every other utility button in the
