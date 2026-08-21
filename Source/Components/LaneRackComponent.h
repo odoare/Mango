@@ -434,14 +434,28 @@ private:
             case EffectType::Grain:
             {
                 const double dur = juce::jmax (1.0e-3, ovDurBeats (drawnBeats ("grain_")));
+                const auto seed = (uint64_t) (int64_t) apvts.getRawParameterValue (pid::seed)->load();
                 blockgfx::EnvShape s;
                 s.cycleBeats = dur;   // repetitions are contiguous
                 s.openBeats  = dur;
-                s.attFrac    = ovOr (OvKey::Att, param ("grain_att"));
-                s.relFrac    = ovOr (OvKey::Rel, param ("grain_rel"));
+                // Same draw indices as GrainDupEffect::onBlockEnter, so the
+                // picture matches the actual per-block Gaussian draw, not
+                // just the knobs' mean.
+                s.attFrac    = gaussianFraction (seed, (uint64_t) laneIndex, (uint64_t) b.id, 1,
+                                                 ovOr (OvKey::Att, param ("grain_att")),
+                                                 param ("grain_attstd"));
+                s.relFrac    = gaussianFraction (seed, (uint64_t) laneIndex, (uint64_t) b.id, 3,
+                                                 ovOr (OvKey::Rel, param ("grain_rel")),
+                                                 param ("grain_relstd"));
                 normaliseAttackRelease (s.attFrac, s.relFrac);
-                s.attGamma   = attackGammaFor (ovOr (OvKey::AttCurve, param ("grain_attcurve")));
-                s.relGamma   = releaseGammaFor (ovOr (OvKey::RelCurve, param ("grain_relcurve")));
+                const float attCurve = gaussianFraction (seed, (uint64_t) laneIndex, (uint64_t) b.id, 5,
+                                                         ovOr (OvKey::AttCurve, param ("grain_attcurve")),
+                                                         param ("grain_attcurvestd"));
+                const float relCurve = gaussianFraction (seed, (uint64_t) laneIndex, (uint64_t) b.id, 7,
+                                                         ovOr (OvKey::RelCurve, param ("grain_relcurve")),
+                                                         param ("grain_relcurvestd"));
+                s.attGamma   = attackGammaFor (attCurve);
+                s.relGamma   = releaseGammaFor (relCurve);
                 blockgfx::paintMirroredEnv (g, r, blockBeats, s, curveColour);
                 break;
             }
