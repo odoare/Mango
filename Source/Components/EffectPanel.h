@@ -54,6 +54,11 @@ public:
                 addKnob (prefix + "grain_attcurve", "Att Curve", nullptr, true, 0.5);
                 addKnob (prefix + "grain_rel", "Release");
                 addKnob (prefix + "grain_relcurve", "Rel Curve", nullptr, true, 0.5);
+                addKnob (prefix + "grain_attstd", "Att Std");
+                addKnob (prefix + "grain_attcurvestd", "AttCv Std");
+                addKnob (prefix + "grain_relstd", "Rel Std");
+                addKnob (prefix + "grain_relcurvestd", "RelCv Std");
+                addKnob (prefix + "grain_fade", "Fade");
                 addKnob (prefix + "grain_mix", "Mix");
                 addWeights (prefix + "grain_");
                 break;
@@ -327,10 +332,18 @@ private:
 
             case EffectType::Grain:
                 return "Records a short grain when the block starts and loops it "
-                       "for the whole block, so the sound freezes into a stutter.\n\n"
+                       "for the whole block, so the sound freezes into a stutter, "
+                       "repeating exactly at the drawn rate.\n\n"
                        "Attack and Release shape every repetition (not the block), "
-                       "as fractions of one grain. Seams are crossfaded over 15 ms. "
-                       "Short grains give pitched buzzes, long ones give stutters." + drawn;
+                       "as fractions of one grain, and each has a Std knob: every "
+                       "block draws its own value around the knob's mean instead of "
+                       "repeating it exactly, so the stutter doesn't chop with an "
+                       "identical envelope every pass (0 keeps it identical). Att Cv "
+                       "and Rel Cv Std do the same to the curve knobs.\n\n"
+                       "Fade is the seam crossfade - short keeps repeats tight, long "
+                       "smooths a grain that isn't looping cleanly on its own, at the "
+                       "cost of blurring the attack. Short grains give pitched "
+                       "buzzes, long ones give stutters." + drawn;
 
             case EffectType::Delay:
                 return "A feedback delay whose buffer keeps running between blocks, "

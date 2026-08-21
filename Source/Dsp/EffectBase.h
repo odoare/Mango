@@ -74,6 +74,26 @@ inline void normaliseAttackRelease (float& att, float& rel)
     }
 }
 
+/** `mean` shifted by a Gaussian(0,1) draw (Box-Muller on two deterministic
+    fxme::detrand::u01 draws) scaled by `std`, clamped to a valid 0..1
+    fraction. `std` <= 0 skips the draw and returns `mean` untouched — every
+    caller behaves this way at rest, and it sidesteps log(0) in the
+    Box-Muller transform for free. Shared by the retrigger effect and its
+    block visual, so the picture matches what the block actually plays. */
+inline float gaussianFraction (uint64_t seed, uint64_t laneIndex, uint64_t blockId,
+                               uint64_t drawIndex, float mean, float std)
+{
+    mean = juce::jlimit (0.0f, 1.0f, mean);
+    if (std <= 0.0f)
+        return mean;
+
+    const float u1 = juce::jmax (1.0e-6f, fxme::detrand::u01 (seed, laneIndex, blockId, drawIndex));
+    const float u2 = fxme::detrand::u01 (seed, laneIndex, blockId, drawIndex + 1);
+    const float z  = std::sqrt (-2.0f * std::log (u1))
+                    * std::cos (juce::MathConstants<float>::twoPi * u2);
+    return juce::jlimit (0.0f, 1.0f, mean + std * z);
+}
+
 /** The override for `key`, or `fallback` when the block doesn't set it. */
 inline float overrideOr (const BlockContext& ctx, OvKey key, float fallback)
 {
