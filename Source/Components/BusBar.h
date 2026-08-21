@@ -320,7 +320,7 @@ private:
 
     struct Group
     {
-        fxme::FxmeSlider vol, pan;
+        fxme::FxmeNumberBox vol, pan;
         std::unique_ptr<SliderAttachment> volAtt, panAtt;
     };
 

@@ -40,7 +40,7 @@ public:
         const auto prefix = pid::lanePrefix (laneIndex);
         switch (type)
         {
-            case EffectType::Gater:   // numberBox trial, paired layout - see addKnob()/layoutKnobPairs()
+            case EffectType::Gater:   // paired layout - see addKnob()/layoutKnobPairs(); Mix rides with the block-keys text
                 addKnob (prefix + "gate_att", "Attack", nullptr, false, 0.0, true);
                 addKnob (prefix + "gate_attstd", "Att Std", nullptr, false, 0.0, true);
                 addKnob (prefix + "gate_rel", "Release", nullptr, false, 0.0, true);
@@ -49,105 +49,106 @@ public:
                 addKnob (prefix + "gate_attcurvestd", "AttCv Std", nullptr, false, 0.0, true);
                 addKnob (prefix + "gate_relcurve", "Rel Curve", nullptr, true, 0.5, true);
                 addKnob (prefix + "gate_relcurvestd", "RelCv Std", nullptr, false, 0.0, true);
-                addKnob (prefix + "gate_mix", "Mix", nullptr, false, 0.0, true);   // odd one out: right, centred
+                addKnob (prefix + "gate_mix", "Mix", &primaryKnobs, false, 0.0, true);
                 addWeights (prefix + "gate_", true);
                 break;
 
-            case EffectType::Grain:
-                addKnob (prefix + "grain_att", "Attack");
-                addKnob (prefix + "grain_attcurve", "Att Curve", nullptr, true, 0.5);
-                addKnob (prefix + "grain_rel", "Release");
-                addKnob (prefix + "grain_relcurve", "Rel Curve", nullptr, true, 0.5);
-                addKnob (prefix + "grain_attstd", "Att Std");
-                addKnob (prefix + "grain_attcurvestd", "AttCv Std");
-                addKnob (prefix + "grain_relstd", "Rel Std");
-                addKnob (prefix + "grain_relcurvestd", "RelCv Std");
-                addKnob (prefix + "grain_fade", "Fade");
-                addKnob (prefix + "grain_mix", "Mix");
-                addWeights (prefix + "grain_");
+            case EffectType::Grain:   // paired layout - see layoutKnobPairs(); Mix rides with the block-keys text
+                addKnob (prefix + "grain_att", "Attack", nullptr, false, 0.0, true);
+                addKnob (prefix + "grain_attstd", "Att Std", nullptr, false, 0.0, true);
+                addKnob (prefix + "grain_rel", "Release", nullptr, false, 0.0, true);
+                addKnob (prefix + "grain_relstd", "Rel Std", nullptr, false, 0.0, true);
+                addKnob (prefix + "grain_attcurve", "Att Curve", nullptr, true, 0.5, true);
+                addKnob (prefix + "grain_attcurvestd", "AttCv Std", nullptr, false, 0.0, true);
+                addKnob (prefix + "grain_relcurve", "Rel Curve", nullptr, true, 0.5, true);
+                addKnob (prefix + "grain_relcurvestd", "RelCv Std", nullptr, false, 0.0, true);
+                addKnob (prefix + "grain_fade", "Fade", nullptr, false, 0.0, true);
+                addKnob (prefix + "grain_mix", "Mix", &primaryKnobs, false, 0.0, true);
+                addWeights (prefix + "grain_", true);
                 break;
 
-            case EffectType::Delay:
-                addKnob (prefix + "dly_dur", "Time");
-                addKnob (prefix + "dly_fb", "Feedback");
-                addKnob (prefix + "dly_damp", "Damping");
-                addKnob (prefix + "dly_porta", "Porta ms");
-                addKnob (prefix + "dly_durstd", "Time Std");
-                addKnob (prefix + "dly_fbstd", "Fb Std");
-                addKnob (prefix + "dly_dampstd", "Damp Std");
-                addKnob (prefix + "dly_mix", "Mix");
+            case EffectType::Delay:   // paired layout - see layoutKnobPairs(); Mix rides with the block-keys text
+                addKnob (prefix + "dly_dur", "Time", nullptr, false, 0.0, true);
+                addKnob (prefix + "dly_durstd", "Time Std", nullptr, false, 0.0, true);
+                addKnob (prefix + "dly_fb", "Feedback", nullptr, false, 0.0, true);
+                addKnob (prefix + "dly_fbstd", "Fb Std", nullptr, false, 0.0, true);
+                addKnob (prefix + "dly_damp", "Damping", nullptr, false, 0.0, true);
+                addKnob (prefix + "dly_dampstd", "Damp Std", nullptr, false, 0.0, true);
+                addKnob (prefix + "dly_porta", "Porta ms", nullptr, false, 0.0, true);
+                addKnob (prefix + "dly_mix", "Mix", &primaryKnobs, false, 0.0, true);
                 break;
 
             case EffectType::Distortion:
                 addCombo (prefix + "dist_model", "Model");
-                addKnob (prefix + "dist_drive", "Drive");
-                addKnob (prefix + "dist_bias", "Bias");
-                addKnob (prefix + "dist_sag", "Sag");
-                addKnob (prefix + "dist_gain", "Out dB", nullptr, true);   // -24..+24 dB, centred on 0
-                addKnob (prefix + "dist_mix", "Mix");
+                addKnob (prefix + "dist_drive", "Drive", nullptr, false, 0.0, true);
+                addKnob (prefix + "dist_bias", "Bias", nullptr, false, 0.0, true);
+                addKnob (prefix + "dist_sag", "Sag", nullptr, false, 0.0, true);
+                // -24..+24 dB, centred on 0:
+                addKnob (prefix + "dist_gain", "Out dB", nullptr, true, 0.0, true);
+                addKnob (prefix + "dist_mix", "Mix", &primaryKnobs, false, 0.0, true);
                 break;
 
             case EffectType::FilterEnv:
                 addCombo (prefix + "flt_mode", "Mode");
                 addCombo (prefix + "flt_v0", "Vowels");
                 addCombo (prefix + "flt_v1", "to");
-                addKnob (prefix + "flt_q", "Q");
-                addKnob (prefix + "flt_f0", "Start Hz");
-                addKnob (prefix + "flt_f1", "End Hz");
-                addKnob (prefix + "flt_mix", "Mix");
-                addWeights (prefix + "flt_");
+                addKnob (prefix + "flt_q", "Q", nullptr, false, 0.0, true);
+                addKnob (prefix + "flt_f0", "Start Hz", nullptr, false, 0.0, true);
+                addKnob (prefix + "flt_f1", "End Hz", nullptr, false, 0.0, true);
+                addKnob (prefix + "flt_mix", "Mix", &primaryKnobs, false, 0.0, true);
+                addWeights (prefix + "flt_", true);
                 break;
 
-            case EffectType::Quantizer:
-                addKnob (prefix + "qnt_bits", "Bits");
-                addKnob (prefix + "qnt_down", "Downsmp");
-                addKnob (prefix + "qnt_bitsstd", "Bits Std");
-                addKnob (prefix + "qnt_downstd", "Down Std");
-                addKnob (prefix + "qnt_mix", "Mix");
+            case EffectType::Quantizer:   // paired layout - see layoutKnobPairs(); Mix rides with the block-keys text
+                addKnob (prefix + "qnt_bits", "Bits", nullptr, false, 0.0, true);
+                addKnob (prefix + "qnt_bitsstd", "Bits Std", nullptr, false, 0.0, true);
+                addKnob (prefix + "qnt_down", "Downsmp", nullptr, false, 0.0, true);
+                addKnob (prefix + "qnt_downstd", "Down Std", nullptr, false, 0.0, true);
+                addKnob (prefix + "qnt_mix", "Mix", &primaryKnobs, false, 0.0, true);
                 break;
 
-            case EffectType::RingMod:
-                addKnob (prefix + "ring_f0", "Start Hz");
-                addKnob (prefix + "ring_f1", "End Hz");
-                addKnob (prefix + "ring_f0std", "Start Std");
-                addKnob (prefix + "ring_f1std", "End Std");
-                addKnob (prefix + "ring_amp", "Amount");
-                addWeights (prefix + "ring_");
+            case EffectType::RingMod:   // paired layout - see layoutKnobPairs(); Amount rides with the block-keys text
+                addKnob (prefix + "ring_f0", "Start Hz", nullptr, false, 0.0, true);
+                addKnob (prefix + "ring_f0std", "Start Std", nullptr, false, 0.0, true);
+                addKnob (prefix + "ring_f1", "End Hz", nullptr, false, 0.0, true);
+                addKnob (prefix + "ring_f1std", "End Std", nullptr, false, 0.0, true);
+                addKnob (prefix + "ring_amp", "Amount", &primaryKnobs, false, 0.0, true);
+                addWeights (prefix + "ring_", true);
                 break;
 
             case EffectType::Reverser:
-                addKnob (prefix + "rev_fade", "Fade");
-                addKnob (prefix + "rev_mix", "Mix");
-                addWeights (prefix + "rev_");
+                addKnob (prefix + "rev_fade", "Fade", nullptr, false, 0.0, true);
+                addKnob (prefix + "rev_mix", "Mix", &primaryKnobs, false, 0.0, true);
+                addWeights (prefix + "rev_", true);
                 break;
 
-            case EffectType::Freeze:
-                addKnob (prefix + "frz_mix", "Mix");
-                addKnob (prefix + "frz_width", "Width");
-                addKnob (prefix + "frz_widthstd", "Width Std");
-                addWeights (prefix + "frz_");   // retrigger grid
+            case EffectType::Freeze:   // paired layout - see layoutKnobPairs(); Mix rides with the block-keys text
+                addKnob (prefix + "frz_width", "Width", nullptr, false, 0.0, true);
+                addKnob (prefix + "frz_widthstd", "Width Std", nullptr, false, 0.0, true);
+                addKnob (prefix + "frz_mix", "Mix", &primaryKnobs, false, 0.0, true);
+                addWeights (prefix + "frz_", true);   // retrigger grid
                 break;
 
-            case EffectType::AuxSend:
-                addKnob (prefix + "aux_send1", "Aux 1");
-                addKnob (prefix + "aux_send2", "Aux 2");
-                addKnob (prefix + "aux_pass", "Pass");
-                addKnob (prefix + "aux_att", "Attack");
-                addKnob (prefix + "aux_rel", "Release");
-                addKnob (prefix + "aux_attcurve", "Att Curve", nullptr, true, 0.5);
-                addKnob (prefix + "aux_relcurve", "Rel Curve", nullptr, true, 0.5);
-                addKnob (prefix + "aux_attstd", "Att Std");
-                addKnob (prefix + "aux_relstd", "Rel Std");
-                addKnob (prefix + "aux_attcurvestd", "AttCv Std");
-                addKnob (prefix + "aux_relcurvestd", "RelCv Std");
-                addWeights (prefix + "aux_");
+            case EffectType::AuxSend:   // paired layout - see layoutKnobPairs(); sends/Pass ride with the block-keys text
+                addKnob (prefix + "aux_send1", "Aux 1", &primaryKnobs, false, 0.0, true);
+                addKnob (prefix + "aux_send2", "Aux 2", &primaryKnobs, false, 0.0, true);
+                addKnob (prefix + "aux_pass", "Pass", &primaryKnobs, false, 0.0, true);
+                addKnob (prefix + "aux_att", "Attack", nullptr, false, 0.0, true);
+                addKnob (prefix + "aux_attstd", "Att Std", nullptr, false, 0.0, true);
+                addKnob (prefix + "aux_rel", "Release", nullptr, false, 0.0, true);
+                addKnob (prefix + "aux_relstd", "Rel Std", nullptr, false, 0.0, true);
+                addKnob (prefix + "aux_attcurve", "Att Curve", nullptr, true, 0.5, true);
+                addKnob (prefix + "aux_attcurvestd", "AttCv Std", nullptr, false, 0.0, true);
+                addKnob (prefix + "aux_relcurve", "Rel Curve", nullptr, true, 0.5, true);
+                addKnob (prefix + "aux_relcurvestd", "RelCv Std", nullptr, false, 0.0, true);
+                addWeights (prefix + "aux_", true);
                 break;
 
             case EffectType::Panner:
                 addCombo (prefix + "pan_mode", "Mode");
-                addKnob (prefix + "pan_glide", "Glide");
-                addKnob (prefix + "pan_mix", "Mix");
-                addWeights (prefix + "pan_");
+                addKnob (prefix + "pan_glide", "Glide", nullptr, false, 0.0, true);
+                addKnob (prefix + "pan_mix", "Mix", &primaryKnobs, false, 0.0, true);
+                addWeights (prefix + "pan_", true);
                 break;
         }
 
@@ -219,13 +220,23 @@ public:
             r.removeFromTop (3);
         }
 
-        if (type == EffectType::Gater)
-            // Paired knobs a size down from the usual 70 (matches the weight
-            // knobs below, so every control on this panel is now the same
-            // size); Mix stays at 70, unreduced, in its own centred column.
-            layoutKnobPairs (knobs, r, 5, 52, 70);
-        else
-            layoutKnobRow (knobs, r, 5, 70);   // 5/row: the widest sets keep one row
+        // Panels with mean/std pairs get them stacked (a size down from the
+        // usual 70, matching the weight knobs below). Grain and Delay each
+        // have one further knob (Fade, Porta) that doesn't pair, held out at
+        // the original 70 in its own column - see layoutKnobPairs. Mix (or
+        // Amount, or AuxSend's sends/Pass) never sits in this grid at all -
+        // see primaryKnobs below. Everything else keeps the plain row layout.
+        switch (type)
+        {
+            case EffectType::Gater:     layoutKnobPairs (knobs, r, 5, 52); break;
+            case EffectType::Grain:     layoutKnobPairs (knobs, r, 5, 52, 70, 0, 1); break;   // Fade trailing
+            case EffectType::Delay:     layoutKnobPairs (knobs, r, 5, 52, 70, 0, 1); break;   // Porta trailing
+            case EffectType::Quantizer: layoutKnobPairs (knobs, r, 5, 52); break;
+            case EffectType::RingMod:   layoutKnobPairs (knobs, r, 5, 52); break;
+            case EffectType::Freeze:    layoutKnobPairs (knobs, r, 5, 52); break;
+            case EffectType::AuxSend:   layoutKnobPairs (knobs, r, 5, 52); break;
+            default:                    layoutKnobRow (knobs, r, 5, 70); break;   // Distortion/FilterEnv/Reverser/Panner
+        }
 
         if (! weightKnobs.empty())
         {
@@ -237,6 +248,18 @@ public:
         }
 
         keywordsArea = r.removeFromBottom (juce::jmin (50, r.getHeight())).reduced (2, 0);
+
+        // Mix/Amount/the aux sends ride along the same band as the
+        // block-keys text instead of taking a slot in the grid above -
+        // squared off to that band's height so it keeps a sane aspect
+        // ratio rather than the full-width stretch a lone knob got before.
+        if (! primaryKnobs.empty())
+        {
+            const int box = keywordsArea.getHeight();
+            auto primaryArea = keywordsArea.removeFromRight (box * (int) primaryKnobs.size());
+            for (auto& k : primaryKnobs)
+                k.slider->setBounds (primaryArea.removeFromLeft (box).reduced (2));
+        }
     }
 
     int laneOf() const  { return laneIndex; }
@@ -248,7 +271,7 @@ public:
         if (accent == newAccent)
             return;
         accent = newAccent;
-        for (auto* list : { &knobs, &weightKnobs })
+        for (auto* list : { &knobs, &weightKnobs, &primaryKnobs })
             for (auto& k : *list)
                 theme::styleKnob (*k.slider, k.slider->getName(), accent);
         for (auto& c : combos)
@@ -505,39 +528,57 @@ private:
         }
     }
 
-    /** Lays out `list` two at a time in a column: list[i] (a control) on
-        top, list[i+1] (its paired std knob) directly below it - so the
-        caller supplies the list already ordered [mean, std, mean, std, ...].
-        A trailing knob with no partner (Gater's Mix) gets a column of its
-        own, sized `oddRowHeight` (defaults to `rowHeight`) and centred
-        within the full two-row height rather than stretched into it - which
-        is also what puts it on the right, since columns fill left to right
-        and it is always last. Wraps to further rows of columns once one is
+    /** Lays out `list` as `leadingSingles` independent controls, then pairs
+        (a control immediately followed by its std knob, stacked in one
+        column), then `trailingSingles` more independent controls - so the
+        caller supplies the list pre-ordered to match (Grain: 4 pairs then
+        Fade trailing; Delay: 3 pairs then Porta trailing; everyone else
+        here is pure pairs). Each column is a fixed `rowArea.getWidth() /
+        perRow` wide, same as layoutKnobRow uses - so a panel with fewer
+        columns than perRow (Freeze's single pair, say) keeps every
+        control's aspect ratio instead of stretching to fill the panel. A
+        single gets a column of its own, sized `oddRowHeight` (defaults to
+        `rowHeight`) and centred within the full two-row height rather than
+        stretched into it. Wraps to further rows of columns once one is
         full, same as layoutKnobRow. */
     static void layoutKnobPairs (std::vector<Knob>& list, juce::Rectangle<int>& area,
-                                 int perRow, int rowHeight, int oddRowHeight = -1)
+                                 int perRow, int rowHeight, int oddRowHeight = -1,
+                                 int leadingSingles = 0, int trailingSingles = 0)
     {
         if (oddRowHeight < 0)
             oddRowHeight = rowHeight;
 
-        const int numCols = (int) ((list.size() + 1) / 2);
+        const int numPairs = ((int) list.size() - leadingSingles - trailingSingles) / 2;
+        const int numCols  = leadingSingles + numPairs + trailingSingles;
+
         for (int firstCol = 0; firstCol < numCols; firstCol += perRow)
         {
             auto rowArea = area.removeFromTop (rowHeight * 2);
             const int colsHere = juce::jmin (perRow, numCols - firstCol);
-            const int w = rowArea.getWidth() / colsHere;
+            const int w = rowArea.getWidth() / perRow;
             for (int c = 0; c < colsHere; ++c)
             {
                 auto col = rowArea.removeFromLeft (w).reduced (2, 0);
-                const size_t i = (size_t) (firstCol + c) * 2;
-                if (i + 1 < list.size())
+                const int colIdx = firstCol + c;
+
+                if (colIdx < leadingSingles)
                 {
+                    list[(size_t) colIdx].slider->setBounds (
+                        col.withSizeKeepingCentre (col.getWidth(), oddRowHeight));
+                }
+                else if (colIdx < leadingSingles + numPairs)
+                {
+                    const size_t i = (size_t) leadingSingles
+                                    + (size_t) (colIdx - leadingSingles) * 2;
                     list[i].slider->setBounds     (col.removeFromTop (rowHeight));
                     list[i + 1].slider->setBounds (col.removeFromTop (rowHeight));
                 }
                 else
                 {
-                    list[i].slider->setBounds (col.withSizeKeepingCentre (col.getWidth(), oddRowHeight));
+                    const size_t i = (size_t) leadingSingles + (size_t) numPairs * 2
+                                    + (size_t) (colIdx - leadingSingles - numPairs);
+                    list[i].slider->setBounds (
+                        col.withSizeKeepingCentre (col.getWidth(), oddRowHeight));
                 }
             }
         }
@@ -549,7 +590,7 @@ private:
     juce::Colour     accent;   // follows the lane's bus (setAccent)
     juce::String     title;
 
-    std::vector<Knob>  knobs, weightKnobs;
+    std::vector<Knob>  knobs, weightKnobs, primaryKnobs;   // primaryKnobs: Mix/Amount/aux sends, by the block-keys text
     std::deque<Combo>  combos;
     fxme::InfoButton   info;
     juce::Rectangle<int> weightsLabelArea, keywordsArea;
