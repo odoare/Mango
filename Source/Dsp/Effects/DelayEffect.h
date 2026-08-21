@@ -13,6 +13,14 @@
     note, damping sets the string's brightness decay, and portamento slurs
     the pitch between notes.
 
+    Time, Feedback and Damping each have a paired *std* knob: every block
+    draws its actual value around the knob's mean by a Gaussian
+    (gaussianDraw()/gaussianFraction(), EffectBase.h) scaled by the std
+    (0 = every block identical, the default), clamped back to the
+    parameter's own valid range. Unlike the gater-family effects this one
+    draws nothing else at block entry (dur/fb/damp aren't taken from a
+    weighted table), so it owns draw indices 0-5 for itself.
+
     Overrides: dur (note-value / mididur convention), fb, damp,
     porta (milliseconds), mix.
 
@@ -43,14 +51,23 @@ public:
         durRange.setSkewForCentre (0.25f);
         params.push_back (std::make_unique<juce::AudioParameterFloat> (
             lanePrefix + "dly_dur", nameP + "Delay Time", durRange, 0.25f));
+        params.push_back (std::make_unique<juce::AudioParameterFloat> (
+            lanePrefix + "dly_durstd", nameP + "Delay Time Std",
+            juce::NormalisableRange<float> (0.0f, 1.0f, 0.001f), 0.0f));
         // Skewed so the resonator-grade range (>0.9) keeps knob travel.
         auto fbRange = juce::NormalisableRange<float> (0.0f, kMaxFeedback, 0.001f);
         fbRange.setSkewForCentre (0.6f);
         params.push_back (std::make_unique<juce::AudioParameterFloat> (
             lanePrefix + "dly_fb", nameP + "Delay Feedback", fbRange, 0.5f));
         params.push_back (std::make_unique<juce::AudioParameterFloat> (
+            lanePrefix + "dly_fbstd", nameP + "Delay Feedback Std",
+            juce::NormalisableRange<float> (0.0f, 0.5f, 0.001f), 0.0f));
+        params.push_back (std::make_unique<juce::AudioParameterFloat> (
             lanePrefix + "dly_damp", nameP + "Delay Damping",
             juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.0f));
+        params.push_back (std::make_unique<juce::AudioParameterFloat> (
+            lanePrefix + "dly_dampstd", nameP + "Delay Damping Std",
+            juce::NormalisableRange<float> (0.0f, 0.5f, 0.001f), 0.0f));
         params.push_back (std::make_unique<juce::AudioParameterFloat> (
             lanePrefix + "dly_porta", nameP + "Delay Portamento",
             juce::NormalisableRange<float> (kMinPortaMs, kMaxPortaMs, 0.1f), 30.0f));
@@ -61,11 +78,14 @@ public:
 
     void bindParameters (juce::AudioProcessorValueTreeState& apvts, const juce::String& lanePrefix)
     {
-        durParam   = apvts.getRawParameterValue (lanePrefix + "dly_dur");
-        fbParam    = apvts.getRawParameterValue (lanePrefix + "dly_fb");
-        dampParam  = apvts.getRawParameterValue (lanePrefix + "dly_damp");
-        portaParam = apvts.getRawParameterValue (lanePrefix + "dly_porta");
-        mixParam   = apvts.getRawParameterValue (lanePrefix + "dly_mix");
+        durParam    = apvts.getRawParameterValue (lanePrefix + "dly_dur");
+        durStdParam = apvts.getRawParameterValue (lanePrefix + "dly_durstd");
+        fbParam     = apvts.getRawParameterValue (lanePrefix + "dly_fb");
+        fbStdParam  = apvts.getRawParameterValue (lanePrefix + "dly_fbstd");
+        dampParam   = apvts.getRawParameterValue (lanePrefix + "dly_damp");
+        dampStdParam = apvts.getRawParameterValue (lanePrefix + "dly_dampstd");
+        portaParam  = apvts.getRawParameterValue (lanePrefix + "dly_porta");
+        mixParam    = apvts.getRawParameterValue (lanePrefix + "dly_mix");
     }
 
     void prepare (double sr, int, int numChannels) override
@@ -95,6 +115,37 @@ public:
         dampValue  = juce::jlimit (0.0f, 1.0f, overrideOr (ctx, OvKey::Damp, dampParam->load()));
         portaValue = juce::jlimit (kMinPortaMs, kMaxPortaMs,
                                    overrideOr (ctx, OvKey::Porta, portaParam->load()));
+
+        // A std knob > 0 pins a per-block Gaussian draw around the mean,
+        // the same way a block-string override pins a value - only when
+        // the block doesn't already set it explicitly (the mini-language
+        // always wins). At std == 0 (the default) nothing changes here:
+        // *Override stays false and process() keeps tracking the knob live,
+        // exactly as before. Above 0 the knob stops gliding continuously
+        // and instead snaps (still through the portamento smoothing) to a
+        // freshly drawn value on every re-entry - a live tweak still
+        // re-enters and redraws, so it doesn't feel unresponsive, but the
+        // "randomised" character replaces true continuous tracking.
+        if (! durOverride && durStdParam->load() > 0.0f)
+        {
+            durOverride = true;
+            durValue = gaussianDraw (ctx.seed, (uint64_t) ctx.laneIndex, (uint64_t) ctx.blockId,
+                                     0, durParam->load(), durStdParam->load(),
+                                     0.001f, kMaxDelaySeconds);
+        }
+        if (! fbOverride && fbStdParam->load() > 0.0f)
+        {
+            fbOverride = true;
+            fbValue = gaussianDraw (ctx.seed, (uint64_t) ctx.laneIndex, (uint64_t) ctx.blockId,
+                                    2, fbParam->load(), fbStdParam->load(),
+                                    0.0f, kMaxFeedback);
+        }
+        if (! dampOverride && dampStdParam->load() > 0.0f)
+        {
+            dampOverride = true;
+            dampValue = gaussianFraction (ctx.seed, (uint64_t) ctx.laneIndex, (uint64_t) ctx.blockId,
+                                          4, dampParam->load(), dampStdParam->load());
+        }
     }
 
     void onBlockExit() override {}   // tail persists in the buffer, processing stops
@@ -126,11 +177,14 @@ public:
     }
 
 private:
-    std::atomic<float>* durParam   = nullptr;
-    std::atomic<float>* fbParam    = nullptr;
-    std::atomic<float>* dampParam  = nullptr;
-    std::atomic<float>* portaParam = nullptr;
-    std::atomic<float>* mixParam   = nullptr;
+    std::atomic<float>* durParam     = nullptr;
+    std::atomic<float>* durStdParam  = nullptr;
+    std::atomic<float>* fbParam      = nullptr;
+    std::atomic<float>* fbStdParam   = nullptr;
+    std::atomic<float>* dampParam    = nullptr;
+    std::atomic<float>* dampStdParam = nullptr;
+    std::atomic<float>* portaParam   = nullptr;
+    std::atomic<float>* mixParam     = nullptr;
 
     std::vector<fxme::DelayLine> delays;
     bool  durOverride = false, fbOverride = false, dampOverride = false,

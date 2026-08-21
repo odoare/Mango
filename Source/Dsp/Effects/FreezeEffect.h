@@ -33,6 +33,13 @@
     every bounce produces the identical wash. A live-tweak re-enter keeps the
     running wash instead of re-capturing.
 
+    Width has a paired *std* knob: every block draws its actual value around
+    the knob's mean by a Gaussian (gaussianFraction(), EffectBase.h) scaled
+    by the std (0 = every block identical, the default), clamped back to a
+    valid 0..1 fraction, the same pin-for-the-block pattern DelayEffect uses
+    for its live-tracked parameters (draw index 1; the retrigger-grid draw
+    above owns index 0).
+
     Overrides: mix, width, and the weight keys w4..wdot (retrigger grid).
 
     Author: Olivier Doaré, github.com/odoare
@@ -63,6 +70,9 @@ public:
         params.push_back (std::make_unique<juce::AudioParameterFloat> (
             lanePrefix + "frz_width", nameP + "Freeze Width",
             juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 1.0f));
+        params.push_back (std::make_unique<juce::AudioParameterFloat> (
+            lanePrefix + "frz_widthstd", nameP + "Freeze Width Std",
+            juce::NormalisableRange<float> (0.0f, 0.5f, 0.001f), 0.0f));
         // Retrigger grid — defaults to straight 1/4 (DurationWeights' own
         // default), which never subdivides a freeze block of a quarter note
         // or less, so old sessions/presets keep their single-capture sound.
@@ -71,8 +81,9 @@ public:
 
     void bindParameters (juce::AudioProcessorValueTreeState& apvts, const juce::String& lanePrefix)
     {
-        mixParam   = apvts.getRawParameterValue (lanePrefix + "frz_mix");
-        widthParam = apvts.getRawParameterValue (lanePrefix + "frz_width");
+        mixParam      = apvts.getRawParameterValue (lanePrefix + "frz_mix");
+        widthParam    = apvts.getRawParameterValue (lanePrefix + "frz_width");
+        widthStdParam = apvts.getRawParameterValue (lanePrefix + "frz_widthstd");
         weights.bind (apvts, lanePrefix + "frz_");
     }
 
@@ -94,6 +105,16 @@ public:
         mixValue      = juce::jlimit (0.0f, 1.0f, overrideOr (ctx, OvKey::Mix, mixParam->load()));
         widthOverride = ctx.overrides != nullptr && ctx.overrides->find (OvKey::Width) != nullptr;
         widthValue    = juce::jlimit (0.0f, 1.0f, overrideOr (ctx, OvKey::Width, widthParam->load()));
+
+        // A std knob > 0 pins a per-block Gaussian draw around the mean,
+        // the same way a block-string override pins a value (see
+        // DelayEffect for the same pattern).
+        if (! widthOverride && widthStdParam->load() > 0.0f)
+        {
+            widthOverride = true;
+            widthValue = gaussianFraction (ctx.seed, (uint64_t) ctx.laneIndex, (uint64_t) ctx.blockId,
+                                           1, widthParam->load(), widthStdParam->load());
+        }
 
         // Retrigger interval (samples) drawn from the weights, and the block's
         // length for the retrigger grid and the end fade. Both resolved once,
@@ -164,8 +185,9 @@ private:
                              (float) ((int64_t) blockLenSamples - pos) / (float) releaseSamples);
     }
 
-    std::atomic<float>* mixParam   = nullptr;
-    std::atomic<float>* widthParam = nullptr;
+    std::atomic<float>* mixParam      = nullptr;
+    std::atomic<float>* widthParam    = nullptr;
+    std::atomic<float>* widthStdParam = nullptr;
     DurationWeights weights;
 
     fxme::SpectralFreezeMulti freezer;

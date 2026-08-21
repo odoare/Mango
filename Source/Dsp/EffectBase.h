@@ -75,15 +75,17 @@ inline void normaliseAttackRelease (float& att, float& rel)
 }
 
 /** `mean` shifted by a Gaussian(0,1) draw (Box-Muller on two deterministic
-    fxme::detrand::u01 draws) scaled by `std`, clamped to a valid 0..1
-    fraction. `std` <= 0 skips the draw and returns `mean` untouched — every
-    caller behaves this way at rest, and it sidesteps log(0) in the
-    Box-Muller transform for free. Shared by the retrigger effect and its
-    block visual, so the picture matches what the block actually plays. */
-inline float gaussianFraction (uint64_t seed, uint64_t laneIndex, uint64_t blockId,
-                               uint64_t drawIndex, float mean, float std)
+    fxme::detrand::u01 draws) scaled by `std`, clamped to [minVal, maxVal].
+    `std` <= 0 skips the draw and returns `mean` untouched (still clamped) —
+    every caller behaves this way at rest, and it sidesteps log(0) in the
+    Box-Muller transform for free. Shared by every effect whose knobs draw a
+    per-block value around a mean, and their block visuals, so the picture
+    matches what actually plays. */
+inline float gaussianDraw (uint64_t seed, uint64_t laneIndex, uint64_t blockId,
+                           uint64_t drawIndex, float mean, float std,
+                           float minVal, float maxVal)
 {
-    mean = juce::jlimit (0.0f, 1.0f, mean);
+    mean = juce::jlimit (minVal, maxVal, mean);
     if (std <= 0.0f)
         return mean;
 
@@ -91,7 +93,15 @@ inline float gaussianFraction (uint64_t seed, uint64_t laneIndex, uint64_t block
     const float u2 = fxme::detrand::u01 (seed, laneIndex, blockId, drawIndex + 1);
     const float z  = std::sqrt (-2.0f * std::log (u1))
                     * std::cos (juce::MathConstants<float>::twoPi * u2);
-    return juce::jlimit (0.0f, 1.0f, mean + std * z);
+    return juce::jlimit (minVal, maxVal, mean + std * z);
+}
+
+/** gaussianDraw() specialised to a 0..1 fraction — attack/release lengths,
+    curve knobs, mix/width amounts: the common case among the effects here. */
+inline float gaussianFraction (uint64_t seed, uint64_t laneIndex, uint64_t blockId,
+                               uint64_t drawIndex, float mean, float std)
+{
+    return gaussianDraw (seed, laneIndex, blockId, drawIndex, mean, std, 0.0f, 1.0f);
 }
 
 /** The override for `key`, or `fallback` when the block doesn't set it. */

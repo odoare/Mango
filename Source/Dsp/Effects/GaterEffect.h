@@ -16,6 +16,13 @@
     exponential decay. Implemented as gain = ramp^gamma with
     gamma = kCurveRange^(±(1 - 2*curve)).
 
+    Each of the four envelope knobs (att, rel, attcurve, relcurve) has a
+    paired *std* knob: every block draws its actual value around the knob's
+    mean by a Gaussian (gaussianFraction(), EffectBase.h) scaled by the std
+    (0 = every block identical, the default), clamped back to a valid 0..1
+    fraction. So a rack of Gater lanes doesn't chop with an identical
+    envelope on every pass.
+
     Overrides: dur, att, rel, attcurve, relcurve, mix.
 
     Author: Olivier Doaré, github.com/odoare
@@ -42,14 +49,26 @@ public:
             lanePrefix + "gate_att", nameP + "Gate Attack",
             juce::NormalisableRange<float> (0.0f, 1.0f, 0.001f), 0.02f));
         params.push_back (std::make_unique<juce::AudioParameterFloat> (
+            lanePrefix + "gate_attstd", nameP + "Gate Attack Std",
+            juce::NormalisableRange<float> (0.0f, 0.5f, 0.001f), 0.0f));
+        params.push_back (std::make_unique<juce::AudioParameterFloat> (
             lanePrefix + "gate_rel", nameP + "Gate Release",
             juce::NormalisableRange<float> (0.0f, 1.0f, 0.001f), 0.02f));
+        params.push_back (std::make_unique<juce::AudioParameterFloat> (
+            lanePrefix + "gate_relstd", nameP + "Gate Release Std",
+            juce::NormalisableRange<float> (0.0f, 0.5f, 0.001f), 0.0f));
         params.push_back (std::make_unique<juce::AudioParameterFloat> (
             lanePrefix + "gate_attcurve", nameP + "Gate Attack Curve",
             juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.5f));
         params.push_back (std::make_unique<juce::AudioParameterFloat> (
+            lanePrefix + "gate_attcurvestd", nameP + "Gate Attack Curve Std",
+            juce::NormalisableRange<float> (0.0f, 0.5f, 0.001f), 0.0f));
+        params.push_back (std::make_unique<juce::AudioParameterFloat> (
             lanePrefix + "gate_relcurve", nameP + "Gate Release Curve",
             juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.5f));
+        params.push_back (std::make_unique<juce::AudioParameterFloat> (
+            lanePrefix + "gate_relcurvestd", nameP + "Gate Release Curve Std",
+            juce::NormalisableRange<float> (0.0f, 0.5f, 0.001f), 0.0f));
         params.push_back (std::make_unique<juce::AudioParameterFloat> (
             lanePrefix + "gate_mix", nameP + "Gate Mix",
             juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 1.0f));
@@ -58,11 +77,15 @@ public:
     void bindParameters (juce::AudioProcessorValueTreeState& apvts, const juce::String& lanePrefix)
     {
         weights.bind (apvts, lanePrefix + "gate_");
-        attParam      = apvts.getRawParameterValue (lanePrefix + "gate_att");
-        relParam      = apvts.getRawParameterValue (lanePrefix + "gate_rel");
-        attCurveParam = apvts.getRawParameterValue (lanePrefix + "gate_attcurve");
-        relCurveParam = apvts.getRawParameterValue (lanePrefix + "gate_relcurve");
-        mixParam      = apvts.getRawParameterValue (lanePrefix + "gate_mix");
+        attParam         = apvts.getRawParameterValue (lanePrefix + "gate_att");
+        attStdParam      = apvts.getRawParameterValue (lanePrefix + "gate_attstd");
+        relParam         = apvts.getRawParameterValue (lanePrefix + "gate_rel");
+        relStdParam      = apvts.getRawParameterValue (lanePrefix + "gate_relstd");
+        attCurveParam    = apvts.getRawParameterValue (lanePrefix + "gate_attcurve");
+        attCurveStdParam = apvts.getRawParameterValue (lanePrefix + "gate_attcurvestd");
+        relCurveParam    = apvts.getRawParameterValue (lanePrefix + "gate_relcurve");
+        relCurveStdParam = apvts.getRawParameterValue (lanePrefix + "gate_relcurvestd");
+        mixParam         = apvts.getRawParameterValue (lanePrefix + "gate_mix");
     }
 
     void prepare (double sr, int, int) override { sampleRate = sr; }
@@ -78,8 +101,15 @@ public:
 
         gateSamples = juce::jmax (1, (int) std::lround (durSec * ctx.sampleRate));
 
-        float attFrac = overrideOr (ctx, OvKey::Att, attParam->load());
-        float relFrac = overrideOr (ctx, OvKey::Rel, relParam->load());
+        // Each block draws its own attack/release around the knob's mean,
+        // spread by the paired std knob (0 = deterministic, same as every
+        // other effect here).
+        float attFrac = gaussianFraction (ctx.seed, (uint64_t) ctx.laneIndex, (uint64_t) ctx.blockId,
+                                          1, overrideOr (ctx, OvKey::Att, attParam->load()),
+                                          attStdParam->load());
+        float relFrac = gaussianFraction (ctx.seed, (uint64_t) ctx.laneIndex, (uint64_t) ctx.blockId,
+                                          3, overrideOr (ctx, OvKey::Rel, relParam->load()),
+                                          relStdParam->load());
         normaliseAttackRelease (attFrac, relFrac);
         attackSamples  = (int) std::lround (attFrac * (float) gateSamples);
         releaseSamples = (int) std::lround (relFrac * (float) gateSamples);
@@ -87,10 +117,12 @@ public:
         // Curve 0..1 -> exponent: 0.5 linear, 0 slow (gamma = kCurveRange),
         // 1 very fast (gamma = 1/kCurveRange). The release exponent applies
         // to the *remaining* ramp, so its mapping is mirrored.
-        const float attCurve = juce::jlimit (0.0f, 1.0f,
-            overrideOr (ctx, OvKey::AttCurve, attCurveParam->load()));
-        const float relCurve = juce::jlimit (0.0f, 1.0f,
-            overrideOr (ctx, OvKey::RelCurve, relCurveParam->load()));
+        const float attCurve = gaussianFraction (ctx.seed, (uint64_t) ctx.laneIndex, (uint64_t) ctx.blockId,
+                                                 5, overrideOr (ctx, OvKey::AttCurve, attCurveParam->load()),
+                                                 attCurveStdParam->load());
+        const float relCurve = gaussianFraction (ctx.seed, (uint64_t) ctx.laneIndex, (uint64_t) ctx.blockId,
+                                                 7, overrideOr (ctx, OvKey::RelCurve, relCurveParam->load()),
+                                                 relCurveStdParam->load());
         attGamma = attackGammaFor (attCurve);
         relGamma = releaseGammaFor (relCurve);
 
@@ -136,11 +168,15 @@ public:
 
 private:
     DurationWeights weights;
-    std::atomic<float>* attParam      = nullptr;
-    std::atomic<float>* relParam      = nullptr;
-    std::atomic<float>* attCurveParam = nullptr;
-    std::atomic<float>* relCurveParam = nullptr;
-    std::atomic<float>* mixParam      = nullptr;
+    std::atomic<float>* attParam         = nullptr;
+    std::atomic<float>* attStdParam      = nullptr;
+    std::atomic<float>* relParam         = nullptr;
+    std::atomic<float>* relStdParam      = nullptr;
+    std::atomic<float>* attCurveParam    = nullptr;
+    std::atomic<float>* attCurveStdParam = nullptr;
+    std::atomic<float>* relCurveParam    = nullptr;
+    std::atomic<float>* relCurveStdParam = nullptr;
+    std::atomic<float>* mixParam         = nullptr;
     bool  mixOverride = false;
     float mixValue    = 1.0f;
 

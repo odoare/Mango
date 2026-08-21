@@ -11,6 +11,11 @@
     frequencies give tremolo. The carrier phase restarts at block entry so
     every pass sounds the same; one carrier feeds all channels.
 
+    Start Freq and End Freq each have a paired *std* knob: every block draws
+    its actual value around the knob's mean by a Gaussian (gaussianDraw(),
+    EffectBase.h) scaled by the std (0 = every block identical, the
+    default), clamped back to [kMinFreq, kMaxFreq].
+
     Overrides: dur (glide ramp), f0, f1, amp.
 
     Author: Olivier Doaré, github.com/odoare
@@ -42,7 +47,13 @@ public:
         params.push_back (std::make_unique<juce::AudioParameterFloat> (
             lanePrefix + "ring_f0", nameP + "Ring Start Freq", freqRange, 100.0f));
         params.push_back (std::make_unique<juce::AudioParameterFloat> (
+            lanePrefix + "ring_f0std", nameP + "Ring Start Freq Std",
+            juce::NormalisableRange<float> (0.0f, 2000.0f, 1.0f), 0.0f));
+        params.push_back (std::make_unique<juce::AudioParameterFloat> (
             lanePrefix + "ring_f1", nameP + "Ring End Freq", freqRange, 800.0f));
+        params.push_back (std::make_unique<juce::AudioParameterFloat> (
+            lanePrefix + "ring_f1std", nameP + "Ring End Freq Std",
+            juce::NormalisableRange<float> (0.0f, 2000.0f, 1.0f), 0.0f));
         params.push_back (std::make_unique<juce::AudioParameterFloat> (
             lanePrefix + "ring_amp", nameP + "Ring Amount",
             juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 1.0f));
@@ -51,9 +62,11 @@ public:
     void bindParameters (juce::AudioProcessorValueTreeState& apvts, const juce::String& lanePrefix)
     {
         weights.bind (apvts, lanePrefix + "ring_");
-        f0Param  = apvts.getRawParameterValue (lanePrefix + "ring_f0");
-        f1Param  = apvts.getRawParameterValue (lanePrefix + "ring_f1");
-        ampParam = apvts.getRawParameterValue (lanePrefix + "ring_amp");
+        f0Param    = apvts.getRawParameterValue (lanePrefix + "ring_f0");
+        f0StdParam = apvts.getRawParameterValue (lanePrefix + "ring_f0std");
+        f1Param    = apvts.getRawParameterValue (lanePrefix + "ring_f1");
+        f1StdParam = apvts.getRawParameterValue (lanePrefix + "ring_f1std");
+        ampParam   = apvts.getRawParameterValue (lanePrefix + "ring_amp");
     }
 
     void prepare (double sr, int, int) override { sampleRate = sr; }
@@ -73,8 +86,14 @@ public:
         const float  rampSec    = juce::jmax (0.001f, overrideDurSeconds (ctx, OvKey::Dur, defaultSec));
         rampSamples = juce::jmax (kControlInterval, (int) std::lround (rampSec * ctx.sampleRate));
 
-        f0  = juce::jlimit (kMinFreq, kMaxFreq, overrideOr (ctx, OvKey::F0, f0Param->load()));
-        f1  = juce::jlimit (kMinFreq, kMaxFreq, overrideOr (ctx, OvKey::F1, f1Param->load()));
+        // Each block draws its own start/end frequency around the knob's
+        // mean, spread by the paired std knob (0 = deterministic).
+        f0  = gaussianDraw (ctx.seed, (uint64_t) ctx.laneIndex, (uint64_t) ctx.blockId, 1,
+                            overrideOr (ctx, OvKey::F0, f0Param->load()), f0StdParam->load(),
+                            kMinFreq, kMaxFreq);
+        f1  = gaussianDraw (ctx.seed, (uint64_t) ctx.laneIndex, (uint64_t) ctx.blockId, 3,
+                            overrideOr (ctx, OvKey::F1, f1Param->load()), f1StdParam->load(),
+                            kMinFreq, kMaxFreq);
         amp = juce::jlimit (0.0f, 1.0f, overrideOr (ctx, OvKey::Amp, ampParam->load()));
 
         sinceControl = kControlInterval;   // recompute the increment on entry
@@ -113,9 +132,11 @@ public:
 
 private:
     DurationWeights weights;
-    std::atomic<float>* f0Param  = nullptr;
-    std::atomic<float>* f1Param  = nullptr;
-    std::atomic<float>* ampParam = nullptr;
+    std::atomic<float>* f0Param    = nullptr;
+    std::atomic<float>* f0StdParam = nullptr;
+    std::atomic<float>* f1Param    = nullptr;
+    std::atomic<float>* f1StdParam = nullptr;
+    std::atomic<float>* ampParam   = nullptr;
 
     double  sampleRate = 44100.0;
     float   f0 = 100.0f, f1 = 800.0f, amp = 1.0f;

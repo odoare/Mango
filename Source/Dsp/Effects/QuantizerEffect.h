@@ -7,6 +7,12 @@
     downsample factor is in samples so ÷1 is bit-transparent), with a
     wet/dry mix to soften the destruction.
 
+    Bits and Downsample each have a paired *std* knob: every block draws its
+    actual value around the knob's mean by a Gaussian (gaussianDraw(),
+    EffectBase.h) scaled by the std (0 = every block identical, the
+    default), clamped back to the parameter's own valid range. Draws nothing
+    else at block entry, so it owns draw indices 0-3 for itself.
+
     Overrides: bits, down, mix.
 
     Author: Olivier Doaré, github.com/odoare
@@ -33,10 +39,16 @@ public:
         bitsRange.setSkewForCentre (6.0f);
         params.push_back (std::make_unique<juce::AudioParameterFloat> (
             lanePrefix + "qnt_bits", nameP + "Quantizer Bits", bitsRange, 8.0f));
+        params.push_back (std::make_unique<juce::AudioParameterFloat> (
+            lanePrefix + "qnt_bitsstd", nameP + "Quantizer Bits Std",
+            juce::NormalisableRange<float> (0.0f, 8.0f, 0.05f), 0.0f));
         auto downRange = juce::NormalisableRange<float> (1.0f, kMaxDownFactor, 0.1f);
         downRange.setSkewForCentre (8.0f);
         params.push_back (std::make_unique<juce::AudioParameterFloat> (
             lanePrefix + "qnt_down", nameP + "Quantizer Downsample", downRange, 1.0f));
+        params.push_back (std::make_unique<juce::AudioParameterFloat> (
+            lanePrefix + "qnt_downstd", nameP + "Quantizer Downsample Std",
+            juce::NormalisableRange<float> (0.0f, 32.0f, 0.1f), 0.0f));
         params.push_back (std::make_unique<juce::AudioParameterFloat> (
             lanePrefix + "qnt_mix", nameP + "Quantizer Mix",
             juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 1.0f));
@@ -44,9 +56,11 @@ public:
 
     void bindParameters (juce::AudioProcessorValueTreeState& apvts, const juce::String& lanePrefix)
     {
-        bitsParam = apvts.getRawParameterValue (lanePrefix + "qnt_bits");
-        downParam = apvts.getRawParameterValue (lanePrefix + "qnt_down");
-        mixParam  = apvts.getRawParameterValue (lanePrefix + "qnt_mix");
+        bitsParam    = apvts.getRawParameterValue (lanePrefix + "qnt_bits");
+        bitsStdParam = apvts.getRawParameterValue (lanePrefix + "qnt_bitsstd");
+        downParam    = apvts.getRawParameterValue (lanePrefix + "qnt_down");
+        downStdParam = apvts.getRawParameterValue (lanePrefix + "qnt_downstd");
+        mixParam     = apvts.getRawParameterValue (lanePrefix + "qnt_mix");
     }
 
     void prepare (double, int, int numChannels) override
@@ -69,6 +83,23 @@ public:
         bitsValue = overrideOr (ctx, OvKey::Bits, bitsParam->load());
         downValue = juce::jlimit (1.0f, kMaxDownFactor, overrideOr (ctx, OvKey::Down, downParam->load()));
         mixValue  = juce::jlimit (0.0f, 1.0f, overrideOr (ctx, OvKey::Mix, mixParam->load()));
+
+        // A std knob > 0 pins a per-block Gaussian draw around the mean,
+        // the same way a block-string override pins a value (see
+        // DelayEffect for the same pattern, including the live-tracking
+        // tradeoff once a std is non-zero).
+        if (! bitsOverride && bitsStdParam->load() > 0.0f)
+        {
+            bitsOverride = true;
+            bitsValue = gaussianDraw (ctx.seed, (uint64_t) ctx.laneIndex, (uint64_t) ctx.blockId,
+                                      0, bitsParam->load(), bitsStdParam->load(), 1.0f, 24.0f);
+        }
+        if (! downOverride && downStdParam->load() > 0.0f)
+        {
+            downOverride = true;
+            downValue = gaussianDraw (ctx.seed, (uint64_t) ctx.laneIndex, (uint64_t) ctx.blockId,
+                                      2, downParam->load(), downStdParam->load(), 1.0f, kMaxDownFactor);
+        }
 
         // Each block latches its first sample, so entries line up across
         // passes; a live-tweak re-enter keeps the running hold phase.
@@ -103,9 +134,11 @@ public:
     }
 
 private:
-    std::atomic<float>* bitsParam = nullptr;
-    std::atomic<float>* downParam = nullptr;
-    std::atomic<float>* mixParam  = nullptr;
+    std::atomic<float>* bitsParam    = nullptr;
+    std::atomic<float>* bitsStdParam = nullptr;
+    std::atomic<float>* downParam    = nullptr;
+    std::atomic<float>* downStdParam = nullptr;
+    std::atomic<float>* mixParam     = nullptr;
 
     fxme::BitCrusher crusher;
     std::vector<fxme::Downsampler> downsamplers;

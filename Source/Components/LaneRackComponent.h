@@ -24,7 +24,10 @@
 #include "../Theme.h"
 #include "../Dsp/DurationWeights.h"
 #include "BlockGraphics.h"
-#include "../Dsp/Effects/PannerEffect.h"   // panStateAt: the visual follows the DSP
+#include "../Dsp/Effects/PannerEffect.h"      // panStateAt: the visual follows the DSP
+#include "../Dsp/Effects/DelayEffect.h"       // kMaxDelaySeconds / kMaxFeedback
+#include "../Dsp/Effects/QuantizerEffect.h"   // kMaxDownFactor
+#include "../Dsp/Effects/RingModEffect.h"     // kMinFreq / kMaxFreq
 
 namespace mng
 {
@@ -419,14 +422,26 @@ private:
             case EffectType::Gater:
             {
                 const double dur = juce::jmax (1.0e-3, ovDurBeats (drawnBeats ("gate_")));
+                const auto seed = (uint64_t) (int64_t) apvts.getRawParameterValue (pid::seed)->load();
                 blockgfx::EnvShape s;
                 s.cycleBeats = 2.0 * dur;
                 s.openBeats  = dur;
-                s.attFrac    = ovOr (OvKey::Att, param ("gate_att"));
-                s.relFrac    = ovOr (OvKey::Rel, param ("gate_rel"));
+                // Same draw indices as GaterEffect::onBlockEnter.
+                s.attFrac    = gaussianFraction (seed, (uint64_t) laneIndex, (uint64_t) b.id, 1,
+                                                 ovOr (OvKey::Att, param ("gate_att")),
+                                                 param ("gate_attstd"));
+                s.relFrac    = gaussianFraction (seed, (uint64_t) laneIndex, (uint64_t) b.id, 3,
+                                                 ovOr (OvKey::Rel, param ("gate_rel")),
+                                                 param ("gate_relstd"));
                 normaliseAttackRelease (s.attFrac, s.relFrac);
-                s.attGamma   = attackGammaFor (ovOr (OvKey::AttCurve, param ("gate_attcurve")));
-                s.relGamma   = releaseGammaFor (ovOr (OvKey::RelCurve, param ("gate_relcurve")));
+                const float attCurve = gaussianFraction (seed, (uint64_t) laneIndex, (uint64_t) b.id, 5,
+                                                         ovOr (OvKey::AttCurve, param ("gate_attcurve")),
+                                                         param ("gate_attcurvestd"));
+                const float relCurve = gaussianFraction (seed, (uint64_t) laneIndex, (uint64_t) b.id, 7,
+                                                         ovOr (OvKey::RelCurve, param ("gate_relcurve")),
+                                                         param ("gate_relcurvestd"));
+                s.attGamma   = attackGammaFor (attCurve);
+                s.relGamma   = releaseGammaFor (relCurve);
                 blockgfx::paintEnvCurve (g, r, blockBeats, s, curveColour);
                 break;
             }
@@ -462,13 +477,33 @@ private:
 
             case EffectType::Delay:
             {
-                double delayBeats = param ("dly_dur") * bpm / 60.0;
-                if (ov)
-                    if (const auto* e = ov->find (OvKey::Dur))
-                        delayBeats = e->kind != Expr::Const
-                                   ? (double) e->eval (midi) * bpm / 60.0
-                                   : (double) e->value * 4.0;
-                const float fb = ovOr (OvKey::Fb, param ("dly_fb"));
+                const auto seed = (uint64_t) (int64_t) apvts.getRawParameterValue (pid::seed)->load();
+
+                // Std knobs pin a Gaussian draw around the mean exactly like
+                // a block-string override would (see DelayEffect), so a
+                // string override still wins here and the un-overridden
+                // path draws with the same indices onBlockEnter uses.
+                double delayBeats;
+                if (ov && ov->find (OvKey::Dur) != nullptr)
+                {
+                    const auto* e = ov->find (OvKey::Dur);
+                    delayBeats = e->kind != Expr::Const
+                               ? (double) e->eval (midi) * bpm / 60.0
+                               : (double) e->value * 4.0;
+                }
+                else
+                {
+                    const float durSec = gaussianDraw (seed, (uint64_t) laneIndex, (uint64_t) b.id, 0,
+                                                        param ("dly_dur"), param ("dly_durstd"),
+                                                        0.001f, DelayEffect::kMaxDelaySeconds);
+                    delayBeats = (double) durSec * bpm / 60.0;
+                }
+
+                const float fb = (ov && ov->find (OvKey::Fb) != nullptr)
+                                ? ovOr (OvKey::Fb, 0.0f)
+                                : gaussianDraw (seed, (uint64_t) laneIndex, (uint64_t) b.id, 2,
+                                                param ("dly_fb"), param ("dly_fbstd"),
+                                                0.0f, DelayEffect::kMaxFeedback);
                 blockgfx::paintDelayLines (g, r, blockBeats, delayBeats, fb, curveColour);
                 break;
             }
@@ -490,16 +525,37 @@ private:
             }
 
             case EffectType::Quantizer:
-                blockgfx::paintStairsWave (g, r, ovOr (OvKey::Bits, param ("qnt_bits")),
-                                           ovOr (OvKey::Down, param ("qnt_down")),
-                                           curveColour);
+            {
+                const auto seed = (uint64_t) (int64_t) apvts.getRawParameterValue (pid::seed)->load();
+                const float bits = (ov && ov->find (OvKey::Bits) != nullptr)
+                                  ? ovOr (OvKey::Bits, 0.0f)
+                                  : gaussianDraw (seed, (uint64_t) laneIndex, (uint64_t) b.id, 0,
+                                                  param ("qnt_bits"), param ("qnt_bitsstd"),
+                                                  1.0f, 24.0f);
+                const float down = (ov && ov->find (OvKey::Down) != nullptr)
+                                  ? ovOr (OvKey::Down, 0.0f)
+                                  : gaussianDraw (seed, (uint64_t) laneIndex, (uint64_t) b.id, 2,
+                                                  param ("qnt_down"), param ("qnt_downstd"),
+                                                  1.0f, QuantizerEffect::kMaxDownFactor);
+                blockgfx::paintStairsWave (g, r, bits, down, curveColour);
                 break;
+            }
 
             case EffectType::RingMod:
             {
                 const double ramp = juce::jmax (1.0e-3, ovDurBeats (drawnBeats ("ring_")));
-                const bool rising = ovOr (OvKey::F1, param ("ring_f1"))
-                                 >= ovOr (OvKey::F0, param ("ring_f0"));
+                const auto seed = (uint64_t) (int64_t) apvts.getRawParameterValue (pid::seed)->load();
+                const float f0 = (ov && ov->find (OvKey::F0) != nullptr)
+                                ? ovOr (OvKey::F0, 0.0f)
+                                : gaussianDraw (seed, (uint64_t) laneIndex, (uint64_t) b.id, 1,
+                                                param ("ring_f0"), param ("ring_f0std"),
+                                                RingModEffect::kMinFreq, RingModEffect::kMaxFreq);
+                const float f1 = (ov && ov->find (OvKey::F1) != nullptr)
+                                ? ovOr (OvKey::F1, 0.0f)
+                                : gaussianDraw (seed, (uint64_t) laneIndex, (uint64_t) b.id, 3,
+                                                param ("ring_f1"), param ("ring_f1std"),
+                                                RingModEffect::kMinFreq, RingModEffect::kMaxFreq);
+                const bool rising = f1 >= f0;
                 blockgfx::paintChirpWave (g, r, blockBeats, ramp, rising,
                                           ovOr (OvKey::Amp, param ("ring_amp")),
                                           curveColour);
@@ -522,14 +578,26 @@ private:
             case EffectType::AuxSend:
             {
                 const double dur = juce::jmax (1.0e-3, ovDurBeats (drawnBeats ("aux_")));
+                const auto seed = (uint64_t) (int64_t) apvts.getRawParameterValue (pid::seed)->load();
                 blockgfx::EnvShape s;
                 s.cycleBeats = 2.0 * dur;
                 s.openBeats  = dur;
-                s.attFrac    = ovOr (OvKey::Att, param ("aux_att"));
-                s.relFrac    = ovOr (OvKey::Rel, param ("aux_rel"));
+                // Same draw indices as AuxSendEffect::onBlockEnter.
+                s.attFrac    = gaussianFraction (seed, (uint64_t) laneIndex, (uint64_t) b.id, 1,
+                                                 ovOr (OvKey::Att, param ("aux_att")),
+                                                 param ("aux_attstd"));
+                s.relFrac    = gaussianFraction (seed, (uint64_t) laneIndex, (uint64_t) b.id, 3,
+                                                 ovOr (OvKey::Rel, param ("aux_rel")),
+                                                 param ("aux_relstd"));
                 normaliseAttackRelease (s.attFrac, s.relFrac);
-                s.attGamma   = attackGammaFor (ovOr (OvKey::AttCurve, param ("aux_attcurve")));
-                s.relGamma   = releaseGammaFor (ovOr (OvKey::RelCurve, param ("aux_relcurve")));
+                const float attCurve = gaussianFraction (seed, (uint64_t) laneIndex, (uint64_t) b.id, 5,
+                                                         ovOr (OvKey::AttCurve, param ("aux_attcurve")),
+                                                         param ("aux_attcurvestd"));
+                const float relCurve = gaussianFraction (seed, (uint64_t) laneIndex, (uint64_t) b.id, 7,
+                                                         ovOr (OvKey::RelCurve, param ("aux_relcurve")),
+                                                         param ("aux_relcurvestd"));
+                s.attGamma   = attackGammaFor (attCurve);
+                s.relGamma   = releaseGammaFor (relCurve);
                 const float send = juce::jmax (ovOr (OvKey::Aux1, param ("aux_send1")),
                                                ovOr (OvKey::Aux2, param ("aux_send2")));
                 blockgfx::paintSendEnv (g, r, blockBeats, s, send,

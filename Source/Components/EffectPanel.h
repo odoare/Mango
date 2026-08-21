@@ -45,6 +45,10 @@ public:
                 addKnob (prefix + "gate_rel", "Release");
                 addKnob (prefix + "gate_attcurve", "Att Curve", nullptr, true, 0.5);
                 addKnob (prefix + "gate_relcurve", "Rel Curve", nullptr, true, 0.5);
+                addKnob (prefix + "gate_attstd", "Att Std");
+                addKnob (prefix + "gate_relstd", "Rel Std");
+                addKnob (prefix + "gate_attcurvestd", "AttCv Std");
+                addKnob (prefix + "gate_relcurvestd", "RelCv Std");
                 addKnob (prefix + "gate_mix", "Mix");
                 addWeights (prefix + "gate_");
                 break;
@@ -68,6 +72,9 @@ public:
                 addKnob (prefix + "dly_fb", "Feedback");
                 addKnob (prefix + "dly_damp", "Damping");
                 addKnob (prefix + "dly_porta", "Porta ms");
+                addKnob (prefix + "dly_durstd", "Time Std");
+                addKnob (prefix + "dly_fbstd", "Fb Std");
+                addKnob (prefix + "dly_dampstd", "Damp Std");
                 addKnob (prefix + "dly_mix", "Mix");
                 break;
 
@@ -94,12 +101,16 @@ public:
             case EffectType::Quantizer:
                 addKnob (prefix + "qnt_bits", "Bits");
                 addKnob (prefix + "qnt_down", "Downsmp");
+                addKnob (prefix + "qnt_bitsstd", "Bits Std");
+                addKnob (prefix + "qnt_downstd", "Down Std");
                 addKnob (prefix + "qnt_mix", "Mix");
                 break;
 
             case EffectType::RingMod:
                 addKnob (prefix + "ring_f0", "Start Hz");
                 addKnob (prefix + "ring_f1", "End Hz");
+                addKnob (prefix + "ring_f0std", "Start Std");
+                addKnob (prefix + "ring_f1std", "End Std");
                 addKnob (prefix + "ring_amp", "Amount");
                 addWeights (prefix + "ring_");
                 break;
@@ -113,6 +124,7 @@ public:
             case EffectType::Freeze:
                 addKnob (prefix + "frz_mix", "Mix");
                 addKnob (prefix + "frz_width", "Width");
+                addKnob (prefix + "frz_widthstd", "Width Std");
                 addWeights (prefix + "frz_");   // retrigger grid
                 break;
 
@@ -124,6 +136,10 @@ public:
                 addKnob (prefix + "aux_rel", "Release");
                 addKnob (prefix + "aux_attcurve", "Att Curve", nullptr, true, 0.5);
                 addKnob (prefix + "aux_relcurve", "Rel Curve", nullptr, true, 0.5);
+                addKnob (prefix + "aux_attstd", "Att Std");
+                addKnob (prefix + "aux_relstd", "Rel Std");
+                addKnob (prefix + "aux_attcurvestd", "AttCv Std");
+                addKnob (prefix + "aux_relcurvestd", "RelCv Std");
                 addWeights (prefix + "aux_");
                 break;
 
@@ -328,7 +344,11 @@ private:
                        "up to more than 1 they share the phase between them and "
                        "you get a triangle with no sustain. The curve knobs bend "
                        "the edges: 0 slow, 0.5 straight, 1 very fast - a fast "
-                       "release sounds like a plucked decay." + drawn;
+                       "release sounds like a plucked decay.\n\n"
+                       "Each of those four has a Std knob: every block draws its "
+                       "own value around the mean instead of repeating it exactly "
+                       "(0 keeps every block identical), so a rack of gated lanes "
+                       "doesn't chop in lockstep." + drawn;
 
             case EffectType::Grain:
                 return "Records a short grain when the block starts and loops it "
@@ -353,7 +373,12 @@ private:
                        "long for tape-style warps.\n\n"
                        "Set the delay time to one period of a MIDI note and push "
                        "feedback near 1 and it becomes a plucked string tuned by "
-                       "your keyboard: type  dur=mididur fb=0.99  into the block.";
+                       "your keyboard: type  dur=mididur fb=0.99  into the block.\n\n"
+                       "Time, Feedback and Damping each have a Std knob: whenever one "
+                       "is above 0 that knob stops gliding live and instead draws a "
+                       "fresh value around its mean on every block entry (still "
+                       "gliding into it via Porta) - 0 keeps tracking the knob "
+                       "continuously, exactly as before.";
 
             case EffectType::Distortion:
                 return "Tube-style saturation, in four flavours: Standard, Dynamic, "
@@ -379,7 +404,10 @@ private:
                        "wave); Downsmp holds each sample for several samples, which "
                        "folds high frequencies down into the audible range. The "
                        "aliasing is the point - it is not filtered away.\n\n"
-                       "Mix blends the crushed signal back with the clean one.";
+                       "Mix blends the crushed signal back with the clean one. Bits "
+                       "Std and Down Std each draw a fresh value around the knob's "
+                       "mean on every block entry (0 = deterministic), same "
+                       "live-vs-drawn tradeoff as the delay's std knobs.";
 
             case EffectType::RingMod:
                 return "Multiplies the sound by a sine carrier, which replaces its "
@@ -389,7 +417,9 @@ private:
                        "the drawn ramp and repeats for the block. Below about 20 Hz "
                        "it stops sounding like modulation and becomes tremolo.\n\n"
                        "Amount is this effect's mix: 0 is clean, 1 is full ring "
-                       "modulation." + drawn;
+                       "modulation. Start Std and End Std draw each block's actual "
+                       "frequency around the knob's mean (0 = deterministic), in Hz - "
+                       "a small std goes further at the low end than the high." + drawn;
 
             case EffectType::Reverser:
                 return "Cuts the incoming audio into slices and plays each one "
@@ -412,7 +442,9 @@ private:
                        "longer than one step is captured just once." + drawn +
                        "\n\nWidth sets how alike the two channels are - 1 fully "
                        "decorrelated and wide, 0 mono. The level stays constant "
-                       "across the range.";
+                       "across the range. Width Std draws each block's actual value "
+                       "around the knob's mean instead of repeating it exactly "
+                       "(0 keeps it identical).";
 
             case EffectType::AuxSend:
                 return "The gater's rhythm, but it routes the sound instead of "
@@ -423,7 +455,11 @@ private:
                        "Pass is how much carries on down the main chain, and it is "
                        "a steady level, not gated: 1 leaves the lane transparent and "
                        "sends a copy on top, 0 takes the sound out of the main mix "
-                       "entirely so only the aux outputs hear it." + drawn;
+                       "entirely so only the aux outputs hear it.\n\n"
+                       "Attack, Release and their curves each have a Std knob, same "
+                       "as the gater: every block draws its own value around the "
+                       "mean instead of repeating it exactly (0 keeps it identical)."
+                       + drawn;
 
             case EffectType::Panner:
                 return "Steps the sound between three positions - hard left, centre, "

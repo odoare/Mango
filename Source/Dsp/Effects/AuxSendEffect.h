@@ -15,10 +15,11 @@
 
     The gate timing, envelope and curves are exactly the gater's — same
     weighted duration draw at block entry, same attack/release fractions of
-    the open phase, same gamma curves — so the two effects read and behave
-    identically apart from where the sound goes. The envelope shapes the
-    sends only; the main passthrough is a flat gain, so a lane can send in
-    rhythm without chopping what it passes on.
+    the open phase, same gamma curves, same paired std knobs drawing each
+    block's actual value around the mean — so the two effects read and
+    behave identically apart from where the sound goes. The envelope shapes
+    the sends only; the main passthrough is a flat gain, so a lane can send
+    in rhythm without chopping what it passes on.
 
     If the host has an aux bus disabled, the engine hands us a nullptr for
     it and that send is silently dropped.
@@ -50,14 +51,26 @@ public:
             lanePrefix + "aux_att", nameP + "Aux Attack",
             juce::NormalisableRange<float> (0.0f, 1.0f, 0.001f), 0.02f));
         params.push_back (std::make_unique<juce::AudioParameterFloat> (
+            lanePrefix + "aux_attstd", nameP + "Aux Attack Std",
+            juce::NormalisableRange<float> (0.0f, 0.5f, 0.001f), 0.0f));
+        params.push_back (std::make_unique<juce::AudioParameterFloat> (
             lanePrefix + "aux_rel", nameP + "Aux Release",
             juce::NormalisableRange<float> (0.0f, 1.0f, 0.001f), 0.02f));
+        params.push_back (std::make_unique<juce::AudioParameterFloat> (
+            lanePrefix + "aux_relstd", nameP + "Aux Release Std",
+            juce::NormalisableRange<float> (0.0f, 0.5f, 0.001f), 0.0f));
         params.push_back (std::make_unique<juce::AudioParameterFloat> (
             lanePrefix + "aux_attcurve", nameP + "Aux Attack Curve",
             juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.5f));
         params.push_back (std::make_unique<juce::AudioParameterFloat> (
+            lanePrefix + "aux_attcurvestd", nameP + "Aux Attack Curve Std",
+            juce::NormalisableRange<float> (0.0f, 0.5f, 0.001f), 0.0f));
+        params.push_back (std::make_unique<juce::AudioParameterFloat> (
             lanePrefix + "aux_relcurve", nameP + "Aux Release Curve",
             juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 0.5f));
+        params.push_back (std::make_unique<juce::AudioParameterFloat> (
+            lanePrefix + "aux_relcurvestd", nameP + "Aux Release Curve Std",
+            juce::NormalisableRange<float> (0.0f, 0.5f, 0.001f), 0.0f));
         params.push_back (std::make_unique<juce::AudioParameterFloat> (
             lanePrefix + "aux_send1", nameP + "Aux 1 Send",
             juce::NormalisableRange<float> (0.0f, 1.0f, 0.01f), 1.0f));
@@ -72,10 +85,14 @@ public:
     void bindParameters (juce::AudioProcessorValueTreeState& apvts, const juce::String& lanePrefix)
     {
         weights.bind (apvts, lanePrefix + "aux_");
-        attParam      = apvts.getRawParameterValue (lanePrefix + "aux_att");
-        relParam      = apvts.getRawParameterValue (lanePrefix + "aux_rel");
-        attCurveParam = apvts.getRawParameterValue (lanePrefix + "aux_attcurve");
-        relCurveParam = apvts.getRawParameterValue (lanePrefix + "aux_relcurve");
+        attParam         = apvts.getRawParameterValue (lanePrefix + "aux_att");
+        attStdParam      = apvts.getRawParameterValue (lanePrefix + "aux_attstd");
+        relParam         = apvts.getRawParameterValue (lanePrefix + "aux_rel");
+        relStdParam      = apvts.getRawParameterValue (lanePrefix + "aux_relstd");
+        attCurveParam    = apvts.getRawParameterValue (lanePrefix + "aux_attcurve");
+        attCurveStdParam = apvts.getRawParameterValue (lanePrefix + "aux_attcurvestd");
+        relCurveParam    = apvts.getRawParameterValue (lanePrefix + "aux_relcurve");
+        relCurveStdParam = apvts.getRawParameterValue (lanePrefix + "aux_relcurvestd");
         send1Param    = apvts.getRawParameterValue (lanePrefix + "aux_send1");
         send2Param    = apvts.getRawParameterValue (lanePrefix + "aux_send2");
         passParam     = apvts.getRawParameterValue (lanePrefix + "aux_pass");
@@ -100,16 +117,27 @@ public:
 
         gateSamples = juce::jmax (1, (int) std::lround (durSec * ctx.sampleRate));
 
-        float attFrac = overrideOr (ctx, OvKey::Att, attParam->load());
-        float relFrac = overrideOr (ctx, OvKey::Rel, relParam->load());
+        // Each block draws its own attack/release around the knob's mean,
+        // spread by the paired std knob (0 = deterministic, same as the
+        // gater).
+        float attFrac = gaussianFraction (ctx.seed, (uint64_t) ctx.laneIndex, (uint64_t) ctx.blockId,
+                                          1, overrideOr (ctx, OvKey::Att, attParam->load()),
+                                          attStdParam->load());
+        float relFrac = gaussianFraction (ctx.seed, (uint64_t) ctx.laneIndex, (uint64_t) ctx.blockId,
+                                          3, overrideOr (ctx, OvKey::Rel, relParam->load()),
+                                          relStdParam->load());
         normaliseAttackRelease (attFrac, relFrac);
         attackSamples  = (int) std::lround (attFrac * (float) gateSamples);
         releaseSamples = (int) std::lround (relFrac * (float) gateSamples);
 
-        attGamma = attackGammaFor (juce::jlimit (0.0f, 1.0f,
-            overrideOr (ctx, OvKey::AttCurve, attCurveParam->load())));
-        relGamma = releaseGammaFor (juce::jlimit (0.0f, 1.0f,
-            overrideOr (ctx, OvKey::RelCurve, relCurveParam->load())));
+        const float attCurve = gaussianFraction (ctx.seed, (uint64_t) ctx.laneIndex, (uint64_t) ctx.blockId,
+                                                 5, overrideOr (ctx, OvKey::AttCurve, attCurveParam->load()),
+                                                 attCurveStdParam->load());
+        const float relCurve = gaussianFraction (ctx.seed, (uint64_t) ctx.laneIndex, (uint64_t) ctx.blockId,
+                                                 7, overrideOr (ctx, OvKey::RelCurve, relCurveParam->load()),
+                                                 relCurveStdParam->load());
+        attGamma = attackGammaFor (attCurve);
+        relGamma = releaseGammaFor (relCurve);
 
         // Levels: pinned for the block when the string sets them, otherwise
         // read live from the knobs in process().
@@ -181,10 +209,14 @@ private:
     }
 
     DurationWeights weights;
-    std::atomic<float>* attParam      = nullptr;
-    std::atomic<float>* relParam      = nullptr;
-    std::atomic<float>* attCurveParam = nullptr;
-    std::atomic<float>* relCurveParam = nullptr;
+    std::atomic<float>* attParam         = nullptr;
+    std::atomic<float>* attStdParam      = nullptr;
+    std::atomic<float>* relParam         = nullptr;
+    std::atomic<float>* relStdParam      = nullptr;
+    std::atomic<float>* attCurveParam    = nullptr;
+    std::atomic<float>* attCurveStdParam = nullptr;
+    std::atomic<float>* relCurveParam    = nullptr;
+    std::atomic<float>* relCurveStdParam = nullptr;
     std::atomic<float>* send1Param    = nullptr;
     std::atomic<float>* send2Param    = nullptr;
     std::atomic<float>* passParam     = nullptr;
