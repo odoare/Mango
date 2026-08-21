@@ -40,17 +40,17 @@ public:
         const auto prefix = pid::lanePrefix (laneIndex);
         switch (type)
         {
-            case EffectType::Gater:
-                addKnob (prefix + "gate_att", "Attack");
-                addKnob (prefix + "gate_rel", "Release");
-                addKnob (prefix + "gate_attcurve", "Att Curve", nullptr, true, 0.5);
-                addKnob (prefix + "gate_relcurve", "Rel Curve", nullptr, true, 0.5);
-                addKnob (prefix + "gate_attstd", "Att Std");
-                addKnob (prefix + "gate_relstd", "Rel Std");
-                addKnob (prefix + "gate_attcurvestd", "AttCv Std");
-                addKnob (prefix + "gate_relcurvestd", "RelCv Std");
-                addKnob (prefix + "gate_mix", "Mix");
-                addWeights (prefix + "gate_");
+            case EffectType::Gater:   // numberBox trial, paired layout - see addKnob()/layoutKnobPairs()
+                addKnob (prefix + "gate_att", "Attack", nullptr, false, 0.0, true);
+                addKnob (prefix + "gate_attstd", "Att Std", nullptr, false, 0.0, true);
+                addKnob (prefix + "gate_rel", "Release", nullptr, false, 0.0, true);
+                addKnob (prefix + "gate_relstd", "Rel Std", nullptr, false, 0.0, true);
+                addKnob (prefix + "gate_attcurve", "Att Curve", nullptr, true, 0.5, true);
+                addKnob (prefix + "gate_attcurvestd", "AttCv Std", nullptr, false, 0.0, true);
+                addKnob (prefix + "gate_relcurve", "Rel Curve", nullptr, true, 0.5, true);
+                addKnob (prefix + "gate_relcurvestd", "RelCv Std", nullptr, false, 0.0, true);
+                addKnob (prefix + "gate_mix", "Mix", nullptr, false, 0.0, true);   // odd one out: right, centred
+                addWeights (prefix + "gate_", true);
                 break;
 
             case EffectType::Grain:
@@ -156,39 +156,6 @@ public:
         addAndMakeVisible (info);
     }
 
-    /** The override string of the block currently selected on this lane (empty
-        when none is). The panel names the keys that block pins *and this
-        effect actually reads*, because those knobs stop responding: without
-        the notice, a preset whose blocks carry e.g. `dur=mididur` looks like
-        a broken Time knob. */
-    void setBlockOverrides (const juce::String& blockText)
-    {
-        // Whole-token matching throughout: several keys are substrings of
-        // others (att/attcurve, amp/damp, mode/model), so a String::contains
-        // test would silently drop them.
-        juce::StringArray found;
-
-        if (blockText.isNotEmpty())
-            if (const auto parsed = parseOverrides (blockText.toStdString()))
-            {
-                // `keywords` is this effect's own key list, so the two can
-                // never drift apart.
-                const auto mine = juce::StringArray::fromTokens (keywords, " \n", "");
-                for (int i = 0; i < parsed->count; ++i)
-                {
-                    const juce::String name (detail::keyNames[(int) parsed->entries[i].key]);
-                    if (mine.contains (name))
-                        found.addIfNotAlreadyThere (name);   // a block may set a key twice
-                }
-            }
-
-        const auto keys = found.joinIntoString (" ");
-        if (keys == overriddenKeys)
-            return;
-        overriddenKeys = keys;
-        repaint();
-    }
-
     void paint (juce::Graphics& g) override
     {
         auto r = getLocalBounds();
@@ -197,30 +164,20 @@ public:
         g.setColour (accent.withAlpha (0.6f));
         g.drawRoundedRectangle (r.toFloat().reduced (0.5f), 6.0f, 1.0f);
 
-        g.setColour (theme::text);
+        // All text in the lane's own accent, at varying alpha for hierarchy,
+        // rather than a neutral grey/white - it reads as belonging to this
+        // lane at a glance, which matters once several panels are visible.
+        g.setColour (accent);
         g.setFont (juce::Font (juce::FontOptions (14.0f, juce::Font::bold)));
         g.drawText (title, r.removeFromTop (22).reduced (8, 0),
                     juce::Justification::centredLeft);
 
         if (! weightKnobs.empty())
         {
-            g.setColour (theme::dimText);
-            g.setFont (juce::Font (juce::FontOptions (11.0f)));
+            g.setColour (accent.withAlpha (0.7f));
+            g.setFont (juce::Font (juce::FontOptions (12.0f)));
             g.drawText ("duration probabilities", weightsLabelArea,
                         juce::Justification::centredLeft);
-        }
-
-        // What the selected block takes over, and therefore which knobs
-        // above are currently doing nothing. Drawn in the lane's accent so
-        // it reads as a state of this panel, not as more reference text.
-        if (! overriddenKeys.isEmpty() && ! overrideArea.isEmpty())
-        {
-            g.setColour (accent);
-            g.setFont (juce::Font (juce::FontOptions (11.0f, juce::Font::bold)));
-            g.drawText ("block overrides: " + overriddenKeys
-                          + (overriddenKeys.containsChar (' ') ? "  (knobs inactive)"
-                                                              : "  (knob inactive)"),
-                        overrideArea, juce::Justification::centredLeft);
         }
 
         // The override-language keywords this effect understands, as a
@@ -228,12 +185,12 @@ public:
         if (! keywordsArea.isEmpty())
         {
             auto area = keywordsArea;
-            g.setColour (theme::dimText);
-            g.setFont (juce::Font (juce::FontOptions (10.0f)));
-            g.drawText ("block keys", area.removeFromTop (13),
+            g.setColour (accent.withAlpha (0.7f));
+            g.setFont (juce::Font (juce::FontOptions (11.0f)));
+            g.drawText ("block keys", area.removeFromTop (15),
                         juce::Justification::centredLeft);
-            g.setColour (theme::text.withAlpha (0.8f));
-            g.setFont (juce::Font (juce::FontOptions (11.5f)));
+            g.setColour (accent.withAlpha (0.85f));
+            g.setFont (juce::Font (juce::FontOptions (12.5f)));
             g.drawFittedText (keywords, area, juce::Justification::topLeft, 3);
         }
     }
@@ -262,20 +219,24 @@ public:
             r.removeFromTop (3);
         }
 
-        layoutKnobRow (knobs, r, 5, 70);   // 5/row: the widest sets keep one row
+        if (type == EffectType::Gater)
+            // Paired knobs a size down from the usual 70 (matches the weight
+            // knobs below, so every control on this panel is now the same
+            // size); Mix stays at 70, unreduced, in its own centred column.
+            layoutKnobPairs (knobs, r, 5, 52, 70);
+        else
+            layoutKnobRow (knobs, r, 5, 70);   // 5/row: the widest sets keep one row
 
         if (! weightKnobs.empty())
         {
-            weightsLabelArea = r.removeFromTop (16);
+            weightsLabelArea = r.removeFromTop (18);
             // 5/row keeps the two groups on their own lines: the five note
             // values, then the three modifiers. 4/row would spill w64 onto
             // the modifier row and read as if it were one.
             layoutKnobRow (weightKnobs, r, 5, 52);
         }
 
-        // Bottom-up: the key reference, then the override notice just above it.
-        keywordsArea = r.removeFromBottom (juce::jmin (46, r.getHeight())).reduced (2, 0);
-        overrideArea = r.removeFromBottom (juce::jmin (16, r.getHeight())).reduced (2, 0);
+        keywordsArea = r.removeFromBottom (juce::jmin (50, r.getHeight())).reduced (2, 0);
     }
 
     int laneOf() const  { return laneIndex; }
@@ -488,13 +449,19 @@ private:
         std::unique_ptr<ComboBoxAttachment> att;
     };
 
+    // numberBox is a trial: EffectType::Gater currently opts in below, every
+    // other panel still gets the default fxme::FxmeSlider. Same Theme
+    // colours either way (see FxmeNumberBox.h) - only the shape changes.
     void addKnob (const juce::String& paramId, const juce::String& label,
                   std::vector<Knob>* target = nullptr, bool bipolar = false,
-                  double centreValue = 0.0)
+                  double centreValue = 0.0, bool numberBox = false)
     {
         auto& list = *(target != nullptr ? target : &knobs);
         auto& k = list.emplace_back();
-        k.slider = std::make_unique<fxme::FxmeSlider>();
+        if (numberBox)
+            k.slider = std::make_unique<fxme::FxmeNumberBox>();
+        else
+            k.slider = std::make_unique<fxme::FxmeSlider>();
         theme::styleKnob (*k.slider, label, accent, bipolar, centreValue);
         addAndMakeVisible (*k.slider);
         k.att = std::make_unique<SliderAttachment> (apvts, paramId, *k.slider);
@@ -516,14 +483,14 @@ private:
         c.att = std::make_unique<ComboBoxAttachment> (apvts, paramId, c.box);
     }
 
-    void addWeights (const juce::String& weightPrefix)
+    void addWeights (const juce::String& weightPrefix, bool numberBox = false)
     {
         for (int b = 0; b < fxme::kNumNoteBases; ++b)
             addKnob (weightPrefix + DurationWeights::baseSuffixes[b],
-                     DurationWeights::baseLabels[b], &weightKnobs);
+                     DurationWeights::baseLabels[b], &weightKnobs, false, 0.0, numberBox);
         for (int m = 0; m < fxme::kNumNoteMods; ++m)
             addKnob (weightPrefix + DurationWeights::modSuffixes[m],
-                     DurationWeights::modLabels[m], &weightKnobs);
+                     DurationWeights::modLabels[m], &weightKnobs, false, 0.0, numberBox);
     }
 
     static void layoutKnobRow (std::vector<Knob>& list, juce::Rectangle<int>& area,
@@ -538,6 +505,44 @@ private:
         }
     }
 
+    /** Lays out `list` two at a time in a column: list[i] (a control) on
+        top, list[i+1] (its paired std knob) directly below it - so the
+        caller supplies the list already ordered [mean, std, mean, std, ...].
+        A trailing knob with no partner (Gater's Mix) gets a column of its
+        own, sized `oddRowHeight` (defaults to `rowHeight`) and centred
+        within the full two-row height rather than stretched into it - which
+        is also what puts it on the right, since columns fill left to right
+        and it is always last. Wraps to further rows of columns once one is
+        full, same as layoutKnobRow. */
+    static void layoutKnobPairs (std::vector<Knob>& list, juce::Rectangle<int>& area,
+                                 int perRow, int rowHeight, int oddRowHeight = -1)
+    {
+        if (oddRowHeight < 0)
+            oddRowHeight = rowHeight;
+
+        const int numCols = (int) ((list.size() + 1) / 2);
+        for (int firstCol = 0; firstCol < numCols; firstCol += perRow)
+        {
+            auto rowArea = area.removeFromTop (rowHeight * 2);
+            const int colsHere = juce::jmin (perRow, numCols - firstCol);
+            const int w = rowArea.getWidth() / colsHere;
+            for (int c = 0; c < colsHere; ++c)
+            {
+                auto col = rowArea.removeFromLeft (w).reduced (2, 0);
+                const size_t i = (size_t) (firstCol + c) * 2;
+                if (i + 1 < list.size())
+                {
+                    list[i].slider->setBounds     (col.removeFromTop (rowHeight));
+                    list[i + 1].slider->setBounds (col.removeFromTop (rowHeight));
+                }
+                else
+                {
+                    list[i].slider->setBounds (col.withSizeKeepingCentre (col.getWidth(), oddRowHeight));
+                }
+            }
+        }
+    }
+
     juce::AudioProcessorValueTreeState& apvts;
     const int        laneIndex;
     const EffectType type;
@@ -547,9 +552,8 @@ private:
     std::vector<Knob>  knobs, weightKnobs;
     std::deque<Combo>  combos;
     fxme::InfoButton   info;
-    juce::Rectangle<int> weightsLabelArea, keywordsArea, overrideArea;
-    juce::String keywords;        // the keys this effect reads
-    juce::String overriddenKeys;  // ...of those, the ones the selected block pins
+    juce::Rectangle<int> weightsLabelArea, keywordsArea;
+    juce::String keywords;   // the keys this effect reads
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (EffectPanel)
 };
