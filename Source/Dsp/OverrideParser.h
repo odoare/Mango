@@ -16,6 +16,14 @@
     `mididur*N`, `mididur/N`, `N*mididur` (same forms for midifreq).
     Vowel keys also accept the letters a e i o u.
 
+    The note-value helpers `s4 s8 s16 s32 s64` (straight), `t4 t8 t16 t32
+    t64` (triplet), `d4 d8 d16 d32 d64` (dotted) expand to the same
+    fraction-of-a-whole-note a block's own duration draw would produce for
+    that note value (e.g. `s8` = 0.125, `t8` = 0.125 * 2/3), and take the
+    same `*N`, `/N`, `N*` forms as the magic variables - e.g. `dur=t8*2`.
+    Unlike mididur/midifreq they don't depend on runtime state, so they
+    fold to a plain constant at parse time.
+
     Both magic variables take an optional voice digit 1..4 — `mididur2`,
     `midifreq3*2` — addressing the chord currently held, sorted low to high,
     so one block can tune several lanes to different notes of the same chord.
@@ -45,6 +53,8 @@
 #include <cstring>
 #include <optional>
 #include <string>
+
+#include <FxmeTools/midi/NoteDuration.h>
 
 namespace mng
 {
@@ -232,6 +242,44 @@ namespace detail
         return std::nullopt;
     }
 
+    /** A note-value helper reference at `pos`: `s4/s8/.../t64/d64` plus its
+        length, so the caller can check what (if anything) follows it - same
+        shape as MagicRef. The value is already the fraction-of-a-whole-note
+        `dur`'s plain numbers use (see noteDurationBeats: quarter=1 beat =
+        0.25 of a whole note), computed once and shared by every lookup. */
+    struct NoteConstRef { float value = 0.0f; size_t len = 0; };
+
+    inline std::optional<NoteConstRef> parseNoteConstRef (const std::string& s, size_t pos)
+    {
+        static const std::pair<const char*, float> kNoteConstants[] = {
+            { "s4",  (float) fxme::noteDurationBeats (fxme::NoteBase::Quarter,      fxme::NoteMod::Straight) * 0.25f },
+            { "s8",  (float) fxme::noteDurationBeats (fxme::NoteBase::Eighth,       fxme::NoteMod::Straight) * 0.25f },
+            { "s16", (float) fxme::noteDurationBeats (fxme::NoteBase::Sixteenth,    fxme::NoteMod::Straight) * 0.25f },
+            { "s32", (float) fxme::noteDurationBeats (fxme::NoteBase::ThirtySecond, fxme::NoteMod::Straight) * 0.25f },
+            { "s64", (float) fxme::noteDurationBeats (fxme::NoteBase::SixtyFourth,  fxme::NoteMod::Straight) * 0.25f },
+            { "t4",  (float) fxme::noteDurationBeats (fxme::NoteBase::Quarter,      fxme::NoteMod::Triplet)  * 0.25f },
+            { "t8",  (float) fxme::noteDurationBeats (fxme::NoteBase::Eighth,       fxme::NoteMod::Triplet)  * 0.25f },
+            { "t16", (float) fxme::noteDurationBeats (fxme::NoteBase::Sixteenth,    fxme::NoteMod::Triplet)  * 0.25f },
+            { "t32", (float) fxme::noteDurationBeats (fxme::NoteBase::ThirtySecond, fxme::NoteMod::Triplet)  * 0.25f },
+            { "t64", (float) fxme::noteDurationBeats (fxme::NoteBase::SixtyFourth,  fxme::NoteMod::Triplet)  * 0.25f },
+            { "d4",  (float) fxme::noteDurationBeats (fxme::NoteBase::Quarter,      fxme::NoteMod::Dotted)   * 0.25f },
+            { "d8",  (float) fxme::noteDurationBeats (fxme::NoteBase::Eighth,       fxme::NoteMod::Dotted)   * 0.25f },
+            { "d16", (float) fxme::noteDurationBeats (fxme::NoteBase::Sixteenth,    fxme::NoteMod::Dotted)   * 0.25f },
+            { "d32", (float) fxme::noteDurationBeats (fxme::NoteBase::ThirtySecond, fxme::NoteMod::Dotted)   * 0.25f },
+            { "d64", (float) fxme::noteDurationBeats (fxme::NoteBase::SixtyFourth,  fxme::NoteMod::Dotted)   * 0.25f },
+        };
+
+        // Longest names first: "s4" is a prefix of nothing here, but checking
+        // longer names first is the safer habit if this table ever grows.
+        for (const auto& [name, value] : kNoteConstants)
+        {
+            const size_t len = std::strlen (name);
+            if (s.compare (pos, len, name) == 0)
+                return NoteConstRef { value, len };
+        }
+        return std::nullopt;
+    }
+
     inline std::optional<Expr> parseExpr (const std::string& s, bool vowelKey)
     {
         if (vowelKey)
@@ -267,6 +315,39 @@ namespace detail
                     if (! n)
                         return std::nullopt;
                     return Expr { m->kind, *n, m->voice };
+                }
+
+        // noteConst , noteConst*N , noteConst/N - folds straight to a
+        // constant, since (unlike mididur/midifreq) these don't depend on
+        // runtime MIDI state.
+        if (const auto c = parseNoteConstRef (s, 0))
+        {
+            if (c->len == s.size())
+                return Expr { Expr::Const, c->value, 0 };
+
+            if (s.size() > c->len + 1)
+            {
+                const char op = s[c->len];
+                const auto n  = parseNumber (s.substr (c->len + 1));
+                if (! n)
+                    return std::nullopt;
+                if (op == '*')
+                    return Expr { Expr::Const, c->value * *n, 0 };
+                if (op == '/' && *n != 0.0f)
+                    return Expr { Expr::Const, c->value / *n, 0 };
+            }
+            return std::nullopt;
+        }
+
+        // N*noteConst
+        if (const auto star = s.find ('*'); star != std::string::npos)
+            if (const auto c = parseNoteConstRef (s, star + 1))
+                if (c->len == s.size() - star - 1)
+                {
+                    const auto n = parseNumber (s.substr (0, star));
+                    if (! n)
+                        return std::nullopt;
+                    return Expr { Expr::Const, *n * c->value, 0 };
                 }
 
         if (const auto n = parseNumber (s))

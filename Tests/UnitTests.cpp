@@ -824,6 +824,31 @@ static int testOverrideParser()
     CHECK (! parseOverrides ("f0=midifreq/0").has_value());
     CHECK (! parseOverrides ("f0=midifrequency").has_value());
 
+    // Note-value helpers: s/t/d + 4/8/16/32/64, the same fraction-of-a-whole-
+    // note dur's plain numbers use - folded to a plain Const, not runtime-scaled.
+    auto nc = parseOverrides ("dur=s4");
+    CHECK (nc.has_value() && nc->find (OvKey::Dur)->kind == Expr::Const);
+    CHECK (near (nc->find (OvKey::Dur)->value, 0.25f, 1e-6));
+
+    auto nc2 = parseOverrides ("dur=s8 fade=t8 fb=d16");
+    CHECK (nc2.has_value());
+    CHECK (near (nc2->find (OvKey::Dur)->value, 0.125f, 1e-6));
+    CHECK (near (nc2->find (OvKey::Fade)->value, 0.125f * 2.0f / 3.0f, 1e-6));
+    CHECK (near (nc2->find (OvKey::Fb)->value, 0.0625f * 1.5f, 1e-6));
+
+    auto nc3 = parseOverrides ("dur=s4*2");
+    CHECK (nc3.has_value() && near (nc3->find (OvKey::Dur)->value, 0.5f, 1e-6));
+
+    auto nc4 = parseOverrides ("dur=t4/3");
+    CHECK (nc4.has_value() && near (nc4->find (OvKey::Dur)->value, (0.25f * 2.0f / 3.0f) / 3.0f, 1e-6));
+
+    auto nc5 = parseOverrides ("dur=2*d8");
+    CHECK (nc5.has_value() && near (nc5->find (OvKey::Dur)->value, 2.0f * 0.125f * 1.5f, 1e-6));
+
+    CHECK (! parseOverrides ("dur=s4/0").has_value());
+    CHECK (! parseOverrides ("dur=s5").has_value());
+    CHECK (! parseOverrides ("dur=s4x").has_value());
+
     // Vowels.
     auto vow = parseOverrides ("v0=a v1=u");
     CHECK (vow.has_value());
