@@ -350,5 +350,11 @@ Some effect lanes use the fast Fourier Transform engine of
 distributed under the permissive zlib license. Thanks to Justin Frankel and the
 Cockos team ([github.com/justinfrankel/WDL](https://github.com/justinfrankel/WDL)).
 
+## License
+
+AGPL-3.0-or-later, or commercial terms for holders of a commercial JUCE
+licence - see [LICENSE.md](LICENSE.md) for the details and the two
+framework-free files that stay LGPL-3.0-or-later.
+
 ---
-Author: Olivier Doaré · FX-Mechanics · LGPL-3.0-or-later
+Author: Olivier Doaré · FX-Mechanics · AGPL-3.0-or-later OR LicenseRef-FXME-Commercial

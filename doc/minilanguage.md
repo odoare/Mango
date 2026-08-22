@@ -30,7 +30,11 @@ spaces (press **Ctrl+Return** for a newline, **Return** to commit).
 | `mididur` | length of one cycle of the last MIDI note, in **seconds** | `dur=mididur` |
 | `midifreq` | pitch of that note, in **Hz** (= 1/mididur) | `f0=midifreq` |
 | voice digit | the same, on one note of the chord you are holding | `dur=mididur2`, `f0=midifreq1` |
-| scaled | any magic word times or divided by a number | `mididur*2`, `mididur/4`, `2*midifreq3` |
+| `s4 s8 s16 s32 s64` | straight note-value shortcut (fraction of a whole note) | `dur=s8` |
+| `t4 t8 t16 t32 t64` | triplet note-value shortcut | `dur=t8` |
+| `d4 d8 d16 d32 d64` | dotted note-value shortcut | `dur=d8` |
+| number + `s` | an absolute time in **seconds**, ignores tempo and mididur | `dur=1.5s` |
+| scaled | a magic word or note-value shortcut, times or divided by a number | `mididur*2`, `s4/3`, `2*d16` |
 | vowel letter | for `v0` / `v1` only | `v0=a` |
 
 **MIDI tracking.** Without a digit both follow the last note-on, sampled when
@@ -54,6 +58,18 @@ are not holding (`mididur3` on a two-note chord) and you get the top note
 instead of silence, and with nothing held at all you get the last note
 played, exactly like plain `mididur`.
 
+**Note-value shortcuts.** `s4 s8 s16 s32 s64` (straight), `t4 t8 t16 t32 t64`
+(triplet) and `d4 d8 d16 d32 d64` (dotted) are the same fractions the
+duration-weight grid draws from - `s8` is 0.125, `t8` is 0.125 × 2/3, `d8` is
+0.125 × 1.5 - so `dur=t8` beats typing the decimal out. They scale like the
+magic words do: `s4*2`, `t8/3`, `2*d16`.
+
+**Absolute seconds.** A number written with a trailing `s` is a time in
+seconds outright: `dur=1.5s` is 1.5 seconds, independent of both tempo and
+mididur - the same "already resolved, skip the tempo maths" behaviour
+mididur/midifreq get, just with a fixed value instead of one that follows
+what you play.
+
 ### The one unit trap
 
 `dur` changes meaning depending on how you write it:
@@ -62,7 +78,9 @@ played, exactly like plain `mididur`.
 |---------|-------|------------|
 | `dur=0.25` | a fraction of a **whole note**, follows host tempo | a quarter = 0.5 s |
 | `dur=0.125` | eighth note | 0.25 s |
+| `dur=s8` | the same eighth, spelled from the weight grid's names | 0.25 s |
 | `dur=mididur` | a time in **seconds**, ignores tempo | 1 cycle of the note |
+| `dur=1.5s` | a time in **seconds**, ignores tempo and mididur | 1.5 s |
 
 Every other key is in the same unit as its knob.
 
@@ -152,6 +170,8 @@ bits=3 down=8 mix=0.7            quant: crunchy, blended back
 pass=0 aux1=1                    aux: send this block away from the main mix
 mode=3 glide=0                   panner: random, hard jumps
 w4=1 wdot=1                      freeze: re-capture every dotted quarter
+dur=t8 fb=0.5                    delay: eighth-note triplet repeats
+dur=1.5s mix=1                   gater: pinned to 1.5 s, whatever the tempo
 ```
 
 ## Gotchas
@@ -173,3 +193,6 @@ w4=1 wdot=1                      freeze: re-capture every dotted quarter
 - The voice digits read the notes held **when the block starts**. Releasing a
   note does not retune a block that is already sounding; the next block picks
   up the new chord.
+- Note-value shortcuts and the seconds suffix are exact matches only: `s5`
+  (not a real note value), `dur=s` (no digits) and `dur=1.5sx` are all typos,
+  not something else, and turn the line red like any other bad key.

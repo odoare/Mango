@@ -1,3 +1,70 @@
+# Mango 0.2.0
+
+Denser control panels, per-block randomness in more effects, and a block
+language that can now speak in plain seconds.
+
+**Compatibility:** sessions, presets and automation from 0.1.3 load
+unchanged. No existing parameter was renamed, renumbered or reordered - every
+new knob defaults to the old fixed behaviour (Std = 0, Fade at its previous
+constant 15 ms). Saved state now also records an internal format version
+(currently 1), ahead of any future save-format change.
+
+## New
+
+**FxmeNumberBox controls, everywhere.** Every effect panel, and the bus
+Volume/Pan knobs at the bottom of the mixer, now use a compact readout
+control in place of a knob: name and value as text, drag up/down to adjust,
+right-click to type a value directly - built for panels that had outgrown
+knobs as more parameters were added.
+
+**Per-block standard deviation.** Gater, Grain, Delay, Quantizer, RingMod,
+Freeze and AuxSend each gain a Std knob alongside every mean control they
+already had (attack/release/curve, delay time/feedback/damping, bits/
+downsample, ring frequencies, freeze width). At 0 a block still draws the
+exact mean, as before; above 0 every block draws its own value around it, so
+several lanes running the same effect don't move in lockstep.
+
+**Grain Fade knob.** The seam crossfade between repetitions, previously a
+fixed 15 ms, is now a knob: short keeps repeats tight, long smooths a grain
+that isn't looping cleanly on its own.
+
+**Minilanguage: absolute seconds and note-value shortcuts.** A block
+override can now write `dur=1.5s` for a literal time in seconds, independent
+of both tempo and `mididur`. `s4 s8 s16 s32 s64` (straight), `t4..t64`
+(triplet) and `d4..d64` (dotted) are shortcuts for the fractions the
+duration-weight grid already draws from, and take the same `*N`/`/N` scaling
+`mididur` does - e.g. `dur=t8*2`.
+
+**Tooltips** across the transport, block editor and lane controls.
+
+## Fixed
+
+**Grain's loop landed sharp of the requested pitch/duration.** The fixed
+30 ms crossfade was eating into the recorded grain, so a loop meant to be
+exactly `dur` long (tuned to a MIDI note, say) came out measurably shorter -
+audible as slightly sharp. Grain now trims its crossfade so the loop always
+lands on the exact period requested.
+
+**Bipolar knobs whose centre isn't 0.** Att Curve and Rel Curve (Gater,
+Grain, AuxSend) are a 0..1 range whose neutral setting is the midpoint, 0.5 -
+they were drawing their bipolar fill from 0 instead, which read as already
+off-centre at rest.
+
+**Buttons stole keyboard focus on click.** Clicking a lane button or the
+Configs toggle could pull focus out of whatever text field you were editing.
+
+## Changed
+
+**Mix rides with the block-keys text.** On every panel, Mix (Amount on
+RingMod; the three aux sends on AuxSend) now sits beside the "block keys"
+reference text at the bottom instead of taking a slot in the knob grid -
+freeing the grid to size every control the same way regardless of how many
+fit in a row, instead of stretching the last few to fill the panel width.
+
+**A consistent accent colour** now tints every inherited look-and-feel
+element (combo box menus and the like), not just the controls Mango styles
+directly.
+
 # Mango 0.1.1
 
 A workflow release: editing blocks is much faster, the block language

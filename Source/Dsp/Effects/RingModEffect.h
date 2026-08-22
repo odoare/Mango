@@ -19,7 +19,7 @@
     Overrides: dur (glide ramp), f0, f1, amp.
 
     Author: Olivier Doaré, github.com/odoare
-    SPDX-License-Identifier: LGPL-3.0-or-later
+    SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-FXME-Commercial
   ------------------------------------------------------------------------------
 */
 

@@ -16,7 +16,7 @@
 
     Author: Olivier Doaré, github.com/odoare
     (c) 2026 Olivier Doaré
-    SPDX-License-Identifier: LGPL-3.0-or-later
+    SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-FXME-Commercial
   ------------------------------------------------------------------------------
 */
 
