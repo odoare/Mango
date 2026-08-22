@@ -24,6 +24,13 @@
     Unlike mididur/midifreq they don't depend on runtime state, so they
     fold to a plain constant at parse time.
 
+    A number written with a trailing `s` - `dur=1.5s` - is an absolute time
+    in seconds: like mididur/midifreq it skips the whole-note/tempo
+    conversion a plain number gets, but without following the MIDI input.
+    Every `dur`-style key already accepts mididur/midifreq (they resolve to
+    seconds directly; see overrideDurSeconds in EffectBase.h) - this is the
+    same mechanism, just a fixed value instead of a MIDI-derived one.
+
     Both magic variables take an optional voice digit 1..4 — `mididur2`,
     `midifreq3*2` — addressing the chord currently held, sorted low to high,
     so one block can tune several lanes to different notes of the same chord.
@@ -93,20 +100,22 @@ struct MidiNoteState
     }
 };
 
-/** One override value: a plain constant, `constant * mididur`, or
+/** One override value: a plain constant, an absolute-seconds constant (a
+    number written with a trailing `s`), `constant * mididur`, or
     `constant * midifreq` = constant/mididur (division by N is folded into
     the constant at parse time). `voice` is the magic variable's optional
-    digit: 0 = the last note played, 1..kMaxVoices = the held chord. */
+    digit: 0 = the last note played, 1..kMaxVoices = the held chord -
+    meaningless for the two Const kinds, which never touch `midi`. */
 struct Expr
 {
-    enum Kind { Const, MididurScaled, MidifreqScaled };
+    enum Kind { Const, SecondsConst, MididurScaled, MidifreqScaled };
     Kind  kind  = Const;
     float value = 0.0f;
     int   voice = 0;
 
     float eval (const MidiNoteState& midi) const
     {
-        if (kind == Const)
+        if (kind == Const || kind == SecondsConst)
             return value;
         const float period = midi.periodFor (voice);
         if (kind == MididurScaled)
@@ -349,6 +358,14 @@ namespace detail
                         return std::nullopt;
                     return Expr { Expr::Const, *n * c->value, 0 };
                 }
+
+        // N s - an absolute time in seconds, bypassing the whole-note/tempo
+        // conversion a plain Const gets in overrideDurSeconds(). strtof
+        // itself never accepts a trailing 's', so this can't collide with a
+        // plain number (with or without an exponent).
+        if (s.size() > 1 && s.back() == 's')
+            if (const auto n = parseNumber (s.substr (0, s.size() - 1)))
+                return Expr { Expr::SecondsConst, *n, 0 };
 
         if (const auto n = parseNumber (s))
             return Expr { Expr::Const, *n, 0 };

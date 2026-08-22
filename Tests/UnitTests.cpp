@@ -824,6 +824,22 @@ static int testOverrideParser()
     CHECK (! parseOverrides ("f0=midifreq/0").has_value());
     CHECK (! parseOverrides ("f0=midifrequency").has_value());
 
+    // Absolute seconds: a number with a trailing s, independent of tempo
+    // and of mididur - same mechanism (see overrideDurSeconds), a fixed
+    // value instead of one derived from MIDI/runtime state.
+    auto abs1 = parseOverrides ("dur=1.5s");
+    CHECK (abs1.has_value() && abs1->find (OvKey::Dur)->kind == Expr::SecondsConst);
+    CHECK (near (abs1->find (OvKey::Dur)->eval (0.01f), 1.5f, 1e-6));
+    CHECK (near (abs1->find (OvKey::Dur)->eval (99.0f), 1.5f, 1e-6));   // ignores the period entirely
+
+    auto abs2 = parseOverrides ("dur=0.25s fade=2s");
+    CHECK (abs2.has_value());
+    CHECK (near (abs2->find (OvKey::Dur)->value, 0.25f, 1e-6));
+    CHECK (near (abs2->find (OvKey::Fade)->value, 2.0f, 1e-6));
+
+    CHECK (! parseOverrides ("dur=s").has_value());     // bare "s", not a number+s
+    CHECK (! parseOverrides ("dur=1.5sx").has_value());
+
     // Note-value helpers: s/t/d + 4/8/16/32/64, the same fraction-of-a-whole-
     // note dur's plain numbers use - folded to a plain Const, not runtime-scaled.
     auto nc = parseOverrides ("dur=s4");
