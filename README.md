@@ -38,8 +38,12 @@ Then rescan in your DAW (it caches the plugin list).
 
 Mango is free software and is **not signed with an Apple Developer ID**
 (that is a paid subscription). macOS tags anything downloaded through a
-browser as untrusted, and refuses to load it: the plugin will simply not
-appear in your DAW's scan, usually with no error message at all.
+browser as untrusted, and refuses to load it. Depending on the macOS version
+and the host, either the plugin simply does not appear in your DAW's scan,
+with no error message at all, or macOS shows a dialog such as *"Apple could
+not verify 'Mango.vst3' is free of malware that may harm your Mac or
+compromise your privacy"*. Despite the wording, this is not a malware
+detection: it is the standard warning for any unsigned download.
 
 Clear the tag after copying the files, in Terminal:
 
@@ -49,9 +53,13 @@ xattr -dr com.apple.quarantine /Library/Audio/Plug-Ins/Components/Mango.componen
 xattr -dr com.apple.quarantine /Applications/Mango.app
 ```
 
-(Run only the lines for the parts you installed.) Then rescan. If you used the
-`.pkg` installer and macOS refused to open it, right-click it and choose
-**Open**, or allow it under System Settings → Privacy & Security.
+(Run only the lines for the parts you installed.) Then rescan.
+
+If you used the `.pkg` installer and macOS refused to open it: try to open it
+once, then go to **System Settings → Privacy & Security**, scroll down and
+click **Open Anyway** next to the message about the installer (macOS asks for
+your password). On macOS 14 and earlier, right-clicking the `.pkg` and choosing
+**Open** also works; macOS 15 (Sequoia) and later removed that shortcut.
 
 The macOS build is a universal binary and runs on both Apple Silicon and Intel
 Macs, from macOS 10.13 up.
