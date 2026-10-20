@@ -2,21 +2,24 @@
 
 *Reference for development sessions. Kept in sync with the code*
 
-Mango is an FX-Mechanics JUCE audio plugin (VST3 / AU / Standalone, MIDI
+Mango is an FX-Mechanics JUCE audio plugin (VST3 / AU / CLAP / Standalone, MIDI
 input): a **modular sound glitcher/mangler** built around a multi-lane rubber
 step sequencer. Each lane drives one effect; while the playhead is inside a
 block on a lane, that lane's effect processes the audio. Lane order (top to
 bottom) is the processing order. All randomness is seeded and reproducible.
 
-Repo: `/home/doare/src/Mango` · JUCE expected as sibling `../JUCE` ·
-[FxmeTools](https://github.com/odoare/FxmeTools) as submodule `lib/FxmeTools`
-(JUCE module, namespace `fxme`). Sister projects used as references:
+Repo: `/home/doare/src/Mango` · JUCE 9,
+[FxmeTools](https://github.com/odoare/FxmeTools) (JUCE module, namespace
+`fxme`) and clap-juce-extensions pinned in `cmake/Dependencies.cmake`, resolved
+by `cmake/FxmeDeps.cmake` to a sibling clone (`../JUCE`, `../FxmeTools`, …) or
+the pinned commit (`-DFXME_USE_SIBLINGS=OFF`; CI does this). Sister projects used as references:
 Spread (project template, TopBar origin), Neorix (mini-language + threading
 patterns), FxmeFX (Tube saturation origin), Gloubiboulga (formant origin).
 
 > **Workflow note:** the user commits and pushes himself — never run
 > `git commit` / `git push` (see project memory). Shared, generally reusable
-> functionality goes into the FxmeTools submodule with API docs; Mango-only
+> functionality goes into FxmeTools (`../FxmeTools`) with API docs, then the
+> pin in `cmake/Dependencies.cmake` is bumped; Mango-only
 > logic stays in `Source/`.
 
 ---
@@ -88,9 +91,13 @@ patterns), FxmeFX (Tube saturation origin), Gloubiboulga (formant origin).
 ## 2. Source layout
 
 ```
-CMakeLists.txt                Spread-derived; juce_add_module(lib/FxmeTools/FxmeTools)
-                              (no fxmetools_attach: Mango does not use WDL/FirFilter);
-                              PLUGIN_CODE MNGO, COMPANY FX-Mechanics, MANUFACTURER FXME
+CMakeLists.txt                Spread-derived; links the FxmeTools module directly
+                              (no fxmetools_attach: Mango does not use WDL/FirFilter,
+                              only WDL fft.c); PLUGIN_CODE MNGO, COMPANY FX-Mechanics,
+                              MANUFACTURER FXME; CLAP ID com.fx-mechanics.Mango
+cmake/Dependencies.cmake      pins: JUCE, FxmeTools, clap-juce-extensions
+cmake/FxmeDeps.cmake          fxme_dependency(): sibling clone or pinned commit
+                              (verbatim copy of FxmeFX's)
 Source/
   PluginProcessor.{h,cpp}     APVTS, MIDI->mididur, grid listener, state save/load
   PluginEditor.{h,cpp}        layout, selection flow, panel switching, ChangeListener
@@ -409,8 +416,10 @@ bars share one colour: on a meter red means clipping, so aux bars sampling
 the red end of the identity ramp would read as a fault.
 
 **Splash** (`fxme::SplashOverlay`, covering the whole window): fades in the
-`Assets/Splash.png` artwork over a dimmed backdrop, holds 2 s, fades out;
-a click dismisses it early and it swallows mouse events while up. The
+`Assets/Splash.png` artwork over a dimmed backdrop, holds (1 s at startup,
+2 s from the logo click), fades out. A link row under it (`setLink`: the
+FX-Mechanics logo + "fx-mechanics.com", in mango yellow) opens the website;
+a click anywhere else dismisses it early and it swallows mouse events while up. The
 component holds no policy about when to appear — the editor shows it from
 `fxme::TopBar::onLogoClicked` (the company logo and the decoration artwork
 are the hit areas, recorded as they paint) and once at startup, gated by
@@ -526,7 +535,7 @@ explains the override language. New effect types must add a `helpFor` case.
   where it actually works**, so this class must be tested on Windows, not
   just on the platform it was written for.
 
-## 8. FxmeTools additions made for Mango (lib/FxmeTools, branch `mango-additions`)
+## 8. FxmeTools additions made for Mango (merged into FxmeTools main)
 
 All header-only, `namespace fxme`, JUCE-free in dsp/midi. Registered in the
 umbrella `FxmeTools/FxmeTools.h` (module v0.0.3):

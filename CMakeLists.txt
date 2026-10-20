@@ -9,7 +9,7 @@ endif()
 # ignored outright and the architectures are unreliable — which is how v0.1.0
 # shipped an arm64-only "universal" build from an Apple Silicon runner.
 #
-# 10.13 is JUCE 8's floor. It has to be well below 11.0 or the plugin refuses
+# 10.13 is JUCE's floor. It has to be well below 11.0 or the plugin refuses
 # to load on Catalina (10.15); the arm64 slice of a universal build is clamped
 # up to 11.0 by the toolchain on its own, so this costs nothing.
 if(APPLE)
@@ -17,31 +17,24 @@ if(APPLE)
     set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "Target architectures")
 endif()
 
-project(Mango VERSION 0.2.0 LANGUAGES C CXX)
+project(Mango VERSION 0.3.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# JUCE is expected as a sibling of this repo; FxmeTools lives in-tree as a git
-# submodule under lib/. The module is registered directly rather than through
-# fxmetools_attach: of the WDL sources (FxmeTools' own submodule) Mango only
-# needs fft.c, for <FxmeTools/dsp/SpectralFreeze.h> (the Freeze effect).
+# JUCE and FxmeTools: sibling clones (../JUCE, ../FxmeTools) or the pinned
+# commits; sets JUCE_DIR and FXMETOOLS_DIR, adds JUCE and includes
+# FxmeTools.cmake (the module, FxmeCore linked into it, fxmetools_add_clap()).
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Dependencies.cmake)
+
+# The module is linked directly rather than through fxmetools_attach: of the
+# WDL sources (FxmeTools' own submodule) Mango only needs fft.c, for
+# <FxmeTools/dsp/SpectralFreeze.h> (the Freeze effect).
 #
-# FxmeTools is split in two, and Mango sits almost entirely on the JUCE-free
-# half: every FxmeTools header it uses — the dsp/ kernels, DeterministicRandom,
-# the midi/ sequencing — now lives under lib/FxmeTools/core. That directory is a
-# second include root for the same <FxmeTools/...> spelling, so no include here
-# changes, but the target has to be added or none of them resolve.
-add_subdirectory(../JUCE JUCE)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/lib/FxmeTools/core FxmeCore)
-juce_add_module(${CMAKE_CURRENT_SOURCE_DIR}/lib/FxmeTools/FxmeTools)
-
-# The module's own sources include core headers, and juce_add_module creates an
-# INTERFACE target whose sources are compiled into the consumer, so core has to
-# travel with it.
-target_link_libraries(FxmeTools INTERFACE FxmeCore)
-
-set(FXMETOOLS_WDL_FFT ${CMAKE_CURRENT_SOURCE_DIR}/lib/FxmeTools/WDL/WDL/fft.c)
+# Mango sits almost entirely on FxmeTools' JUCE-free half (core/): the dsp/
+# kernels, DeterministicRandom, the midi/ sequencing. core/ is a second include
+# root for the same <FxmeTools/...> spelling, carried by the FxmeCore target.
+set(FXMETOOLS_WDL_FFT ${FXMETOOLS_WDL_DIR}/fft.c)
 
 juce_add_plugin(Mango
     COMPANY_NAME                "FX-Mechanics"
@@ -66,6 +59,12 @@ juce_add_plugin(Mango
     AU_MAIN_TYPE                kAudioUnitType_MusicEffect
     BUNDLE_ID                   "com.FXMechanics.Mango"
 )
+
+# CLAP, beside AU/VST3/Standalone (clap-juce-extensions; see
+# fxmetools_add_clap in FxmeTools.cmake). The ID is permanent once released.
+fxmetools_add_clap(Mango
+    ID       "com.fx-mechanics.Mango"
+    FEATURES audio-effect distortion glitch stereo)
 
 # Source files are discovered recursively so adding a new module/component
 # does not require editing this file. Re-run CMake configure after adding files.
@@ -147,7 +146,7 @@ if(MANGO_BUILD_TESTS)
     # which carries core with it.
     target_link_libraries(MangoTests PRIVATE FxmeCore)
     target_include_directories(MangoTests PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/lib/FxmeTools
+        ${FXMETOOLS_ROOT}
         ${CMAKE_CURRENT_SOURCE_DIR}/Source)
     target_compile_features(MangoTests PRIVATE cxx_std_17)
     add_test(NAME MangoTests COMMAND MangoTests)

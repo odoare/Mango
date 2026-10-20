@@ -31,6 +31,10 @@ MangoAudioProcessorEditor::MangoAudioProcessorEditor (MangoAudioProcessor& p)
 
     splash.setImage (juce::ImageCache::getFromMemory (BinaryData::Splash_png,
                                                       BinaryData::Splash_pngSize));
+    splash.setLink ("fx-mechanics.com", juce::URL ("https://fx-mechanics.com"),
+                    juce::ImageCache::getFromMemory (BinaryData::logo686_png,
+                                                     BinaryData::logo686_pngSize));
+    splash.setLinkColour (theme::mangoYellow);
     addChildComponent (splash);   // hidden until shown, always brought to front
     addAndMakeVisible (rack);
     addAndMakeVisible (busBar);
@@ -138,7 +142,7 @@ MangoAudioProcessorEditor::MangoAudioProcessorEditor (MangoAudioProcessor& p)
     // First window of this run only — reopening it must not replay the
     // splash (the flag lives on the processor for exactly that reason).
     if (processor.claimSplash())
-        splash.show();
+        splash.show (1000);   // brief at startup; the logo click keeps the 2 s default
 }
 
 MangoAudioProcessorEditor::~MangoAudioProcessorEditor()

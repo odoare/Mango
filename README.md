@@ -273,10 +273,11 @@ is playing.
 sit next to: the selected lane's effect, the lanes-and-buses strip at the
 bottom left, the config bank, and the block override language.
 
-**Splash**: the cover art appears for two seconds the first time the editor
-is opened in a run (not on every reopen), and any time you click the
-FX-Mechanics logo or the mango artwork in the top bar. Click it to dismiss
-it early.
+**Splash**: the cover art appears for a second the first time the editor
+is opened in a run (not on every reopen), and for two seconds any time you
+click the FX-Mechanics logo or the mango artwork in the top bar. The
+fx-mechanics.com link under it opens the website. Click anywhere else to
+dismiss it early.
 
 **Meters**: the top bar carries four small stereo level meters (input,
 main output, aux 1 and aux 2) reading RMS over −60..0 dBFS with a mark at
@@ -294,14 +295,19 @@ rhythm. Looping a section in your DAW replays it identically each time round.
 
 ## Building
 
-JUCE is expected as a sibling directory (`../JUCE`); FxmeTools is a git
-submodule:
+JUCE 9, FxmeTools and clap-juce-extensions are pinned in
+`cmake/Dependencies.cmake`. CMake uses a sibling clone when there is one
+(`../JUCE`, `../FxmeTools`, `../clap-juce-extensions`) and otherwise fetches the
+pinned commit; the configure output says which, for each dependency. Pass
+`-DFXME_USE_SIBLINGS=OFF` to always build from the pins (releases do).
 
 ```sh
-git clone --recursive <this repo>
+git clone <this repo>
 cmake -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build -j
 ```
+
+Formats: VST3, AU (macOS), CLAP and Standalone.
 
 Tests (console, no audio device needed):
 
@@ -327,9 +333,9 @@ git tag v0.1.0
 git push --tags
 ```
 
-It produces a Linux x86_64 zip (VST3 + Standalone), a Windows x86_64 zip
-(VST3 + Standalone) and a macOS **universal** (arm64 + x86_64) zip and `.pkg`
-installer (VST3 + AU + Standalone). Run it from the Actions tab
+It produces a Linux x86_64 zip (VST3 + CLAP + Standalone), a Windows x86_64
+zip (VST3 + CLAP + Standalone) and a macOS **universal** (arm64 + x86_64) zip
+and `.pkg` installer (VST3 + AU + CLAP + Standalone). Run it from the Actions tab
 (*workflow_dispatch*) to test the builds without cutting a release.
 
 ## Architecture notes
