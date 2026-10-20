@@ -79,9 +79,16 @@ public:
         last note played, held or not) to the caller. */
     void fill (MidiNoteState& s) const
     {
+        // An insertion sort of at most four notes: std::sort here trips GCC 13's
+        // -Warray-bounds in optimised builds (a false positive on its 16-element path).
         int sorted[kMaxVoices];
-        std::copy (notes, notes + count, sorted);
-        std::sort (sorted, sorted + count);
+        for (int i = 0; i < count; ++i)
+        {
+            int j = i;
+            for (; j > 0 && sorted[j - 1] > notes[i]; --j)
+                sorted[j] = sorted[j - 1];
+            sorted[j] = notes[i];
+        }
 
         s.heldCount = count;
         for (int i = 0; i < count; ++i)

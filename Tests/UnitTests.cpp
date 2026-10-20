@@ -796,30 +796,30 @@ static int testOverrideParser()
 
     // mididur forms.
     auto md = parseOverrides ("dur=mididur");
-    CHECK (md.has_value() && md->find (OvKey::Dur)->kind == Expr::MididurScaled);
-    CHECK (near (md->find (OvKey::Dur)->eval (0.01f), 0.01f, 1e-7));
+    CHECK (md.has_value() && md->find (OvKey::Dur)->variable == kMididur);
+    CHECK (near (md->find (OvKey::Dur)->eval (MidiNoteState (0.01f)), 0.01f, 1e-7));
 
     auto md2 = parseOverrides ("dur=mididur*2");
-    CHECK (md2.has_value() && near (md2->find (OvKey::Dur)->eval (0.01f), 0.02f, 1e-7));
+    CHECK (md2.has_value() && near (md2->find (OvKey::Dur)->eval (MidiNoteState (0.01f)), 0.02f, 1e-7));
 
     auto md3 = parseOverrides ("dur=mididur/4");
-    CHECK (md3.has_value() && near (md3->find (OvKey::Dur)->eval (0.01f), 0.0025f, 1e-7));
+    CHECK (md3.has_value() && near (md3->find (OvKey::Dur)->eval (MidiNoteState (0.01f)), 0.0025f, 1e-7));
 
     auto md4 = parseOverrides ("dur=3*mididur");
-    CHECK (md4.has_value() && near (md4->find (OvKey::Dur)->eval (0.01f), 0.03f, 1e-7));
+    CHECK (md4.has_value() && near (md4->find (OvKey::Dur)->eval (MidiNoteState (0.01f)), 0.03f, 1e-7));
 
     // midifreq = 1/mididur (Hz of the last MIDI note), same expression forms.
     auto mf = parseOverrides ("f0=midifreq f1=midifreq*2");
     CHECK (mf.has_value());
-    CHECK (mf->find (OvKey::F0)->kind == Expr::MidifreqScaled);
-    CHECK (near (mf->find (OvKey::F0)->eval (0.01f), 100.0f, 1e-4));
-    CHECK (near (mf->find (OvKey::F1)->eval (0.01f), 200.0f, 1e-4));
+    CHECK (mf->find (OvKey::F0)->variable == kMidifreq);
+    CHECK (near (mf->find (OvKey::F0)->eval (MidiNoteState (0.01f)), 100.0f, 1e-4));
+    CHECK (near (mf->find (OvKey::F1)->eval (MidiNoteState (0.01f)), 200.0f, 1e-4));
 
     auto mf2 = parseOverrides ("f0=midifreq/2 f1=3*midifreq");
     CHECK (mf2.has_value());
-    CHECK (near (mf2->find (OvKey::F0)->eval (0.01f), 50.0f, 1e-4));
-    CHECK (near (mf2->find (OvKey::F1)->eval (0.01f), 300.0f, 1e-4));
-    CHECK (near (mf2->find (OvKey::F0)->eval (0.0f), 0.0f, 1e-7));   // no note yet: safe 0
+    CHECK (near (mf2->find (OvKey::F0)->eval (MidiNoteState (0.01f)), 50.0f, 1e-4));
+    CHECK (near (mf2->find (OvKey::F1)->eval (MidiNoteState (0.01f)), 300.0f, 1e-4));
+    CHECK (near (mf2->find (OvKey::F0)->eval (MidiNoteState (0.0f)), 0.0f, 1e-7));   // no note yet: safe 0
 
     CHECK (! parseOverrides ("f0=midifreq/0").has_value());
     CHECK (! parseOverrides ("f0=midifrequency").has_value());
@@ -829,8 +829,8 @@ static int testOverrideParser()
     // value instead of one derived from MIDI/runtime state.
     auto abs1 = parseOverrides ("dur=1.5s");
     CHECK (abs1.has_value() && abs1->find (OvKey::Dur)->kind == Expr::SecondsConst);
-    CHECK (near (abs1->find (OvKey::Dur)->eval (0.01f), 1.5f, 1e-6));
-    CHECK (near (abs1->find (OvKey::Dur)->eval (99.0f), 1.5f, 1e-6));   // ignores the period entirely
+    CHECK (near (abs1->find (OvKey::Dur)->eval (MidiNoteState (0.01f)), 1.5f, 1e-6));
+    CHECK (near (abs1->find (OvKey::Dur)->eval (MidiNoteState (99.0f)), 1.5f, 1e-6));   // ignores the period entirely
 
     auto abs2 = parseOverrides ("dur=0.25s fade=2s");
     CHECK (abs2.has_value());
@@ -906,8 +906,8 @@ static int testMidiPolyphony()
     // Parsing: voice digits on both magic words, in every expression form.
     auto p = parseOverrides ("dur=mididur2 f0=midifreq3 fb=mididur1*2 q=4*midifreq4 att=mididur/2");
     CHECK (p.has_value());
-    CHECK (p->find (OvKey::Dur)->kind == Expr::MididurScaled  && p->find (OvKey::Dur)->voice == 2);
-    CHECK (p->find (OvKey::F0)->kind  == Expr::MidifreqScaled && p->find (OvKey::F0)->voice  == 3);
+    CHECK (p->find (OvKey::Dur)->variable == kMididur && p->find (OvKey::Dur)->voice == 2);
+    CHECK (p->find (OvKey::F0)->variable == kMidifreq && p->find (OvKey::F0)->voice  == 3);
     CHECK (p->find (OvKey::Fb)->voice == 1 && near (p->find (OvKey::Fb)->value, 2.0f, 1e-6));
     CHECK (p->find (OvKey::Q)->voice  == 4 && near (p->find (OvKey::Q)->value,  4.0f, 1e-6));
     CHECK (p->find (OvKey::Att)->voice == 0);   // no digit: still the last note

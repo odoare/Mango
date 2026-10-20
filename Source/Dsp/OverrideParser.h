@@ -47,6 +47,11 @@
     the message thread only; the resulting ParsedOverrides is a flat POD the
     audio thread can read and evaluate without locks or allocation.
 
+    The language itself (parsing, expressions, note-value constants) lives
+    in FxmeTools (core, `midi/BlockOverrides.h`), shared with other hosts:
+    this file gives it Mango's keys and its two MIDI variables, and keeps
+    Mango's names for the types.
+
     JUCE-free so the console unit tests cover it.
 
     Author: Olivier Doaré, github.com/odoare
@@ -56,12 +61,11 @@
 
 #pragma once
 
-#include <cstdlib>
-#include <cstring>
+#include <array>
 #include <optional>
 #include <string>
 
-#include <FxmeTools/midi/NoteDuration.h>
+#include <FxmeTools/midi/BlockOverrides.h>
 
 namespace mng
 {
@@ -98,31 +102,29 @@ struct MidiNoteState
             return last;
         return held[(voice < heldCount ? voice : heldCount) - 1];
     }
-};
 
-/** One override value: a plain constant, an absolute-seconds constant (a
-    number written with a trailing `s`), `constant * mididur`, or
-    `constant * midifreq` = constant/mididur (division by N is folded into
-    the constant at parse time). `voice` is the magic variable's optional
-    digit: 0 = the last note played, 1..kMaxVoices = the held chord -
-    meaningless for the two Const kinds, which never touch `midi`. */
-struct Expr
-{
-    enum Kind { Const, SecondsConst, MididurScaled, MidifreqScaled };
-    Kind  kind  = Const;
-    float value = 0.0f;
-    int   voice = 0;
-
-    float eval (const MidiNoteState& midi) const
+    /** The language's variables (see kMididur, kMidifreq): a period in
+        seconds, or its frequency in Hz (0 with no note yet). Other
+        variables (a host extending the language) resolve to 0 here. */
+    float variableValue (int variable, int voice) const
     {
-        if (kind == Const || kind == SecondsConst)
-            return value;
-        const float period = midi.periodFor (voice);
-        if (kind == MididurScaled)
-            return value * period;
-        return period > 1.0e-6f ? value / period : 0.0f;
+        const float period = periodFor (voice);
+        if (variable == 0)
+            return period;
+        if (variable == 1)
+            return period > 1.0e-6f ? 1.0f / period : 0.0f;
+        return 0.0f;
     }
 };
+
+/** The variables of Mango's language, in the order of overrideLanguage()'s table. */
+inline constexpr int kMididur = 0, kMidifreq = 1;
+
+/** One override value: a plain constant, an absolute-seconds constant (a
+    number written with a trailing `s`), or a scaled variable (`mididur`,
+    `midifreq`, with their voice digit). Evaluate with a MidiNoteState. */
+using Expr = fxme::OverrideExpr;
+using ParsedOverrides = fxme::ParsedOverrides;
 
 enum class OvKey
 {
@@ -134,31 +136,6 @@ enum class OvKey
     W64,                                   // ...appended, not grouped: this enum
                                            // extends at the tail only (see §10)
     Count
-};
-
-struct ParsedOverrides
-{
-    static constexpr int kMaxEntries = 16;
-
-    struct Entry { OvKey key = OvKey::Count; Expr expr; };
-    Entry entries[kMaxEntries];
-    int   count = 0;
-
-    const Expr* find (OvKey k) const
-    {
-        for (int i = 0; i < count; ++i)
-            if (entries[i].key == k)
-                return &entries[i].expr;
-        return nullptr;
-    }
-
-    bool add (OvKey k, Expr e)
-    {
-        if (count >= kMaxEntries)
-            return false;
-        entries[count++] = { k, e };
-        return true;
-    }
 };
 
 namespace detail
@@ -178,239 +155,37 @@ namespace detail
         while (*a != '\0' && *a == *b) { ++a; ++b; }
         return *a == *b;
     }
-
-    inline std::optional<OvKey> keyFromString (const std::string& s)
-    {
-        for (int i = 0; i < (int) OvKey::Count; ++i)
-            if (s == keyNames[i])
-                return (OvKey) i;
-        return std::nullopt;
-    }
-
-    /** Strict float: the whole string must be consumed. */
-    inline std::optional<float> parseNumber (const std::string& s)
-    {
-        if (s.empty())
-            return std::nullopt;
-        char* end = nullptr;
-        const float v = std::strtof (s.c_str(), &end);
-        if (end != s.c_str() + s.size())
-            return std::nullopt;
-        return v;
-    }
-
-    /** Vowel letters map to the fxme::FormantFilter::Vowel indices. */
-    inline std::optional<float> parseVowel (const std::string& s)
-    {
-        if (s.size() != 1)
-            return std::nullopt;
-        switch (s[0])
-        {
-            case 'a': return 0.0f;
-            case 'e': return 1.0f;
-            case 'i': return 2.0f;
-            case 'o': return 3.0f;
-            case 'u': return 4.0f;
-            default:  return std::nullopt;
-        }
-    }
-
-    /** A magic variable reference at `pos`: the word plus its optional voice
-        digit. `len` is how much of `s` it consumed, so the caller can check
-        that nothing unparsed is left over. */
-    struct MagicRef { Expr::Kind kind = Expr::Const; int voice = 0; size_t len = 0; };
-
-    inline std::optional<MagicRef> parseMagic (const std::string& s, size_t pos)
-    {
-        static const std::pair<std::string, Expr::Kind> kMagic[] = {
-            { "mididur",  Expr::MididurScaled  },
-            { "midifreq", Expr::MidifreqScaled },
-        };
-
-        for (const auto& [word, kind] : kMagic)
-        {
-            if (s.compare (pos, word.size(), word) != 0)
-                continue;
-
-            MagicRef m { kind, 0, word.size() };
-
-            // Optional voice digit. Out-of-range digits are left unconsumed
-            // rather than clamped, so `mididur5` fails to parse (and shows
-            // red) instead of quietly meaning something else.
-            if (pos + m.len < s.size())
-            {
-                const char c = s[pos + m.len];
-                if (c >= '1' && c <= (char) ('0' + MidiNoteState::kMaxVoices))
-                {
-                    m.voice = c - '0';
-                    ++m.len;
-                }
-            }
-            return m;
-        }
-        return std::nullopt;
-    }
-
-    /** A note-value helper reference at `pos`: `s4/s8/.../t64/d64` plus its
-        length, so the caller can check what (if anything) follows it - same
-        shape as MagicRef. The value is already the fraction-of-a-whole-note
-        `dur`'s plain numbers use (see noteDurationBeats: quarter=1 beat =
-        0.25 of a whole note), computed once and shared by every lookup. */
-    struct NoteConstRef { float value = 0.0f; size_t len = 0; };
-
-    inline std::optional<NoteConstRef> parseNoteConstRef (const std::string& s, size_t pos)
-    {
-        static const std::pair<const char*, float> kNoteConstants[] = {
-            { "s4",  (float) fxme::noteDurationBeats (fxme::NoteBase::Quarter,      fxme::NoteMod::Straight) * 0.25f },
-            { "s8",  (float) fxme::noteDurationBeats (fxme::NoteBase::Eighth,       fxme::NoteMod::Straight) * 0.25f },
-            { "s16", (float) fxme::noteDurationBeats (fxme::NoteBase::Sixteenth,    fxme::NoteMod::Straight) * 0.25f },
-            { "s32", (float) fxme::noteDurationBeats (fxme::NoteBase::ThirtySecond, fxme::NoteMod::Straight) * 0.25f },
-            { "s64", (float) fxme::noteDurationBeats (fxme::NoteBase::SixtyFourth,  fxme::NoteMod::Straight) * 0.25f },
-            { "t4",  (float) fxme::noteDurationBeats (fxme::NoteBase::Quarter,      fxme::NoteMod::Triplet)  * 0.25f },
-            { "t8",  (float) fxme::noteDurationBeats (fxme::NoteBase::Eighth,       fxme::NoteMod::Triplet)  * 0.25f },
-            { "t16", (float) fxme::noteDurationBeats (fxme::NoteBase::Sixteenth,    fxme::NoteMod::Triplet)  * 0.25f },
-            { "t32", (float) fxme::noteDurationBeats (fxme::NoteBase::ThirtySecond, fxme::NoteMod::Triplet)  * 0.25f },
-            { "t64", (float) fxme::noteDurationBeats (fxme::NoteBase::SixtyFourth,  fxme::NoteMod::Triplet)  * 0.25f },
-            { "d4",  (float) fxme::noteDurationBeats (fxme::NoteBase::Quarter,      fxme::NoteMod::Dotted)   * 0.25f },
-            { "d8",  (float) fxme::noteDurationBeats (fxme::NoteBase::Eighth,       fxme::NoteMod::Dotted)   * 0.25f },
-            { "d16", (float) fxme::noteDurationBeats (fxme::NoteBase::Sixteenth,    fxme::NoteMod::Dotted)   * 0.25f },
-            { "d32", (float) fxme::noteDurationBeats (fxme::NoteBase::ThirtySecond, fxme::NoteMod::Dotted)   * 0.25f },
-            { "d64", (float) fxme::noteDurationBeats (fxme::NoteBase::SixtyFourth,  fxme::NoteMod::Dotted)   * 0.25f },
-        };
-
-        // Longest names first: "s4" is a prefix of nothing here, but checking
-        // longer names first is the safer habit if this table ever grows.
-        for (const auto& [name, value] : kNoteConstants)
-        {
-            const size_t len = std::strlen (name);
-            if (s.compare (pos, len, name) == 0)
-                return NoteConstRef { value, len };
-        }
-        return std::nullopt;
-    }
-
-    inline std::optional<Expr> parseExpr (const std::string& s, bool vowelKey)
-    {
-        if (vowelKey)
-            if (const auto v = parseVowel (s))
-                return Expr { Expr::Const, *v, 0 };
-
-        // word[voice] , word[voice]*N , word[voice]/N
-        if (const auto m = parseMagic (s, 0))
-        {
-            if (m->len == s.size())
-                return Expr { m->kind, 1.0f, m->voice };
-
-            if (s.size() > m->len + 1)
-            {
-                const char op = s[m->len];
-                const auto n  = parseNumber (s.substr (m->len + 1));
-                if (! n)
-                    return std::nullopt;
-                if (op == '*')
-                    return Expr { m->kind, *n, m->voice };
-                if (op == '/' && *n != 0.0f)
-                    return Expr { m->kind, 1.0f / *n, m->voice };
-            }
-            return std::nullopt;
-        }
-
-        // N*word[voice]
-        if (const auto star = s.find ('*'); star != std::string::npos)
-            if (const auto m = parseMagic (s, star + 1))
-                if (m->len == s.size() - star - 1)
-                {
-                    const auto n = parseNumber (s.substr (0, star));
-                    if (! n)
-                        return std::nullopt;
-                    return Expr { m->kind, *n, m->voice };
-                }
-
-        // noteConst , noteConst*N , noteConst/N - folds straight to a
-        // constant, since (unlike mididur/midifreq) these don't depend on
-        // runtime MIDI state.
-        if (const auto c = parseNoteConstRef (s, 0))
-        {
-            if (c->len == s.size())
-                return Expr { Expr::Const, c->value, 0 };
-
-            if (s.size() > c->len + 1)
-            {
-                const char op = s[c->len];
-                const auto n  = parseNumber (s.substr (c->len + 1));
-                if (! n)
-                    return std::nullopt;
-                if (op == '*')
-                    return Expr { Expr::Const, c->value * *n, 0 };
-                if (op == '/' && *n != 0.0f)
-                    return Expr { Expr::Const, c->value / *n, 0 };
-            }
-            return std::nullopt;
-        }
-
-        // N*noteConst
-        if (const auto star = s.find ('*'); star != std::string::npos)
-            if (const auto c = parseNoteConstRef (s, star + 1))
-                if (c->len == s.size() - star - 1)
-                {
-                    const auto n = parseNumber (s.substr (0, star));
-                    if (! n)
-                        return std::nullopt;
-                    return Expr { Expr::Const, *n * c->value, 0 };
-                }
-
-        // N s - an absolute time in seconds, bypassing the whole-note/tempo
-        // conversion a plain Const gets in overrideDurSeconds(). strtof
-        // itself never accepts a trailing 's', so this can't collide with a
-        // plain number (with or without an exponent).
-        if (s.size() > 1 && s.back() == 's')
-            if (const auto n = parseNumber (s.substr (0, s.size() - 1)))
-                return Expr { Expr::SecondsConst, *n, 0 };
-
-        if (const auto n = parseNumber (s))
-            return Expr { Expr::Const, *n, 0 };
-        return std::nullopt;
-    }
 } // namespace detail
+
+/** Mango's language: its keys (the vowel keys also take a e i o u, the
+    fxme::FormantFilter::Vowel indices) and its two MIDI variables. */
+inline const fxme::OverrideLanguage& overrideLanguage()
+{
+    static const fxme::OverrideSymbol vowels[] = { { "a", 0.0f }, { "e", 1.0f }, { "i", 2.0f }, { "o", 3.0f }, { "u", 4.0f } };
+    static const fxme::OverrideVariable variables[] = { { "mididur", MidiNoteState::kMaxVoices }, { "midifreq", MidiNoteState::kMaxVoices } };
+    static const auto keys = []
+    {
+        std::array<fxme::OverrideKey, (size_t) OvKey::Count> k {};
+        for (int i = 0; i < (int) OvKey::Count; ++i)
+        {
+            k[(size_t) i].name = detail::keyNames[i];
+            if (i == (int) OvKey::V0 || i == (int) OvKey::V1)
+            {
+                k[(size_t) i].symbols = vowels;
+                k[(size_t) i].numSymbols = 5;
+            }
+        }
+        return k;
+    }();
+    static const fxme::OverrideLanguage language { keys.data(), (int) keys.size(), variables, 2 };
+    return language;
+}
 
 /** Parses a block override string. Returns std::nullopt on any error; an
     empty (or all-whitespace) string yields a valid empty set. */
 inline std::optional<ParsedOverrides> parseOverrides (const std::string& text)
 {
-    ParsedOverrides result;
-
-    size_t i = 0;
-    while (i < text.size())
-    {
-        while (i < text.size() && (text[i] == ' ' || text[i] == '\t' || text[i] == '\n'))
-            ++i;
-        if (i >= text.size())
-            break;
-
-        size_t j = i;
-        while (j < text.size() && text[j] != ' ' && text[j] != '\t' && text[j] != '\n')
-            ++j;
-        const std::string token = text.substr (i, j - i);
-        i = j;
-
-        const auto eq = token.find ('=');
-        if (eq == std::string::npos || eq == 0 || eq == token.size() - 1)
-            return std::nullopt;
-
-        const auto key = detail::keyFromString (token.substr (0, eq));
-        if (! key)
-            return std::nullopt;
-
-        const bool vowelKey = (*key == OvKey::V0 || *key == OvKey::V1);
-        const auto expr = detail::parseExpr (token.substr (eq + 1), vowelKey);
-        if (! expr)
-            return std::nullopt;
-
-        if (! result.add (*key, *expr))
-            return std::nullopt;   // too many assignments
-    }
-
-    return result;
+    return fxme::parseOverrides (text, overrideLanguage());
 }
 
 } // namespace mng
